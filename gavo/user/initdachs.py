@@ -426,7 +426,7 @@ def parseCommandLine():
 		action="store", type=str, dest="dsn", default="gavo")
 	parser.add_argument("--nodb", help="Inhibit initialization of the"
 		" database (you may want to use this when refreshing the file system"
-		" hierarchcy)", action="store_false", dest="initDB")
+		" hierarchy)", action="store_false", dest="initDB")
 	return parser.parse_args()
 
 

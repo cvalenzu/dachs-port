@@ -53,7 +53,7 @@ install: all
 	rsync -av *.css gavodoc.js $(HTML_FILES) $(ALL_PDF) index.rstx apidoc $(HTMLTARGET) 
 	rsync -av $(RST_DIR)/*.rstx $(HTMLTARGET)
 
-gavo.1: gavo.1.rstx
+gavo.1: $(RST_DIR)/gavo.1.rstx
 	rst2man --no-datestamp --no-generator $< $@
 
 all: $(HTML_FILES) $(ALL_PDF) gavo.1
