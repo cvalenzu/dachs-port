@@ -134,9 +134,14 @@ class UWS(object):
 		_mayBeEmpty = True
 
 
-def getJobList(workerSystem, forOwner=None):
+def getJobList(workerSystem, 
+		forOwner=None, 
+		phase=None, 
+		last=None, 
+		after=None):
 	result = UWS.jobs()
-	for jobId, phase in workerSystem.getIdsAndPhases(forOwner):
+	for jobId, phase in workerSystem.getIdsAndPhases(
+			forOwner, phase, last, after):
 		result[
 			UWS.jobref(id=jobId, href=workerSystem.getURLForId(jobId))[
 				UWS.phase[phase]]]

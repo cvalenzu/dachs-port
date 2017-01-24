@@ -111,27 +111,6 @@ class UserUWS(uws.UWSWithQueueing):
 		uws.UWSWithQueueing.__init__(self, 
 			makeUserUWSJobClass(service), jobActions)
 
-	def _makeMoreStatements(self, statements, jobsTable):
-		# for user UWSes, we only want jobs from our service in the job
-		# list resource.  We change the respective queries; we don't
-		# change getById and getAllIds, though, as they're used internally
-		# and could influence, e.g., queueing and such.
-
-		# jobClass values in principle are controlled, so literal inclusion
-		# in the queries should be safe.  Let's just add a little extra for
-		# defensiveness:
-		jobClass = self.service.getFullId().replace("'", "")
-		td = jobsTable.tableDef
-
-		statements["getIdsAndPhases"] = jobsTable.getQuery(
-				[td.getColumnByName("jobId"), td.getColumnByName("phase")], 
-				"jobClass='%s'"%jobClass)
-		statements["getIdsAndPhasesForOwner"] = jobsTable.getQuery(
-			[td.getColumnByName("jobId"), td.getColumnByName("phase")], 
-				"owner=%%(owner)s AND jobClass='%s'"%jobClass, 
-				{"owner": ""})
-		uws.UWSWithQueueing._makeMoreStatements(self, statements, jobsTable)
-
 	def getURLForId(self, jobId):
 		return self.service.getURL("uws.xml")+"/"+jobId
 
@@ -161,8 +140,17 @@ class UserUWS(uws.UWSWithQueueing):
 
 		return self.jobClass(res[0], self, writable)
 
+	def getIdsAndPhases(self, *args, **kwargs):
+		# for user UWSes, we only want jobs from our service in the job
+		# list resource.  We insert extra conditions to the basic queries.
+		# getById and getAllIds don't change, though, as they're used internally
+		# and could influence, e.g., queueing and such.
+		return uws.UWSWithQueueing.getIdsAndPhases(self, *args, 
+			initFragments=["jobClass=%(jobClass)s"],
+			initPars={"jobClass": self.service.getFullId()},
+			**kwargs)
+	
 
-		
 def makeUWSForService(service):
 	"""returns a UserUWS instance tailored to service.
 

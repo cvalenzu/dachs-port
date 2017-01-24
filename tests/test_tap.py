@@ -379,4 +379,29 @@ class SimpleAsyncTest(TAPRenderTest):
 			"QUERY": "SELECT ra FROM test.adql WHERE ra<3"}
 		).addCallback(checkPosted)
 
+	def _testJoblistLAST(self):
+		def assertMaxOneResult(result):
+			self.assertEqual(result[1].code, 200)
+			self.assertTrue('xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0',
+				result[0])
+			nJobs = len(re.findall('<uws.jobref ', result[0]))
+			self.assertTrue(nJobs<2, "LAST=1 returns %s jobrefs"%nJobs)
+
+		return trialhelpers.runQuery(self.renderer, "GET", "/async", {
+			"LAST": 1}
+			).addCallback(assertMaxOneResult)
+
+	def testJoblistPHASE(self):
+		def assertMaxOneResult(result):
+			self.assertEqual(result[1].code, 200)
+			self.assertTrue('xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0',
+				result[0])
+			nJobs = len(re.findall('<uws.jobref ', result[0]))
+			self.assertTrue(nJobs==0, "PHASE=ABORTED returns a jobref?")
+
+		return trialhelpers.runQuery(self.renderer, "GET", "/async", {
+			"PHASE": 'ABORTED'}
+			).addCallback(assertMaxOneResult)
+
+
 atexit.register(trialhelpers.provideRDData("test", "ADQLTest"))

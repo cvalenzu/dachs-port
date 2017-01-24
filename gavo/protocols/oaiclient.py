@@ -175,7 +175,7 @@ class IdParser(utils.StartEndHandler, OAIErrorMixin):
 		return self.recs
 
 	def _end_identifier(self, name, attrs, content):
-		self.recs[-1]["id"] = content
+		self.recs[-1]["id"] = content.strip()
 	
 	def _end_datestamp(self, name, attrs, content):
 		try:
@@ -412,7 +412,7 @@ class OAIRecordsParser(sax.ContentHandler, OAIErrorMixin):
 		self.oaiSets.add(self._getLastContent())
 
 	def _end_oai_identifier(self, name):
-		self.ivoid = self._getLastContent().lower()
+		self.ivoid = self._getLastContent().lower().strip()
 
 	def _end_oai_resumptionToken(self, name):
 		self.resumptionToken = self._getLastContent()

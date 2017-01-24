@@ -94,4 +94,28 @@
 		<make table="userjobs"/>
 	</data>
 
+	<data id="do_noting" auto="False">
+		<contextGrammar id="joblistArgs">
+			<inputKey name="PHASE" type="text" multiplicity="single"
+				description="Restrict result to jobs in this phase">
+				<values>
+					<option>PENDING</option>
+					<option>QUEUED</option>
+					<option>EXECUTING</option>
+					<option>COMPLETED</option>
+					<option>ERROR</option>
+					<option>ABORTED</option>
+					<option>UNKNOWN</option>
+					<option>HELD</option>
+					<option>SUSPENDED</option>
+					<option>ARCHIVED</option>
+				</values>
+			</inputKey>
+			<inputKey name="AFTER" type="timestamp" multiplicity="single"
+				description="Restrict result to jobs created after this point in time"/>
+			<inputKey name="LAST" type="integer" multiplicity="single"
+				description="Restrict output to this many records, and choose the
+					most recent ones"/>
+		</contextGrammar>
+	</data>
 </resource>

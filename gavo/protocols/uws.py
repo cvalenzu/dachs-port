@@ -99,8 +99,12 @@ class UWS(object):
 	The UWS then provides methods to access the jobs table,
 	create jobs and and deserialize jobs from the jobs table.
 
-	If you want more canned queries, use the 
-	_makeMoreStatements(statements, jobsTable) hook.
+	We're canning queries so we don't have to keep a copy of the jobs
+	table around.  If you want more canned queries, use the 
+	_makeMoreStatements(statements, jobsTable) hook.  However, canning
+	is not (really) useful with queries with optional arguments 
+	(getIdsAndPhases).  In such cases, just construct the jobs table.
+	It's not *that* expensive.
 
 	You must override the getURLForId(jobId) method in your concrete
 	implementation.
@@ -150,11 +154,6 @@ class UWS(object):
 			res["getById"] = jobsTable.getQuery(td, "jobId=%(jobId)s", {"jobId": 0})
 			res["getAllIds"] = jobsTable.getQuery(
 				[td.getColumnByName("jobId")], "")
-			res["getIdsAndPhases"] = jobsTable.getQuery(
-				[td.getColumnByName("jobId"), td.getColumnByName("phase")], "")
-			res["getIdsAndPhasesForOwner"] = jobsTable.getQuery(
-				[td.getColumnByName("jobId"), td.getColumnByName("phase")], 
-					"owner=%(owner)s", {"owner": ""})
 
 			countField = base.makeStruct(
 				svcs.OutputField, name="count", type="integer", select="count(*)",
@@ -355,17 +354,42 @@ class UWS(object):
 		with base.getTableConn() as conn:
 			return [r["jobId"] for r in self.runCanned('getAllIds', {}, conn)]
 
-	def getIdsAndPhases(self, owner=None):
+	def getIdsAndPhases(self, owner=None, phase=None, last=None, after=None,
+			initFragments=None, initPars=None):
 		"""returns pairs for id and phase for all jobs in the UWS.
+
+		phase, last, after are the respective parameters from UWS 1.1.
 		"""
+		pars = locals()
+		fragments = initFragments or []
+		pars.update(initPars or {})
+		limits = None
+
+		if owner is not None:
+			fragments.append("owner=%(owner)s")
+
+		if phase is not None:
+			fragments.append("phase=%(phase)s")
+
+		if False: # TODO: add creationTime to UWS job tables last is not None:
+			limits = "ORDER BY creationTime DESC LIMIT %(limit)s"
+
+		if False: # TODO: as for limits
+			fragments.append("creationTime>%(after)s")
+
+		td = self.jobClass.jobsTD
+
 		with base.getTableConn() as conn:
-			if owner:
+			jobsTable = rsc.TableForDef(td, connection=conn)
+			try:
 				return [(r["jobId"], r["phase"])
-					for r in self.runCanned('getIdsAndPhasesForOwner', 
-						{"owner": owner}, conn)]
-			else:
-				return [(r["jobId"], r["phase"])
-					for r in self.runCanned('getIdsAndPhases', {}, conn)]
+					for r in jobsTable.iterQuery(
+						[td.getColumnByName("jobId"), td.getColumnByName("phase")],
+						fragment=base.joinOperatorExpr("AND", fragments),
+						pars=pars,
+						limits=limits)]
+			finally:
+				jobsTable.close()
 
 	def cleanupJobsTable(self, includeFailed=False, includeCompleted=False,
 			includeAll=False, includeForgotten=False):

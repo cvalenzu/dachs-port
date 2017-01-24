@@ -101,10 +101,21 @@ class JoblistResource(MethodAwareResource, UWSErrorMixin):
 	dachs_authenticate=anything and haven't passed a user, this will ask 
 	for credentials.
 	"""
+	@utils.memoized
+	def getJoblistCtxGrammar(self):
+		return base.caches.getRD("//uws").getById("joblistArgs")
+
 	def _doGET(self, ctx, request):
 		if request.args.has_key("dachs_authenticate") and not request.getUser():
 			raise svcs.Authenticate()
-		res = uwsactions.getJobList(self.workerSystem, request.getUser() or None)
+		ri = self.getJoblistCtxGrammar().parse(inevow.IRequest(ctx).args)
+		args = ri.getParameters()
+
+		res = uwsactions.getJobList(self.workerSystem, 
+			request.getUser() or None,
+			phase=args["PHASE"],
+			last=args["LAST"],
+			after=args["AFTER"])
 		return res
 	
 	def _doPOST(self, ctx, request):
