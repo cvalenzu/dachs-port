@@ -891,6 +891,9 @@ class Service(base.Structure, base.ComputedMetaMixin,
 			return self.inputDD
 
 		else:
+			if isinstance(renderer, basestring):
+				renderer = renderers.getRenderer(renderer)
+
 			if core is None:
 				core = self.getCoreFor(renderer)
 			if getattr(core, "nocache", False):

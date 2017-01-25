@@ -40,7 +40,7 @@ END_STATES = set([COMPLETED, ERROR, ABORTED])
 # used in the computation of quote
 EST_TIME_PER_JOB = datetime.timedelta(minutes=10)
 
-_DEFAULT_LOCK_TIMEOUT = 20
+_DEFAULT_LOCK_TIMEOUT = 0.1
 
 
 __docformat__ = "restructuredtext en"

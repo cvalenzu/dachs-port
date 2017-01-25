@@ -134,7 +134,8 @@ class PrivilegesMixin(object):
 	_allProfiles = ProfileListAttribute("allProfiles", 
 		default=base.getConfig("db", "maintainers"),
 		description="A (comma separated) list of profile names through"
-			" which the object can be written or administred.")
+			" which the object can be written or administred (oh, and the"
+			" default is not admin, msdemlei but is the value of [db]maintainers)")
 
 
 class IVOMetaMixin(object):

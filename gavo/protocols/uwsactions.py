@@ -22,11 +22,15 @@ from __future__ import with_statement
 
 import os
 
+from twisted.internet import reactor
+from twisted.internet import defer
+
 from nevow import inevow
 from nevow import rend
 from nevow import static
 
 from gavo import base
+from gavo import rsc
 from gavo import svcs
 from gavo import utils
 from gavo.protocols import uws
@@ -449,18 +453,85 @@ class RootAction(JobAction):
 	"""Actions for async/jobId.
 	"""
 	name = ""
+
+	@utils.memoized
+	def getParamInputDD(self):
+		"""returns an InputDD to parse the arguments of the UWS1.1 polling.
+		"""
+		return base.resolveCrossId("//uws#jobresource_wrapper"
+			).getInputDDFor("api")
+
 	def doDELETE(self, job, request):
+		"""Implements DELETE on a job resource.
+
+		This is the UWS-compliant way to delete a job.
+		"""
 		job.uws.destroy(job.jobId)
 		raise svcs.WebRedirect("")
 
 	def doPOST(self, wjob, request):
-		# (Extension to let web browser delete jobs)
+		"""Implements POST on a job resource.
+
+		This is a DaCHS extension to UWS in order to let web browsers
+		delete jobs by passing action=DELETE.
+		"""
 		if utils.getfirst(request.args, "action", None)=="DELETE":
 			self.doDELETE(wjob, request)
 		else:
 			raise svcs.BadMethod("POST")
 
+	def _delayIfWAIT(self, job, request):
+		"""delays if request has UWS 1.1 "slow poll" arguments, returns None
+		otherwise.
+
+		This is a helper for doGET.
+		"""
+		# This is the implemenation of UWS 1.1 "slow polling".
+		# We still do polling internally rather than use postgres'
+		# LISTEN/NOTIFY since the overhead seems rather moderate and
+		# the added complexity of setting up notifcations appeared not
+		# proportional to saving it.
+		args = rsc.makeData(self.getParamInputDD(), forceSource=request.args
+			).getPrimaryTable().getParamDict()
+
+		if args["WAIT"] is None:
+			return
+		if args["WAIT"]==-1:
+			args["WAIT"] = base.getConfig("async", "maxslowpollwait")
+
+		if args["PHASE"] is not None and args["PHASE"]!=job.phase:
+			return
+
+		if job.phase not in ["QUEUED", "EXECUTING"]:
+			return
+			
+		d = defer.Deferred().addCallback(
+			self._recheck, job.uws, job.jobId, args["WAIT"]-1, job.phase)
+		reactor.callLater(1, d.callback, request)
+		return d
+	
+	def _recheck(self, 
+			request, workerSystem, jobId, remainingWait, originalPhase):
+		"""the callback for doing slow polls.
+		"""
+		job = workerSystem.getJob(jobId)
+		if originalPhase!=job.phase or remainingWait<=0:
+			request.args = {}
+			return self.doGET(job, request)
+
+		d = defer.Deferred().addCallback(
+			self._recheck, workerSystem, jobId, remainingWait-1, originalPhase)
+		reactor.callLater(1, d.callback, request)
+		return d
+
+
 	def doGET(self, job, request):
+		"""Implements GET on a job resource: return the current job metadata.
+		"""
+		delay = self._delayIfWAIT(job, request)
+		if delay:
+			return delay
+
 		tree = UWS.makeRoot(UWS.job[
 			UWS.jobId[job.jobId],
 			UWS.runId[job.runId],

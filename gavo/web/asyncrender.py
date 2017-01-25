@@ -14,9 +14,10 @@ integrated here.
 
 from nevow import inevow
 from nevow import rend
-from twisted.internet import threads
+from twisted.internet import defer
 
 from gavo import base
+from gavo import rsc
 from gavo import svcs
 from gavo import utils
 from gavo.protocols import uws
@@ -72,10 +73,8 @@ class MethodAwareResource(rend.Page):
 
 	def renderHTTP(self, ctx):
 		request = inevow.IRequest(ctx)
-		# TODO: check if these can block -- and at least think really hard
-		# if they can all be made non-blocking sanely.
 		handlingMethod = getattr(self, "_do"+request.method, self._doBADMETHOD)
-		return threads.deferToThread(handlingMethod, ctx, request
+		return defer.maybeDeferred(handlingMethod, ctx, request
 			).addCallback(self._deliverResult, request
 			).addErrback(self._deliverError, request)
 
@@ -102,14 +101,16 @@ class JoblistResource(MethodAwareResource, UWSErrorMixin):
 	for credentials.
 	"""
 	@utils.memoized
-	def getJoblistCtxGrammar(self):
-		return base.caches.getRD("//uws").getById("joblistArgs")
+	def getJoblistInputDD(self):
+		return base.resolveCrossId("//uws#joblist_wrapper"
+			).getInputDDFor("api")
 
 	def _doGET(self, ctx, request):
 		if request.args.has_key("dachs_authenticate") and not request.getUser():
 			raise svcs.Authenticate()
-		ri = self.getJoblistCtxGrammar().parse(inevow.IRequest(ctx).args)
-		args = ri.getParameters()
+
+		args = rsc.makeData(self.getJoblistInputDD(), forceSource=request.args
+			).getPrimaryTable().getParamDict()
 
 		res = uwsactions.getJobList(self.workerSystem, 
 			request.getUser() or None,
@@ -137,7 +138,7 @@ class JobResource(rend.Page, UWSErrorMixin):
 
 	def renderHTTP(self, ctx):
 		request = inevow.IRequest(ctx)
-		return threads.deferToThread(
+		return defer.maybeDeferred(
 			uwsactions.doJobAction, self.workerSystem, request, self.segments
 		).addCallback(self._deliverResult, request
 		).addErrback(self._redirectAsNecessary, ctx

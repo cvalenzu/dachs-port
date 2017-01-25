@@ -148,7 +148,7 @@ class UWSResponsesValidTest(testhelpers.VerboseTest, testtricks.XSDTestMixin):
 
 	def testJobRes(self):
 		job = tap.WORKER_SYSTEM.getJob(self.jobId)
-		self.assertValidates(uwsactions.RootAction().doGET(job, None),
+		self.assertValidates(uwsactions.RootAction().doGET(job, TAPFakeRequest()),
 			leaveOffending=True)
 
 	def testJobList(self):

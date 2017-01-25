@@ -96,28 +96,51 @@
 		<make table="userjobs"/>
 	</data>
 
-	<data id="do_noting" auto="False">
-		<contextGrammar id="joblistArgs">
-			<inputKey name="PHASE" type="text" multiplicity="single"
-				description="Restrict result to jobs in this phase">
-				<values>
-					<option>PENDING</option>
-					<option>QUEUED</option>
-					<option>EXECUTING</option>
-					<option>COMPLETED</option>
-					<option>ERROR</option>
-					<option>ABORTED</option>
-					<option>UNKNOWN</option>
-					<option>HELD</option>
-					<option>SUSPENDED</option>
-					<option>ARCHIVED</option>
-				</values>
-			</inputKey>
-			<inputKey name="AFTER" type="timestamp" multiplicity="single"
-				description="Restrict result to jobs created after this point in time"/>
-			<inputKey name="LAST" type="integer" multiplicity="single"
-				description="Restrict output to this many records, and choose the
-					most recent ones"/>
-		</contextGrammar>
-	</data>
+	<service id="joblist_wrapper">
+		<!-- this is not an actual service but just defines the interface
+		for the UWS 1.1 joblist -->
+		<nullCore>
+			<inputTable>
+				<inputKey name="PHASE" type="text" multiplicity="single"
+					description="Restrict result to jobs in this phase">
+					<values>
+						<option>PENDING</option>
+						<option>QUEUED</option>
+						<option>EXECUTING</option>
+						<option>COMPLETED</option>
+						<option>ERROR</option>
+						<option>ABORTED</option>
+						<option>UNKNOWN</option>
+						<option>HELD</option>
+						<option>SUSPENDED</option>
+						<option>ARCHIVED</option>
+					</values>
+				</inputKey>
+				<inputKey name="AFTER" type="timestamp" multiplicity="single"
+					description="Restrict result to jobs created after this point in time"/>
+				<inputKey name="LAST" type="integer" multiplicity="single"
+					description="Restrict output to this many records, and choose the
+						most recent ones"/>
+			</inputTable>
+		</nullCore>
+	</service>
+
+	<service id="jobresource_wrapper">
+		<nullCore>
+			<inputTable>
+				<inputKey name="PHASE" type="text" multiplicity="single"
+					description="Return immediately unless job is in this phase.">
+					<values>
+						<!-- we reject polling against PENDING, too, since it doesn't make
+						much sense -->
+						<option>QUEUED</option>
+						<option>EXECUTING</option>
+					</values>
+				</inputKey>
+				<inputKey name="WAIT" type="integer" multiplicity="single"
+					description="Seconds to wait with an answer if no change occurred."/>
+			</inputTable>
+		</nullCore>
+	</service>
+
 </resource>

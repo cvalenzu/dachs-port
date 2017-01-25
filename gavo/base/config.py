@@ -475,6 +475,9 @@ _config = Configuration(
 			" for ADQL queries via the UWS/TAP"),
 		StringConfigItem("csvDialect", "excel", "CSV dialect as defined"
 			" by the python csv module used when writing CSV files."),
+		IntConfigItem("maxSlowPollWait", "300", "Maximal time a UWS 1.1-WAIT"
+			" request will delay the response.  This should be smaller than"
+			" what you have as timeout on outgoing connections."),
 ),
 
 	Section('ui', "Settings concerning the local user interface",
