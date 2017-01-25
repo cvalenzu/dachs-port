@@ -72,23 +72,26 @@ class UWSObjectTest(testhelpers.VerboseTest):
 	def testGetStatement(self):
 		self.assertEqual(_TEST_UWS._statements["getById"][1],
 			"SELECT jobId, phase, executionDuration, destructionTime,"
-			" owner, parameters, runId, startTime, endTime, error, magic"
+			" owner, parameters, runId, startTime, endTime,"
+			" error, creationTime, magic"
 			" FROM test.testjobs WHERE jobId=%(jobId)s ")
 
 	def testExGetStatement(self):
 		self.assertEqual(_TEST_UWS._statements["getByIdEx"][1],
 			"SELECT jobId, phase, executionDuration, destructionTime,"
-			" owner, parameters, runId, startTime, endTime, error, magic"
+			" owner, parameters, runId, startTime, endTime,"
+			" error, creationTime, magic"
 			" FROM test.testjobs WHERE jobId=%(jobId)s FOR UPDATE ")
 
 	def testFeedStatement(self):
 		self.assertEqual(_TEST_UWS._statements["feedToIdEx"][1], 
 			'INSERT INTO test.testjobs (jobId, phase, executionDuration,'
 			' destructionTime, owner, parameters, runId,'
-			' startTime, endTime, error, magic) VALUES (%(jobId)s, %(phase)s,'
+			' startTime, endTime, error, creationTime, magic) VALUES'
+			' (%(jobId)s, %(phase)s,'
 			' %(executionDuration)s, %(destructionTime)s, %(owner)s,'
 			' %(parameters)s, %(runId)s, %(startTime)s, %(endTime)s,'
-			' %(error)s, %(magic)s)')
+			' %(error)s, %(creationTime)s, %(magic)s)')
 	
 	def testJobsTDCache(self):
 		td1 = UWSTestJob.jobsTD
@@ -190,6 +193,11 @@ class SimpleJobsTest(TestWithUWSJob):
 		self.job.update()
 		self.assertEqual(self.job.parameters["nocase"], 4)
 		self.assertEqual(self.job.getSerializedPar("NOCASE"), "4")
+	
+	def testCreationTime(self):
+		timediff = self.job.creationTime-datetime.datetime.utcnow()
+		self.assertTrue(abs(timediff.total_seconds())<2,
+			"Job creation to test execution >2 seconds??")
 
 
 class PlainActionsTest(TestWithUWSJob):

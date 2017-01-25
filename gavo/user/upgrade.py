@@ -32,7 +32,7 @@ class _COMMIT(object):
 	"""
 
 
-CURRENT_SCHEMAVERSION = 14
+CURRENT_SCHEMAVERSION = 15
 
 
 class AnnotatedString(str):
@@ -399,6 +399,16 @@ class To14Upgrader(Upgrader):
 					" column indices in TAP_SCHEMA"%(rdId, msg))
 				continue
 			rsc.makeData(dd, forceSource=rd, connection=connection)
+
+class To15Upgrader(Upgrader):
+	version = 14
+
+	@classmethod
+	def u_10_add_uws_creationTime(cls, connection):
+		for tableName in [
+				"dc.datalinkjobs", "uws.userjobs", "tap_schema.tapjobs"]:
+			connection.execute("ALTER TABLE IF EXISTS %s"
+					" ADD COLUMN creationTime TIMESTAMP"%tableName)
 
 
 def iterStatements(startVersion, endVersion=CURRENT_SCHEMAVERSION, 

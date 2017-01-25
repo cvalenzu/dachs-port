@@ -371,10 +371,11 @@ class UWS(object):
 		if phase is not None:
 			fragments.append("phase=%(phase)s")
 
-		if False: # TODO: add creationTime to UWS job tables last is not None:
-			limits = "ORDER BY creationTime DESC LIMIT %(limit)s"
+		if last is not None:
+			limits = ("ORDER BY creationTime DESC LIMIT %(limit)s",
+				{'limit': last})
 
-		if False: # TODO: as for limits
+		if after is not None:
 			fragments.append("creationTime>%(after)s")
 
 		td = self.jobClass.jobsTD
@@ -890,7 +891,11 @@ class BaseUWSJob(object):
 	@classmethod
 	def _default_executionDuration(cls):
 		return base.getConfig("async", "defaultExecTime")
-	
+
+	@classmethod
+	def _default_creationTime(cls):
+		return datetime.datetime.utcnow()
+
 	@classmethod
 	def _default_destructionTime(cls):
 		return datetime.datetime.utcnow()+datetime.timedelta(

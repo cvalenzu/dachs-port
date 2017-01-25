@@ -49,6 +49,8 @@
 			description="some suitable representation an error that has
 			occurred while executing the job (null means no error information
 			has been logged)"/>
+		<column name="creationTime" type="timestamp"
+			description="UTC job was created"/>
 	</STREAM>
 
 	<!-- have an empty data so gavo imp does not complain -->
