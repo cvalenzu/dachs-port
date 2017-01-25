@@ -297,7 +297,10 @@ class SimpleAsyncTest(TAPRenderTest):
 
 	def testJobList(self):
 		return self.assertGETHasStrings("/async", {}, [
-			'<uws:jobs xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0'])
+			'<uws:jobs ',
+			' xmlns:uws="http://www.ivoa.net/xml/UWS/v1.0" ',
+			' version="1.1" ',
+			])
 
 	def testNonExistingPhase(self):
 		return self.assertGETHasStrings("/async/23/phase", {},
@@ -400,7 +403,8 @@ class SimpleAsyncTest(TAPRenderTest):
 			self.assertEqual(nJobs, 0)
 
 		return trialhelpers.runQuery(self.renderer, "GET", "/async", {
-			"AFTER": datetime.datetime.utcnow().isoformat()}
+			"AFTER": (datetime.datetime.utcnow()
+				+datetime.timedelta(seconds=1)).isoformat()}
 			).addCallback(assertNoResult)
 
 	def testJoblistPHASE(self):

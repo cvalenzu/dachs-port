@@ -41,7 +41,7 @@ from gavo.votable import V
 UWSNamespace = 'http://www.ivoa.net/xml/UWS/v1.0'
 XlinkNamespace = "http://www.w3.org/1999/xlink"
 stanxml.registerPrefix("uws", UWSNamespace,
-	stanxml.schemaURL("uws-1.0.xsd"))
+	stanxml.schemaURL("UWS-1.1.xsd"))
 stanxml.registerPrefix("xlink", XlinkNamespace,
 	stanxml.schemaURL("xlink.xsd"))
 
@@ -86,11 +86,13 @@ class UWS(object):
 	class job(UWSElement): pass
 	class jobs(UWSElement):
 		_mayBeEmpty = True
+		_a_version = "1.1"
 
 	class parameters(UWSElement): pass
 
 	class destruction(UWSElement): pass
 	class endTime(stanxml.NillableMixin, UWSElement): pass
+	class creationTime(UWSElement): pass
 	class executionDuration(UWSElement): pass
 	class jobId(UWSElement): pass
 	class jobInfo(UWSElement): pass
@@ -538,6 +540,7 @@ class RootAction(JobAction):
 			UWS.ownerId[job.owner],
 			UWS.phase[job.phase],
 			UWS.quote[utils.formatISODT(job.quote)],
+			UWS.creationTime[utils.formatISODT(job.creationTime)],
 			_serializeTime(UWS.startTime, job.startTime),
 			_serializeTime(UWS.endTime, job.endTime),
 			UWS.executionDuration[str(job.executionDuration)],

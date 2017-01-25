@@ -1295,7 +1295,7 @@ class UWSTransitions(object):
 
 	def flagError(self, newPhase, wjob, exception):
 		"""the default action when transitioning to an error: dump exception and
-		mark phase as ACTION.
+		mark phase as ERROR..
 		"""
 		wjob.change(phase=ERROR)
 		# Validation errors don't get logged -- for one, they probably
