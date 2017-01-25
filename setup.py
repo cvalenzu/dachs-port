@@ -30,6 +30,7 @@ SETUP_ARGS = {
 	"entry_points": {
 		'console_scripts': [
 			'gavo = gavo.user.cli:main',
+			'dachs = gavo.user.cli:main',
 		]
 	},
 	"version": VERSION,
