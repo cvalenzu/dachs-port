@@ -83,7 +83,9 @@ class UWS(object):
 		ob._mayBeEmpty = True
 		return ob
 
-	class job(UWSElement): pass
+	class job(UWSElement):
+		_a_version = "1.1"
+
 	class jobs(UWSElement):
 		_mayBeEmpty = True
 		_a_version = "1.1"

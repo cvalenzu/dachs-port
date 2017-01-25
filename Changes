@@ -6,6 +6,12 @@ svn log http://svn.ari.uni-heidelberg.de/svn/gavo/python/trunk/ | less
 to see the gory details.  If anything not mentioned here breaks something
 for you, we'd consider it a severe bug, though.
 
+Version 1.0 (2017-XX-XX)
+
+	* UWS support is now for version 1.1 (i.e., there's creationDate,
+	  filters in the joblist, and slow polling).
+
+
 Version 0.9.8 (2016-12-08)
 
 	* SODA/Datalink implementation is now considered stable.  Go forth and
