@@ -7,7 +7,8 @@ HTMLTARGET=vo.ari.uni-heidelberg.de:/var/www/docs/DaCHS
 RST_SOURCES=data_checklist.rstx howDoI.rstx ref.rstx tutorial.rstx\
 	booster.rstx install.rstx stc.rstx processors.rstx adql.rstx\
 	votable.rstx commonproblems.rstx tapquery.rstx develNotes.rstx\
-	opguide.rstx elemref.rstx templating.rstx deploy_docker.rstx
+	opguide.rstx elemref.rstx templating.rstx deploy_docker.rstx\
+	dachs.1.rstx
 ALL_HTML=index.html $(subst .rstx,.html,$(RST_SOURCES))
 HTML_FILES=$(ALL_HTML)
 ALL_PDF=$(subst .rstx,.pdf,$(RST_SOURCES))
@@ -31,9 +32,10 @@ ALL_PDF=$(subst .rstx,.pdf,$(RST_SOURCES))
 %.tex: %.rstx
 	gavo gendoc latex $< > $@
 
-booster.html: booster.rstx
-
 .PHONY: ref.rstx elemref.rstx apidoc-stamp
+
+dachs.1: $(RST_DIR)/dachs.1.rstx
+
 ref.rstx:
 	gavo --debug --traceback gendoc refdoc > ref.rstx
 
@@ -53,10 +55,9 @@ install: all
 	rsync -av *.css gavodoc.js $(HTML_FILES) $(ALL_PDF) index.rstx apidoc $(HTMLTARGET) 
 	rsync -av $(RST_DIR)/*.rstx $(HTMLTARGET)
 
-gavo.1: $(RST_DIR)/gavo.1.rstx
 	rst2man --no-datestamp --no-generator $< $@
 
-all: $(HTML_FILES) $(ALL_PDF) gavo.1
+all: $(HTML_FILES) $(ALL_PDF) dachs.1
 
 clean:
 	rm -f $(ALL_HTML)

@@ -66,17 +66,26 @@ Deployment Options
 For Data Center Operators
 -------------------------
 
-* Operator's guide (`opguide.html <./opguide.html>`_, 
-  `opguide.pdf <./opguide.pdf>`_, `opguide.rstx <./opguide.rstx>`_)
+* dachs command manpage (`dachs.1.html <./dachs.1.html>`_,
+  `dachs.1.pdf <./dachs.1.pdf>`_, `dachs.1.rstx <./dachs.1.rstx>`_)
 * Tutorial on importing data (`tutorial.html <./tutorial.html>`_, 
   `tutorial.pdf <./tutorial.pdf>`_, `tutorial.rstx <./tutorial.rstx>`_)
 * Reference (`ref.html <./ref.html>`_, 
   `ref.pdf <./ref.pdf>`_, `ref.rstx <./ref.rstx>`_)
+* Operator's guide (`opguide.html <./opguide.html>`_, 
+  `opguide.pdf <./opguide.pdf>`_, `opguide.rstx <./opguide.rstx>`_)
 * How do I? (`howDoI.html <./howDoI.html>`_, 
   `howDoI.pdf <./howDoI.pdf>`_, `howDoI.rstx <./howDoI.rstx>`_)
 * Hints on common problems (`commonproblems.html <./commonproblems.html>`_,
   `commonproblems.pdf <./commonproblems.pdf>`_, 
   `commonproblems.rstx <./commonproblems.rstx>`_)
+* Reference to elements and attributes in use in GAVO's data center
+  (`elemref.html <elemref.html>`_)
+
+
+Special Topics for Operators
+----------------------------
+
 * Guide to writing HTML templates (`templating.html <./templating.html>`_,
   `templating.pdf <./templating.pdf>`_, `templating.rstx <./templating.rstx>`_)
 * Guide to write booster grammars (`booster.html <./booster.html>`_,
@@ -84,8 +93,7 @@ For Data Center Operators
 * Guide to preprocessing input files (`processors.html <./processors.html>`_,
   `processors.pdf <./processors.pdf>`_, 
   `processors.rstx <./processors.rstx>`_)
-* Reference to elements and attributes in use in GAVO's data center
-  (`elemref.html <elemref.html>`_)
+
 
 For VO Data Providers
 ---------------------

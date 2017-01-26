@@ -406,8 +406,8 @@ def parseCommandLine():
 		dest="meta", action="store_true")
 	parser.add_option("-k", "--keep-timestamps", help="Preserve the"
 		" time stamp of the last record modification.  This may sometimes"
-		" be desirable when updating a schema to avoid a reharvesting of"
-		" all resource records.", action="store_true", dest="keepTimestamp")
+		" be desirable with minor updates to an RD that don't justify"
+		" a re-publication to the VO..", action="store_true", dest="keepTimestamp")
 	return parser.parse_args()
 
 

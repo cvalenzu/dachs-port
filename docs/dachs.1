@@ -86,6 +86,11 @@ enable profiling and write a profile to PROFILEPATH
 .TP
 .B \-\-suppress\-log
 suppress logging of exceptions to the dachs\-specific log files
+.TP
+.B \-\-version
+shows the versions of the software, of the database schema
+expected by the software and of the database schema actually
+on disk (if the latter two disagree, run gavo upgrade).
 .UNINDENT
 .SH THE ADMIN SUBCOMMAND
 .sp
@@ -149,9 +154,9 @@ distribution.  The argument is a package resource path.
 (like /inputs/__system__/scs.rd); for system RDs, the special
 //rd\-id syntax is supported.
 .IP \(bu 2
-\fBexecute execId\fP \-\- Execute the contents of an RD execute element. You
+\fBexecute exec\-id\fP \-\- Execute the contents of an RD execute element. You
 must give that element an explicit id in order to make this work; then
-execId is rd\-id#exec\-id
+exec\-id is rd\-id#exec\-id
 .IP \(bu 2
 \fBxsdValidate path\fP \-\- Validate a file against built\-in VO schemas
 and with built\-in schema validator.
@@ -304,7 +309,7 @@ Synopsis:
 .sp
 .nf
 .ft C
-info [\-h] table\-id
+dachs info [\-h] table\-id
 .ft P
 .fi
 .UNINDENT
@@ -327,7 +332,7 @@ Synopsis:
 .sp
 .nf
 .ft C
-init [\-h] [\-d DSN] [\-\-nodb]
+dachs init [\-h] [\-d DSN] [\-\-nodb]
 .ft P
 .fi
 .UNINDENT
@@ -341,17 +346,41 @@ directories went funny.
 .INDENT 0.0
 .TP
 .BI \-d \ <DSN>\fP,\fB \ \-\-dsn \ <DSN>
-data source name (DSN) to use to  connect  to  the
-future DaCHS database; the DSN must let DaCHS con‐
-nect to the database as an administrator;  dbname,
-host,  and  port  get  copied  to  the profile, if
-given; if you followed the  installation  instruc‐
-tions, you do not need this option
+data source name (DSN) to use to  connect  to  the future DaCHS
+database; the DSN must let DaCHS connect to the database as an
+administrator;  dbname, host,  and  port  get  copied  to  the
+profile, if given; if you followed the  installation
+instructions, you do not need this option
 .TP
 .B \-\-nodb
 inhibit  initialization  of  the database (you may
 want to use this when refreshing the  file  system
 hierarchy)
+.UNINDENT
+.SH THE LIMITS SUBCOMMAND
+.sp
+Synopsis:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+dachs limits [\-h] item\-id
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+This subcommand updates existing values/min or values/max items in the
+referenced table or RD from a database query (thus it may run for quite
+a while on large tables).  Note that this will rewrite the RD containing
+the definitions (but it takes great care to preserve not only the
+remaining contents but also its formatting).
+.SS Arguments
+.INDENT 0.0
+.TP
+.B item\-id
+either an RD id or a table reference in the from rd\-id#table\-id
 .UNINDENT
 .SH THE MKBOOST SUBCOMMAND
 .sp
@@ -361,7 +390,7 @@ Synopsis:
 .sp
 .nf
 .ft C
-mkboost [option] <id\-of\-directGrammar>
+dachs mkboost [option] <id\-of\-directGrammar>
 .ft P
 .fi
 .UNINDENT
@@ -388,7 +417,7 @@ Synopsis:
 .sp
 .nf
 .ft C
-mkrd [option] sample
+dachs mkrd [option] sample
 .ft P
 .fi
 .UNINDENT
@@ -411,7 +440,7 @@ name of the generated table
 Synopsis:
 .INDENT 0.0
 .INDENT 3.5
-publish [option] rd\-name
+dachs publish [option] rd\-name
 .UNINDENT
 .UNINDENT
 .sp
@@ -426,10 +455,9 @@ for details.
 search everything below inputsDir for publications
 .TP
 .B \-k\fP,\fB  \-\-keep\-timestamps
-preserve the time stamp of the last record modifi‐
-cation;  this  may  sometimes  be  desirable  when
-updating  a  schema to avoid a reharvesting of all
-resource records
+preserve the time stamp of the last record modification;  this
+may  sometimes  be  desirable  with minor updates on an RD
+that don\(aqt justify a re\-publication to the VO.
 .UNINDENT
 .SH THE PURGE SUBCOMMAND
 .sp
@@ -439,7 +467,7 @@ Synopsis:
 .sp
 .nf
 .ft C
-purge [\-h] tablename [tablename...]
+dachs purge [\-h] tablename [tablename...]
 .ft P
 .fi
 .UNINDENT
@@ -595,15 +623,52 @@ match the definition in the RD.
 .B \-u\fP,\fB  \-\-accept\-free\-units
 Do not warn against units not listed in VOUnits.
 .UNINDENT
-.SH THE SHOW SUBCOMMAND
+.SH THE UPGRADE SUBCOMMAND
 .sp
-(not documented; will probably vanish or change)
-.SH THE STC SUBCOMMAND
+Synopsis:
+.INDENT 0.0
+.INDENT 3.5
 .sp
-(not documented; will probably change fundamentally as STC2 is adopted)
-.SH THE TAPRUN SUBCOMMAND
+.nf
+.ft C
+gavo upgrade
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
 .sp
-(used internally)
+Each DaCHS version has an associated database schema version, encoding
+the structure of DaCHS\(aq (and the impemented protocol versions\(aq) ideas of
+how system and user tables should look like.  \fBgavo upgrade\fP attempts
+to work out how to change the database to match the expectations of the
+current version and executes the respective code.  It will not touch
+anything if it decrees that the installation is up to date.
+.sp
+Operating system packages will usually try to run \fBgavo upgrade\fP as
+part of their management operation.  In case \fBgavo upgrade\fP requires
+manual intervention, this may fail, in which case operators may need to
+call \fBgavo upgrade\fP manually.
+.sp
+Operators keeping a manually installed DaCHS should run \fBgavo upgrade\fP
+after each \fBsvn update\fP or update from tar.
+.SH THE ADQL SUBCOMMAND
+.sp
+Synopsis:
+.INDENT 0.0
+.INDENT 3.5
+dachs adql query
+.UNINDENT
+.UNINDENT
+.sp
+This subcommand executes ADQL queries locally and writes the resulting
+VOTable to stdout.  We consider removing it.
+.SH INTERNAL OR DEPRECATED SUBCOMMANDS
+.sp
+The subcommands \fBshow\fP, \fBstc\fP are deprecated and not documented
+here.  They may disappear without further notice.
+.sp
+the subcommands \fBtaprun\fP, \fBdlrun\fP, \fBuwsrun\fP, \fBgendoc\fP, \fBraise\fP
+are used internally and should not be directly used by DaCHS operators.
 .SH REPORTING BUGS
 .sp
 To report bugs and request support, please use our support mailing
