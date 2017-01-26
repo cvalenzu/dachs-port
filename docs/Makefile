@@ -35,6 +35,7 @@ ALL_PDF=$(subst .rstx,.pdf,$(RST_SOURCES))
 .PHONY: ref.rstx elemref.rstx apidoc-stamp
 
 dachs.1: $(RST_DIR)/dachs.1.rstx
+	rst2man --no-datestamp --no-generator $< $@
 
 ref.rstx:
 	gavo --debug --traceback gendoc refdoc > ref.rstx
@@ -55,7 +56,6 @@ install: all
 	rsync -av *.css gavodoc.js $(HTML_FILES) $(ALL_PDF) index.rstx apidoc $(HTMLTARGET) 
 	rsync -av $(RST_DIR)/*.rstx $(HTMLTARGET)
 
-	rst2man --no-datestamp --no-generator $< $@
 
 all: $(HTML_FILES) $(ALL_PDF) dachs.1
 
