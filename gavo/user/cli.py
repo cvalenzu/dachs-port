@@ -109,7 +109,7 @@ def _parseCLArgs():
 		help="enable profiling and write a profile to PROFILEPATH",
 		action="store", dest="profilePath", default=None)
 	parser.add_option("--suppress-log", help="Do not log exceptions and such"
-		" to the gavo-specific log files", action="store_true",
+		" to the dachs-specific log files", action="store_true",
 		dest="suppressLog")
 	parser.add_option("--debug", help="Produce debug info as appropirate.",
 		action="callback", callback=_enableDebug)
@@ -127,7 +127,7 @@ def _parseCLArgs():
 
 	module, funcName = common.getMatchingFunction(args[0], functions, parser)
 	parser.destroy()
-	args[0] = "gavo "+args[0]
+	args[0] = "dachs "+args[0]
 	sys.argv = args
 	return opts, module, funcName
 

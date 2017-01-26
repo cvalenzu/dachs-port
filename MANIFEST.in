@@ -3,3 +3,5 @@ recursive-exclude utils *
 recursive-exclude subpkgs *
 recursive-include gavo/resources [A-Za-z_]*
 recursive-exclude gavo/resources .*.swp
+recursive-exclude docs *
+include docs/gavo.1

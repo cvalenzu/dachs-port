@@ -175,6 +175,6 @@ def bailOut():
 	"""
 	if len(sys.argv)<2:
 		raise ValueError("Too short")
-	arg = sys.argv[0]
+	arg = sys.argv[1]
 	if arg=="--help":
 		raise base.Error("Hands off this.  For Developers only")
