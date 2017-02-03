@@ -510,6 +510,7 @@ def parseDefaultDate(literal):
 def parseDefaultTime(literal):
 	if literal is None or isinstance(literal, datetime.time):
 		return literal
+	# as long as we're builing on top of time, we can't do fractional seconds
 	return datetime.time(*time.strptime(literal, '%H:%M:%S')[3:6])
 
 

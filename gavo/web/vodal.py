@@ -103,7 +103,7 @@ class DALRenderer(grend.ServiceBasedPage):
 			self.service.getCurOutputFields(queryMeta), id="result")
 
 		nullRowmaker = MS(rscdef.RowmakerDef)
-		dataDesc = MS(svcs.InputDescriptor, makes=[
+		dataDesc = MS(rscdef.DataDescriptor, makes=[
 			MS(rscdef.Make, table=outputTable, rowmaker=nullRowmaker)],
 			params=inputFields,
 			parent_=self.service.rd)
@@ -117,7 +117,7 @@ class DALRenderer(grend.ServiceBasedPage):
 			base.getMetaText(self.service, "title") or "Unnamed",
 			infoName="serviceInfo", 
 			infoValue=str(self.service.getURL(self.name)))
-		
+
 		return data
 
 	def _renderMetadata(self, ctx, queryMeta):

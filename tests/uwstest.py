@@ -346,7 +346,7 @@ class UserUWSTest(testhelpers.VerboseTest):
 		try:
 			job = worker.getJob(jobId)
 			self.assertEqual(job.getSerializedPar("powers"), "2 4 78")
-			self.assertEqual(job.parameters["powers"], (2, 4, 78))
+			self.assertEqual(job.parameters["powers"], [2, 4, 78])
 		finally:
 			worker.destroy(jobId)
 

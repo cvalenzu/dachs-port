@@ -244,12 +244,12 @@ class TabledataReadTest(testhelpers.VerboseTest):
 		), (
 			'<FIELD name="x" datatype="boolean" arraysize="*"/>',
 			[['true false ? T'],        [' T'], ['']],
-			[[(True, False, None, True)], [(True,)], [None]]
+			[[[True, False, None, True]], [[True,]], [None]]
 		), (
 			'<FIELD name="y" datatype="unsignedByte" arraysize="*">'
 			' <VALUES null="16"/></FIELD>',
 			[['10 0x10\t 16 \n 0x16'], ['']],
-			[[(10, 16, None, 22)], [None]]
+			[[[10, 16, None, 22]], [None]]
 		), (
 			'<FIELD name="x" datatype="char" arraysize="4"/>',
 			[[''], ['auto'], ['&apos;xx&quot;'], [u'\xe4'], ['&#xe4;'], ['']],
@@ -257,15 +257,15 @@ class TabledataReadTest(testhelpers.VerboseTest):
 		), (
 			'<FIELD name="x" datatype="short" arraysize="*"><VALUES null="0"/></FIELD>',
 			[['1 2 3 0 1'], [""]], 
-			[[(1,2,3,None,1)], [None]]
+			[[[1,2,3,None,1]], [None]]
 		), (
 			'<FIELD name="y" datatype="floatComplex" arraysize="*"/>',
 			[['1 1 0.5e10 -2e5'], [""]],
-			[[((1+1j), 5e09-2e5j)], [None]]
+			[[[(1+1j), 5e09-2e5j]], [None]]
 		), (
 			'<FIELD datatype="short" arraysize="2x3"/>',
 			[['0 1 2 3 4 5']],
-			[[(0,1,2,3,4,5)]],
+			[[[0,1,2,3,4,5]]],
 		), (
 			'<FIELD name="x" datatype="float"/>',
 			[['NaN'], ['']],
@@ -309,7 +309,7 @@ class FloatTDEncodingTest(testhelpers.VerboseTest):
 		vals = self._decode(
 			'<FIELD name="y" datatype="float" arraysize="3"/>',
 			[['NaN +Inf -Inf']])[0]
-		self.assertEqual(repr(vals), '[(None, inf, -inf)]')
+		self.assertEqual(repr(vals), '[[None, inf, -inf]]')
 
 
 class TabledataWriteTest(testhelpers.VerboseTest):
@@ -585,37 +585,37 @@ class BinaryReadTest(testhelpers.VerboseTest):
 		), (
 			'<FIELD datatype="unsignedByte" arraysize="2"/>',
 			'\x00\x01',
-			[[(0, 1)]],
+			[[[0, 1]]],
 		), (  # 15
 			'<FIELD datatype="short" arraysize="*"><VALUES null="16"/></FIELD>',
 			'\x00\x00\x00\x03\x00\x01\x00\x10\x00\x02',
-			[[(1, None, 2)]],
+			[[[1, None, 2]]],
 		), (
 			'<FIELD datatype="int" arraysize="2"/>',
 			'\x00\x00\x00\x03\x00\x01\x00\x10',
-			[[(3, 0x10010)]],
+			[[[3, 0x10010]]],
 		), (
 			'<FIELD datatype="float" arraysize="2"/>',
 			'\x7f\xc0\x00\x00:\x80\x00\x00',
-			[[(None, 0.0009765625)]],
+			[[[None, 0.0009765625]]],
 		), (
 			'<FIELD datatype="double" arraysize="*"/>',
 			'\x00\x00\x00\x02\x7f\xf8\x00\x00\x00\x00\x00\x00'
 				'?P\x00\x01\x00\x00\x00\x00',
-			[[(None, 0.00097656343132257462)]]
+			[[[None, 0.00097656343132257462]]]
 		), (
 			'<FIELD datatype="float" arraysize="2"><VALUES null="2"/></FIELD>',
 			'\x7f\xc0\x00\x00:\x80\x00\x00',
-			[[(None, 0.0009765625)]],
+			[[[None, 0.0009765625]]],
 		), (
 			'<FIELD datatype="floatComplex" arraysize="2"/>',
 			'\x7f\xc0\x00\x00:\x80\x00\x00'
 				'A\x80\x00\x00A\x0c\x00\x00',
-			[[(None, 16+8.75j)]],
+			[[[None, 16+8.75j]]],
 		), (
 			'<FIELD datatype="short" arraysize="2x3"/>',
 			'\x00\x00\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05',
-			[[(0,1,2,3,4,5)]],
+			[[[0,1,2,3,4,5]]],
 		)]
 
 
@@ -828,39 +828,39 @@ class Binary2ReadTest(testhelpers.VerboseTest):
 		), (
 			'<FIELD datatype="unsignedByte" arraysize="2"/>',
 			'\x00\x00\x01\x80\x00\x00',
-			[[(0, 1)], [None]],
+			[[[0, 1]], [None]],
 		), (  
 # 15
 			'<FIELD datatype="short" arraysize="*"><VALUES null="16"/></FIELD>',
 			'\x00\x00\x00\x00\x03\x00\x01\x00\x10\x00\x02'
 			'\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-			[[(1, None, 2)], [None], [()]],
+			[[[1, None, 2]], [None], [[]]],
 		), (
 			'<FIELD datatype="int" arraysize="2"/>',
 			'\x00\x00\x00\x00\x03\x00\x01\x00\x10\x80\0\0\0\0\0\0\0\0',
-			[[(3, 0x10010)], [None]],
+			[[[3, 0x10010]], [None]],
 		), (
 			'<FIELD datatype="float" arraysize="2"/>',
 			'\x00\x7f\xc0\x00\x00:\x80\x00\x00',
-			[[(None, 0.0009765625)]],
+			[[[None, 0.0009765625]]],
 		), (
 			'<FIELD datatype="double" arraysize="*"/>',
 			'\x00\x00\x00\x00\x02\x7f\xf8\x00\x00\x00\x00\x00\x00'
 				'?P\x00\x01\x00\x00\x00\x00',
-			[[(None, 0.00097656343132257462)]]
+			[[[None, 0.00097656343132257462]]]
 		), (
 			'<FIELD datatype="float" arraysize="2"><VALUES null="2"/></FIELD>',
 			'\x00\x7f\xc0\x00\x00:\x80\x00\x00',
-			[[(None, 0.0009765625)]],
+			[[[None, 0.0009765625]]],
 		), (
 			'<FIELD datatype="floatComplex" arraysize="2"/>',
 			'\x00\x7f\xc0\x00\x00:\x80\x00\x00'
 				'A\x80\x00\x00A\x0c\x00\x00',
-			[[(None, 16+8.75j)]],
+			[[[None, 16+8.75j]]],
 		), (
 			'<FIELD datatype="short" arraysize="2x3"/>',
 			'\x00\x00\x00\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05',
-			[[(0,1,2,3,4,5)]],
+			[[[0,1,2,3,4,5]]],
 		)]
 
 
@@ -976,7 +976,7 @@ class StringArrayTest(testhelpers.VerboseTest):
 	def _get2DTable(self, enc):
 		return V.VOTABLE[V.RESOURCE[votable.DelayedTable(
 			V.TABLE[V.FIELD(name="test", datatype="char", arraysize="2x*")], 
-			[[("ab", "c", "def")]], enc)]]
+			[[["ab", "c", "def"]]], enc)]]
 
 	def test2dTdencWrite(self):
 		self.failUnless("<TD>abc de</TD>" in votable.asString(

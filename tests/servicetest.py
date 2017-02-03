@@ -73,7 +73,128 @@ class GetURLTest(testhelpers.VerboseTest):
 			'arg2=%2F%26%21%3B%3D')
 
 
-class InputDDTest(testhelpers.VerboseTest):
+class InputTDTest(testhelpers.VerboseTest):
+	resources = [("adqltable", tresc.csTestTable)]
+
+	def testIterating(self):
+		it = base.parseFromString(svcs.InputTD, """<inputTable>
+				<inputKey name="par1"/><inputKey name="par2"/>
+			</inputTable>""")
+		results = []
+		for k in it:
+			results.append(k)
+		self.assertEqual([k.name for k in results],
+			["par1", "par2"])
+
+	def testNameResolution(self):
+		res = base.parseFromString(rscdesc.RD, """<resource schema="test">
+			<table id="t">
+				<column name="romp" displayHint="sf=15"/>
+				<column id="henk" name="bobble" ucd="meta.flag"/>
+			</table>
+			<dbCore id="c" queriedTable="t">
+				<inputTable>
+					<inputKey original="romp"/>
+					<inputKey original="henk"/>
+				</inputTable>
+			</dbCore>
+			</resource>""")
+		self.assertEqual(res.getById("c").inputTable.inputKeys[0
+			].displayHint["sf"], '15')
+		self.assertEqual(res.getById("c").inputTable.inputKeys[1
+			].ucd, "meta.flag")
+
+	def testFromDB(self):
+		rd = base.parseFromString(rscdesc.RD, """<resource schema="test">
+			<service><nullCore><inputTable>
+				<inputKey name="rv" id="testcase">
+					<values fromdb="alpha FROM \schema.csdata"/></inputKey>
+			</inputTable></nullCore></service></resource>""")
+		self.assertEqual(rd.getById("testcase").values.options[0].title, "10.0")
+
+	def testNULLValues(self):
+		ik = MS(svcs.InputKey, name="foo", type="text",
+			values=MS(rscdef.Values, options=
+				[MS(rscdef.Option, content_="")]))
+		it = MS(svcs.InputTD, inputKeys=[ik])
+		self.assertEqual(svcs.CoreArgs.fromRawArgs(it, {}).args,
+			{'foo': None})
+		self.assertEqual(svcs.CoreArgs.fromRawArgs(it, {"foo": []}).args,
+			{'foo': None})
+		self.assertEqual(svcs.CoreArgs.fromRawArgs(it, {"foo": [""]}).args,
+			{'foo': None})
+
+
+class InputKeyParsingTestGood(testhelpers.VerboseTest):
+	__metaclass__ = testhelpers.SamplesBasedAutoTest
+
+	def _runTest(self, sample):
+		keyDef, inputList, expected = sample
+		ik = base.parseFromString(svcs.InputKey, 
+			'<inputKey name="foo" %s'%keyDef)
+		self.assertEqual(ik.computeCoreArgValue(inputList), expected)
+	
+	samples = [
+		('/>', ['13.25'], 13.25),
+		('/>', ['12.3', '13.25'], 13.25),
+		('/>', [], None),
+		('multiplicity="single"/>', [], None),
+		('multiplicity="forced-single"/>', [], None),
+#5
+		('multiplicity="single"/>', ['22'], 22),
+		('multiplicity="forced-single"/>', ['22'], 22),
+		('type="text"><values><option>knuz</option></values></inputKey>',
+			[],
+			None),
+		('type="text"><values><option>knuz</option></values></inputKey>',
+			["knuz"],
+			["knuz"]),
+		('type="text"><values><option>a</option><option>b</option>'
+			'</values></inputKey>',
+			["a", "b"],
+			["a", "b"]),
+#10
+		('type="integer[2]"/>', ['12 13'], [12, 13]),
+		('type="integer[2]" multiplicity="multiple"/>', ['12 13'], [[12, 13]]),
+		('type="integer[2]" multiplicity="multiple"/>', 
+			['12 13', '14 15'], [[12, 13], [14, 15]]),
+		('type="integer[2]"/>', ["4"], [4,]),
+		('type="integer[2]"/>', ["4 4 5"], [4,4,5]),
+#15
+		('type="integer[2]" multiplicity="multiple"/>', 
+			["4 4 5", "7 8 9"],
+			[[4,4,5], [7,8,9]]),
+		('multiplicity="multiple"/>', [], None),
+	]
+
+
+class InputKeyParsingTestBad(testhelpers.VerboseTest):
+	__metaclass__ = testhelpers.SamplesBasedAutoTest
+
+	def _runTest(self, sample):
+		keyDef, inputList, msg = sample
+		ik = base.parseFromString(svcs.InputKey, 
+			'<inputKey name="foo" %s'%keyDef)
+		self.assertRaisesWithMsg(
+			(base.ValidationError, base.MultiplicityError),
+			msg,
+			ik.computeCoreArgValue,
+			(inputList,))
+
+	samples = [
+		('required="True"/>', [], "Field foo: Required parameter foo missing."),
+		('multiplicity="forced-single"/>', ["22", "3"], 
+			"Field foo: Inputs for the parameter foo must not have more than"
+				" one value; hovever, ['22', '3'] was passed in."),
+		('type="text"><values><option>knuz</option></values></inputKey>', 
+			["22", "3"],
+			"Field foo: '22' is not a valid value for foo"),
+		('multiplicity="multiple" required="True"/>', [],
+			"Field foo: Required parameter foo missing."),
+	]
+
+
+class CoreArgsTest(testhelpers.VerboseTest):
 	def _assertPartialDict(self, partialExpectation, result):
 		"""checks that all key/value pairs in partialExpectation are present in
 		result.
@@ -81,21 +202,26 @@ class InputDDTest(testhelpers.VerboseTest):
 		for key, value in partialExpectation.iteritems():
 			self.assertEqual(value, result[key])
 
-	def _getDDForInputKey(self, **keyPars):
-		return MS(svcs.InputDescriptor, 
-			grammar=MS(svcs.ContextGrammar, inputKeys=[
-				MS(svcs.InputKey, name="x", **keyPars)]))
-				
 	def _getTableForInputKey(self, source, **keyPars):
-		return rsc.makeData(
-			self._getDDForInputKey(**keyPars),
-			forceSource=source).getPrimaryTable()
+		return svcs.CoreArgs.fromRawArgs(
+				MS(svcs.InputTD,
+					inputKeys=[MS(svcs.InputKey, name="x", **keyPars)]),
+				source)
+
+	def testCarryingMeta(self):
+		ca = svcs.CoreArgs.fromRawArgs(
+			base.parseFromString(svcs.InputTD, """<inputTable>
+			<inputKey name="par1"/></inputTable>"""),
+			{})
+		ca.setMeta("test.grubbel", "testValue")
+		self.assertEqual(
+			ca.getMeta("test").getMeta("grubbel").getContent("text"), 
+			"testValue")
 
 	def testTypedIntSet(self):
 		t = self._getTableForInputKey({"x": ["22", "24"]},
 			type="integer")
-		self._assertPartialDict({"x": 22}, t.getParamDict())
-		self.assertEqual(len(t.rows), 0)
+		self._assertPartialDict({"x": 24}, t.args)
 
 	def testTypedIntVal(self):
 		t = self._getTableForInputKey({"x": "22"},
@@ -118,54 +244,56 @@ class InputDDTest(testhelpers.VerboseTest):
 			{"x": ["-22", "30"]},
 			type="real", multiplicity="forced-single")
 
-	def testRows(self):
-		dd = MS(svcs.InputDescriptor, 
-			grammar=MS(svcs.ContextGrammar, rowKey="x",
-				inputKeys=[
-					MS(svcs.InputKey, name="x", type="integer", multiplicity="multiple"),
-					MS(svcs.InputKey, name="y", type="text", content_="uhu"),
-					MS(svcs.InputKey, name="z", type="integer")]))
-		res = rsc.makeData(dd, 
-			forceSource={"x": range(4), "y": None, "z": range(2)})
-		self.assertEqual(res.getPrimaryTable().rows, [
-			{'x': 0, 'y': u'uhu', 'z': 0},
-			{'x': 1, 'y': u'uhu', 'z': 1},
-			{'x': 2, 'y': u'uhu', 'z': 0},
-			{'x': 3, 'y': u'uhu', 'z': 1}])
-
 	def testMissingRequired(self):
 		self.assertRaisesWithMsg(base.ValidationError,
-			"Field x: Value is required but was not provided",
+			"Field x: Required parameter x missing.",
 			self._getTableForInputKey,
 			({},),
 			type="real", required="True")
 
 	def testMissingStringRequired(self):
 		self.assertRaisesWithMsg(base.ValidationError,
-			"Field x: Value is required but was not provided",
+			"Field x: Required parameter x missing.",
 			self._getTableForInputKey,
-			({"x": ""},),
-			type="text", required="True")
+			({"x": []},),
+			type="text", required=True)
 
+	def testExtrasRejected(self):
+		it = MS(svcs.InputTD,
+			inputKeys=[MS(svcs.InputKey, name="x")], exclusive=True)
+		self.assertRaisesWithMsg(base.ValidationError,
+			"Field (various): The following parameter(s) are not"
+			" accepted by this service: y",
+			svcs.CoreArgs.fromRawArgs,
+			(it, {"x": [3.5], "y": [9]}))
 
-# XXX TODO test some other funky properties of rows generating ContextGrammars.
-# XXX TODO test singleton inputs into ContextGrammar
+	def testUppercaseNotRejected(self):
+		it = MS(svcs.InputTD,
+			inputKeys=[MS(svcs.InputKey, name="x")], exclusive=True)
+		ca = svcs.CoreArgs.fromRawArgs(it, {"X": [3.5]})
+		self.assertEqual(ca.args, {'x': 3.5})
+
+	def testLowercaseNotRejected(self):
+		it = MS(svcs.InputTD,
+			inputKeys=[MS(svcs.InputKey, name="X")], exclusive=True)
+		ca = svcs.CoreArgs.fromRawArgs(it, {"x": [3.5]})
+		self.assertEqual(ca.args, {'X': 3.5})
+
 
 class _AutoBuiltParameters(testhelpers.TestResource):
 # XXX TODO: more types: unicode, spoint...
 	def make(self, ignored):
-		core = testhelpers.getTestRD("cores").getById("typescore")
-		inputDD = svcs.makeAutoInputDD(core)
-		return rsc.makeData(inputDD, forceSource={
-				"anint": ["22"],
+		return svcs.CoreArgs.fromRawArgs(
+			testhelpers.getTestRD("cores").getById("typescore").inputTable,
+			{	"anint": ["22"],
 				"afloat": ["-2e-7"],
 				"adouble": ["-2"],
 				"atext": ["foo", "bar"],
 				"adate": ["2013-05-04", "2005-02-02"]
-			}).getPrimaryTable().getParamDict()
+			}).args
 
 
-class AutoInputDDTest(testhelpers.VerboseTest):
+class ContextGrammarTest(testhelpers.VerboseTest):
 	resources = [("resPars", _AutoBuiltParameters())]
 
 	def testInteger(self):
@@ -178,50 +306,91 @@ class AutoInputDDTest(testhelpers.VerboseTest):
 		self.assertEqual(self.resPars["adouble"], -2)
 
 	def testText(self):
-		self.assertEqual(self.resPars["atext"], "foo")
+		self.assertEqual(self.resPars["atext"], "bar")
 
 	def testDate(self):
-		self.assertEqual(self.resPars["adate"], datetime.date(2013, 5, 4))
+		self.assertEqual(self.resPars["adate"], datetime.date(2005, 2, 2))
 
 
 class InputTableGenTest(testhelpers.VerboseTest):
+	def _getInputTableFor(self, svcId, inputDict):
+		service = testhelpers.getTestRD("cores").getById(svcId)
+		return svcs.CoreArgs.fromRawArgs(
+			service.getCoreFor("form").inputTable, inputDict)
+
 	def testDefaulting(self):
-		service = testhelpers.getTestRD("cores").getById("cstest")
-		it = service._makeInputTableFor(renderers.getRenderer("form"), 
-			svcs.PreparsedInput({
-				"hscs_pos": "Aldebaran", "hscs_SR": "0.25"}))
-		self.assertEqual(it.getParamDict(), {
+ 		ca = self._getInputTableFor("cstest", {
+				"hscs_pos": "Aldebaran", "hscs_SR": "0.25"})
+		self.assertEqual(ca.args, {
 			'rV': '-100 .. 100', 'hscs_sr': 0.25, 'mag': None, 
 			'hscs_pos': 'Aldebaran'})
 
 	def testInvalidLiteral(self):
-		service = testhelpers.getTestRD("cores").getById("cstest")
-		try:
-			it = service._makeInputTableFor(renderers.getRenderer("form"), {
-				"hscs_pos": "Aldebaran", "hscs_sr": "a23"})
-		except base.ValidationError, ex:
-			self.assertEqual(ex.colName, "hscs_sr")
-			return
-		raise AssertionError("ValidationError not raised")
+		self.assertRaisesWithMsg(base.ValidationError,
+			"Field hscs_sr: 'a23' is not a valid literal for hscs_sr",
+			self._getInputTableFor,
+			("cstest", {
+				"hscs_pos": "Aldebaran", "hscs_sr": "a23"}))
 
 	def testEnumeratedNoDefault(self):
-		service = testhelpers.getTestRD("cores").getById("enums")
-		it = service._makeInputTableFor(renderers.getRenderer("form"), {})
-		self.assertEqual(it.getParamDict(), {'a': None, 'b': None,
+		ca = self._getInputTableFor("enums", {})
+		self.assertEqual(ca.args, {'a': None, 'b': None,
 			'c':[1]})
 
 	def testCaseFolding(self):
-		service = testhelpers.getTestRD("cores").getById("enums")
-		it = service._makeInputTableFor(renderers.getRenderer("form"), {"B": 2})
-		self.assertEqual(it.getParamDict(), {'a': None, 'b': [2],
-			'c':[1]})
+		ca = self._getInputTableFor("enums", {"B": 2})
+		self.assertEqual(ca.args, {u'a': None, u'b': [2],
+			u'c':[1]})
 
 	def testEnumeratedBadValues(self):
-		service = testhelpers.getTestRD("cores").getById("enums")
 		self.assertRaisesWithMsg(base.ValidationError,
 			"Field b: '3' is not a valid value for b",
-			service._makeInputTableFor,
-			(renderers.getRenderer("form"), {'b':"3"}))
+			self._getInputTableFor,
+			("enums", {'b':"3"}))
+
+
+class PlainSQLGenerationTest(testhelpers.VerboseTest):
+	__metaclass__ = testhelpers.SamplesBasedAutoTest
+
+	def _runTest(self, sample):
+		ikAttrs, rawArgs, expectedSQL, expectedSQLArgs = sample
+		ik = base.parseFromString(svcs.InputKey, '<inputKey %s>'%ikAttrs)
+		inputTable = svcs.CoreArgs.fromRawArgs(
+			MS(svcs.InputTD, inputKeys=[ik]), rawArgs)
+		outPars = {}
+		self.assertEqual(
+			base.getSQLForField(ik, inputTable.args, outPars),
+			expectedSQL)
+		self.assertEqual(
+			outPars,
+			expectedSQLArgs)
+	
+	samples = [
+		('name="foo" type="integer"/', {"foo": [2]},
+			"foo=%(foo0)s", {'foo0': 2}),
+		('name="foo" type="integer"/', {"foo": []},
+			None, {}),
+		('name="foo" type="integer" multiplicity="multiple"/', {"foo": [2]},
+			"foo=%(foo0)s", {'foo0': 2}),
+		('name="foo" type="integer" multiplicity="multiple"/', {"foo": [2,4,5]},
+			"foo IN %(foo0)s", {'foo0': set([2,4,5])}),
+		('name="foo" type="integer" multiplicity="multiple"/', {"foo": []},
+			None, {}),
+#5
+		('name="foo" type="integer" multiplicity="multiple"/', {},
+			None, {}),
+		# is this behaviour we actually want?  This isn't theoretical
+		# either: you can produce it by passing in null literals.
+		('name="foo" type="integer"/', {"foo": [None]},
+			None, {}),
+		('name="foo" type="integer"><values><option/></values>'
+			'</inputKey', 
+			{"foo": []},
+			None, {}),
+		('name="foo" type="text"><values default="nix"/></inputKey',
+			{},
+			"foo=%(foo0)s", {'foo0': 'nix'}),
+	]
 
 
 class PlainDBServiceTest(testhelpers.VerboseTest):
@@ -368,6 +537,12 @@ class InputKeyTest(testhelpers.VerboseTest):
 		ctx = context.WovenContext()
 		rendered = fwid(ftype).render(ctx, "foo", {}, None)
 		return ftype, fwid, rendered
+	
+	def _getAdapted(self, rendName, **keyProps):
+		it = MS(svcs.InputTD, inputKeys=[
+			MS(svcs.InputKey, name="foo", **keyProps)])
+		it.inputKeys[0].setProperty("adaptToRenderer", "True")
+		return it.adaptForRenderer(svcs.getRenderer(rendName)).inputKeys[0]
 
 	def _runWithData(self, fwid, ftype, data):
 		ctx = trialhelpers.getRequestContext("/")
@@ -462,6 +637,10 @@ class InputKeyTest(testhelpers.VerboseTest):
 			'<condDesc buildFrom="data/test#adql.rV"/>')
 		self.assertEqual(rendered.children[0].attributes["placeholder"],
 			"-20.0 .. 200.0")
+	
+	def testTimestamp(self):
+		ik = self._getAdapted("form", type="timestamp")
+		self.assertEqual(ik.type, "vexpr-date")
 
 
 class InputFieldSelectionTest(testhelpers.VerboseTest):
@@ -759,11 +938,11 @@ class ConeSearchTest(testhelpers.VerboseTest):
 class PythonCoreTest(testhelpers.VerboseTest):
 	def testBasic(self):
 		svc = base.resolveCrossId("data/cores#pc")
-		res = svc.run("form", {"opre": "1", "opim": 1, "powers": [2,3,4]}
+		res = svc.run("form", {"opre": "1", "opim": 1, "powers": ["2 3 4"]}
 			).original.getPrimaryTable()
 		self.assertEqual(res.rows[0]["re"], 0)
 		self.assertEqual(res.rows[1]["im"], 2.0)
-		self.assertAlmostEqual(res.rows[2]["log"], 1.3862943611198906)
+		self.assertAlmostEqual(res.rows[2]["log_value"], 1.3862943611198906)
 		self.assertEqual(len(res.rows), 3)
 
 	def testDefaulting(self):
@@ -775,7 +954,7 @@ class PythonCoreTest(testhelpers.VerboseTest):
 	def testMissing(self):
 		svc = base.resolveCrossId("data/cores#pc")
 		self.assertRaisesWithMsg(base.ValidationError,
-			"Field opre: Value is required but was not provided",
+			"Field opre: Required parameter opre missing.",
 			svc.run,
 			("form", {"opim": 1, "powers": [2,3,4]}))
 

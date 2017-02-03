@@ -178,18 +178,18 @@
 						] = coords.getCenterFromWCSFields(wcs)
 					result["nAxes"] = int(vars["NAXIS"])
 					axeInds = range(1, result["nAxes"]+1)
-					dims = tuple(int(vars["NAXIS%d"%i]) 
+					dims = list(int(vars["NAXIS%d"%i]) 
 						for i in axeInds)
 					pixelGauge = PixelGauge(wcs, (dims[0]/2., dims[1]/2.))
 					result["pixelSize"] = dims
-					result["pixelScale"] = pixelGauge.pixelScale
+					result["pixelScale"] = list(pixelGauge.pixelScale)
 	
 					result["wcs_projection"] = vars.get("CTYPE1")
 					if result["wcs_projection"]:
 						result["wcs_projection"] = result["wcs_projection"][5:8]
-					result["wcs_refPixel"] = tuple(wcs.wcs.crpix)
-					result["wcs_refValues"] = tuple(wcs.wcs.crval)
-					result["wcs_cdmatrix"] = tuple(
+					result["wcs_refPixel"] = list(wcs.wcs.crpix)
+					result["wcs_refValues"] = list(wcs.wcs.crval)
+					result["wcs_cdmatrix"] = list(
 						(wcs.wcs.get_pc()*wcs.wcs.get_cdelt()).ravel())
 					result["wcs_equinox"] = vars.get("EQUINOX", None)
 

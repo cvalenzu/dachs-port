@@ -11,32 +11,54 @@
 		<column name="d" type="integer" verbLevel="20" unit="km">
 			<values nullLiteral="-1"/>
 		</column>
-		<column name="e" type="timestamp" verbLevel="25"/>
+		<column name="e" type="timestamp" verbLevel="25"
+			xtype="adql:TIMESTAMP"/>
 	</table>
 
-	<computedCore id="abccatcore" computer="/bin/cat">
-		<inputTable original="abcd"/>
-		<data>
-			<reGrammar recordSep="&#10;" fieldSep="\s+">
-				<names>a,b,c,d,e</names>
-			</reGrammar>
-			<make table="abcd">
-				<rowmaker idmaps="a,b,c,d,e" id="parseProcessedRows"/>
-			</make>
-		</data>
-	</computedCore>
+	<data id="parse_text_table" auto="false">
+		<reGrammar recordSep="&#10;" fieldSep="\s+">
+			<names>a,b,c,d,e</names>
+		</reGrammar>
+		<make table="abcd">
+			<rowmaker idmaps="a,b,c,d,e" id="parseProcessedRows"/>
+		</make>
+	</data>
+
+	<pythonCore id="abccatcore">
+		<inputTable>
+			<LOOP listItems="a b c d e"><events>
+				<inputKey original="abcd.\item"/>
+			</events></LOOP>
+		</inputTable>
+		<outputTable original="abcd"/>
+		<coreProc>
+			<setup>
+				<code>
+					import tempfile
+					from gavo import rsc, formats
+				</code>
+			</setup>
+			<code>
+				sourceTable = rsc.TableForDef(
+					inputTable.inputTD.rd.getById("abcd"),
+					rows=[inputTable.args])
+				with tempfile.NamedTemporaryFile(mode="w+") as f:
+					formats.formatData("tsv", sourceTable, f)
+					f.seek(0)
+					return rsc.makeData(
+						inputTable.inputTD.rd.getById("parse_text_table"),
+						forceSource=f.name).getPrimaryTable()
+			</code>
+		</coreProc>
+	</pythonCore>
 
 	<service id="basiccat" core="abccatcore">
-		<inputDD id="forceQuo">
-			<contextGrammar inputTable="abcd" rowKey="a"/>
-		</inputDD>
 		<outputTable namePath="abcd">
 			<outputField original="a"/>
 		</outputTable>
 	</service>
 
 	<service id="convcat" core="abccatcore" allowed="form, static">
-		<inputDD original="forceQuo"/>
 		<outputTable namePath="abcd">
 			<column original="a" verbLevel="15"/>
 			<column original="b" displayHint="sf=2"/>
@@ -219,7 +241,7 @@
 					<values default="1.0"/>
 				</inputKey>
 				<inputKey name="powers" description="Powers to compute"
-					type="integer[]" multiplicity="multiple">
+					type="integer[]" multiplicity="single">
 					<values default="1 2 3"/>
 				</inputKey>
 				<inputKey name="responseformat" description="Preferred
@@ -231,7 +253,7 @@
 			<outputTable>
 				<outputField name="re" description="Result, real part"/>
 				<outputField name="im" description="Result, imaginary part"/>
-				<outputField name="log"
+				<outputField name="log_value"
 					description="real part of logarithm of result"/>
 			</outputTable>
 
@@ -242,16 +264,16 @@
 					</code>
 				</setup>
 				<code>
-					powers = inputTable.getParam("powers")
-					op = complex(inputTable.getParam("opre"),
-						inputTable.getParam("opim"))
+					powers = inputTable.args["powers"]
+					op = complex(inputTable.args["opre"],
+						inputTable.args["opim"])
 					rows = []
 					for p in powers:
 						val = op**p
 						rows.append({
 							"re": val.real,
 							"im": val.imag,
-							"log": cmath.log(val).real})
+							"log_value": cmath.log(val).real})
 				
 					if hasattr(inputTable, "job"):
 						with inputTable.job.getWritable() as wjob:

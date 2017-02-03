@@ -191,11 +191,9 @@ def main():
 			wjob.change(phase=uws.EXECUTING, startTime=datetime.datetime.utcnow())
 
 		service = base.resolveCrossId(job.jobClass)
-		inputTable = rsc.TableForDef(service.core.inputTable)
+		inputTable = svcs.CoreArgs(service.core.inputTable,
+			job.parameters, job.parameters)
 		inputTable.job = job
-
-		for parName, value in job.parameters.iteritems():
-			inputTable.setParam(parName, value)
 
 		data = service._runWithInputTable(
 			service.core, inputTable, None).original
@@ -208,8 +206,8 @@ def main():
 				destF.write(payload)
 
 		elif isinstance(data, rsc.Data):
-			destFmt = inputTable.getParam("responseformat", 
-				"application/x-votable+xml")
+			destFmt = inputTable.getParam("responseformat"
+				) or "application/x-votable+xml"
 			with job.openResult(destFmt, "result") as destF:
 				formats.formatData(destFmt, data, destF, False)
 

@@ -207,7 +207,7 @@ def _getArrayDecoderLines(field):
 		"for i in range(arraysize):"])
 	src.extend(coding.indentList(_decoders[type](field), "  "))
 	src.extend([
-		"fullRow.append(tuple(row))",
+		"fullRow.append(list(row))",
 		"row = fullRow"])
 	return src
 

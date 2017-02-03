@@ -338,8 +338,8 @@ class TableBasedCore(core.Core):
 					paramRefs=[MS(rscdef.ParameterReference, dest=ik.name)
 						for ik in cd.inputKeys], 
 					parent_=None))
-		self.inputTable = MS(inputdef.InputTable,
-			params=iks,
+		self.inputTable = MS(inputdef.InputTD,
+			inputKeys=iks,
 			groups=groups)
 
 	def completeElement(self, ctx):
@@ -374,9 +374,8 @@ class TableBasedCore(core.Core):
 		for the query defined by inputTable and queryMeta.
 		"""
 		sqlPars = {}
-		inputPars = dict((p.name, p.value) for p in inputTable.iterParams())
 		return base.joinOperatorExpr("AND",
-			[cd.asSQL(inputPars, sqlPars, queryMeta)
+			[cd.asSQL(inputTable.args, sqlPars, queryMeta)
 				for cd in self.condDescs]), sqlPars
 
 	def _makeTable(self, rowIter, resultTableDef, queryMeta):
@@ -563,7 +562,7 @@ class FixedQueryCore(core.Core, base.RestrictionMixin):
 
 	def completeElement(self, ctx):
 		if self.inputTable is base.NotGiven:
-			self.inputTable = base.makeStruct(inputdef.InputTable)
+			self.inputTable = base.makeStruct(inputdef.InputTD)
 		self._completeElementNext(FixedQueryCore, ctx)
 
 	def run(self, service, inputTable, queryMeta):

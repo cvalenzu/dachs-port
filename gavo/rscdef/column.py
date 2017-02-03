@@ -201,10 +201,13 @@ class Option(base.Structure):
 	def __repr__(self):
 		# may occur in user messages from formal, so we use title.
 		return self.title
+	
+	def __str__(self):
+		return repr(self)
 
 	def completeElement(self, ctx):
 		if self.title is base.NotGiven:
-			self.title = self.content_
+			self.title = unicode(self.content_)
 		self._completeElementNext(Option, ctx)
 
 
@@ -736,12 +739,7 @@ class ParamBase(ColumnBase):
 		"""parses literal using the default value parser for this param's
 		type.
 
-		If literal is not a string or a list of strings, it will be returned
-		unchanged.
-
-		In lists of strings, each element will be treated individually,
-		and the result will be our value.  This is mainly a service
-		for InputKeys fed from nevow args.
+		If literal is not a string, it will be returned unchanged.
 
 		The method also makes sure literal matches any constraints
 		set by a values child and raises a ValidationError if not.
@@ -750,17 +748,8 @@ class ParamBase(ColumnBase):
 			return literal
 
 		elif not isinstance(literal, basestring):
-			# the awful atom thing is for when array-like things are
-			# specified in multiple HTTP parameters rather than
-			# using VOTable serialisation.  It's probably wrong
-			# to accept that in the first place, except of  course
-			# we have that with strings.  Perhaps only turn arrays off
-			# for strings?
-			if _isStringList(literal):
-				value = [self._parse(l, atom=self.xtype!="interval") for l in literal]
-			else:
-				value = literal
-		
+			return literal
+
 		elif literal=="__NULL__" or literal=="":
 			value = None
 

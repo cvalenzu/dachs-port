@@ -170,7 +170,7 @@ def humanTimesFactory(colDesc):
 				return "N/A"
 			else:
 				if isinstance(val, (datetime.time, datetime.datetime)):
-					return fmtStr%(val.hours, val.minutes, val.second)
+					return fmtStr%(val.hour, val.minute, val.second)
 				elif isinstance(val, datetime.timedelta):
 					hours = val.seconds//3600
 					minutes = (val.seconds-hours*3600)//60

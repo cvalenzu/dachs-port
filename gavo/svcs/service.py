@@ -36,6 +36,9 @@ from gavo.svcs import outputdef
 from gavo.svcs import renderers
 
 
+MS = base.makeStruct
+
+
 def adaptTable(origTable, newColumns):
 	"""returns a Data instance created from origTable with columns taken from
 	newColumns.
@@ -375,12 +378,6 @@ class Service(base.Structure, base.ComputedMetaMixin,
 	_customDF = base.StructListAttribute("customDFs",
 		description="Custom data functions for use in custom templates.",
 		childFactory=CustomDF, copyable=True)
-	_inputData = base.StructAttribute("inputDD", default=base.NotGiven,
-		childFactory=inputdef.InputDescriptor, description="A data descriptor"
-			" for obtaining the core's input, usually based on a contextGrammar."
-			"  For many cores (e.g., DBCores), you do not want to give this"
-			" but rather want to let service figure this out from the core.",
-		copyable=True)
 	_outputTable = base.StructAttribute("outputTable", default=base.NotGiven,
 		childFactory=outputdef.OutputTableDef, copyable=True, description=
 		"The output fields of this service.")
@@ -390,6 +387,7 @@ class Service(base.Structure, base.ComputedMetaMixin,
 	_defaultRenderer = base.UnicodeAttribute("defaultRenderer",
 		default=None, description="A name of a renderer used when"
 		" none is provided in the URL (lets you have shorter URLs).")
+
 	_rd = rscdef.RDAttribute()
 	_props = base.PropertyAttribute()
 	_original = base.OriginalAttribute()
@@ -431,7 +429,6 @@ class Service(base.Structure, base.ComputedMetaMixin,
 
 		# cache all kinds of things expensive to create and parse
 		self._coresCache = {}
-		self._inputDDCache = {}
 		self._loadedTemplates = {}
 		
 		# Schedule the capabilities to be added when the parse is
@@ -877,37 +874,30 @@ class Service(base.Structure, base.ComputedMetaMixin,
 			self._coresCache[renderer.name] = res
 		return self._coresCache[renderer.name]
 
-	def getInputDDFor(self, renderer, core=None):
-		"""returns an inputDD for renderer.
-
-		If service has a custom inputDD, it will be used for all renderers;
-		otherwise, this is an automatic inputDD for the inputTable the
-		core adpated to renderer has.
+	def getContextGrammarFor(self, renderer, core=None):
+		"""returns an ContextGrammar apropriate for this renderer.
 
 		Pass in the core if you already have it as an optimisation (in
-		particular for datalink, where cores aren't automatically cached).
+		particular for datalink, where cores aren't automatically cached);
+		if you don't the core will be computed from the renderer.
+
+		In either case, the context grammar simply is built from the core's
+		inputTable.
 		"""
-		if self.inputDD:
-			return self.inputDD
+		if isinstance(renderer, basestring):
+			renderer = renderers.getRenderer(renderer)
+		if core is None:
+			core = self.getCoreFor(renderer)
 
-		else:
-			if isinstance(renderer, basestring):
-				renderer = renderers.getRenderer(renderer)
+		serviceKeys = list(inputdef.filterInputKeys(self.serviceKeys,
+			renderer.name, inputdef.getRendererAdaptor(renderer)))
 
-			if core is None:
-				core = self.getCoreFor(renderer)
-			if getattr(core, "nocache", False):
-				return inputdef.makeAutoInputDD(core)
-
-			serviceKeys = list(inputdef.filterInputKeys(self.serviceKeys,
-				renderer.name, inputdef.getRendererAdaptor(renderer)))
-
-			self._inputDDCache[renderer.name] = inputdef.makeAutoInputDD(core,
-				serviceKeys)
-		return self._inputDDCache[renderer.name]
+		return MS(inputdef.ContextGrammar,
+				inputTD=core.inputTable,
+				inputKeys=serviceKeys)
 
 	def getInputKeysFor(self, renderer):
-		"""returns a sequence of input keys, adapted for certain renderers.
+		"""returns a sequence of input keys, adapted for renderer.
 
 		The renderer argument may either be a renderer name, a renderer
 		class or a renderer instance.
@@ -917,39 +907,7 @@ class Service(base.Structure, base.ComputedMetaMixin,
 		"""
 		if isinstance(renderer, basestring):
 			renderer = renderers.getRenderer(renderer)
-		return self.getInputDDFor(renderer).grammar.inputKeys
-
-	def _hackInputTableFromPreparsed(self, renderer, args, core=None):
-		"""returns an input table from dictionaries as produced by nevow formal.
-
-		This is a shortcut to bypass the relatively expensive makeData.
-		And is probably a bad idea.
-		"""
-		args = utils.CaseSemisensitiveDict(args)
-		inputDD = self.getInputDDFor(renderer, core=core)
-		inputTable = rsc.TableForDef(inputDD.makes[0].table)
-
-		for ik in inputDD.grammar.iterInputKeys():
-			if ik.name in args:
-				if args[ik.name] is not None:
-					inputTable.setParam(ik.name, args[ik.name])
-			else:
-				inputTable.setParam(ik.name, ik.value)
-
-		inputTable.validateParams()
-		return inputTable
-
-	def _makeInputTableFor(self, renderer, args, core=None):
-		"""returns an input table for this service  through renderer, filled 
-		from contextData.
-		"""
-		if isinstance(args, PreparsedInput) and not self.inputDD:
-			return self._hackInputTableFromPreparsed(renderer, args, core=core)
-		else:
-			return rsc.makeData(self.getInputDDFor(renderer, core=core),
-				parseOptions=rsc.parseValidating, forceSource=args,
-				connection=base.NullConnection()
-					).getPrimaryTable()
+		return list(self.getContextGrammarFor(renderer).iterInputKeys())
 
 	def _runWithInputTable(self, core, inputTable, queryMeta):
 		"""runs the core and formats an SvcResult.
@@ -976,10 +934,10 @@ class Service(base.Structure, base.ComputedMetaMixin,
 			queryMeta = common.QueryMeta.fromNevowArgs(args)
 
 		core = self.getCoreFor(renderer)
+		coreArgs = inputdef.CoreArgs.fromRawArgs(
+			core.inputTable, args, self.getContextGrammarFor(renderer, core))
 
-		return self._runWithInputTable(core,
-			self._makeInputTableFor(renderer, args, core=core),
-			queryMeta)
+		return self._runWithInputTable(core, coreArgs, queryMeta)
 
 
 	#################### meta and such

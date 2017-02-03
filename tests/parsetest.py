@@ -319,7 +319,7 @@ class CrossResolutionTest(testhelpers.VerboseTest):
 	def testItemRelative(self):
 		wd = os.path.join(base.getConfig("inputsDir"), "test")
 		with testhelpers.testFile(os.path.join(wd, "rel.rd"), 
-				"""<resource schema="foo"><table id="bar"/></resource>"""):
+				"""<resource schema="test"><table id="bar"/></resource>"""):
 			with utils.in_dir(wd):
 				res = rscdef.getReferencedElement("rel#bar", rscdef.TableDef)
 				self.assertEqual(res.id, "bar")
@@ -335,7 +335,7 @@ class CrossResolutionTest(testhelpers.VerboseTest):
 	def testRDRelative(self):
 		wd = os.path.join(base.getConfig("inputsDir"), "test")
 		with testhelpers.testFile(os.path.join(wd, "rel.rd"), 
-				"""<resource schema="foo"><table id="bar"/></resource>"""):
+				"""<resource schema="test"><table id="bar"/></resource>"""):
 			with utils.in_dir(wd):
 				res = rscdef.getReferencedElement("rel")
 				self.assertEqual(res.sourceId, "test/rel")

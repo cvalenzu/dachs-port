@@ -788,10 +788,10 @@ class DCCProduct(ProductBase):
 	def iterData(self, queryMeta=svcs.emptyQueryMeta):
 		inData = self.params.copy()
 		inData["accref"] = self.accref
-		inputTable = rsc.TableForDef(self.core.inputTable)
-		inputTable.setParams(inData, raiseOnBadKeys=False)
 		self.generatedContentType, data = self.core.run(
-			self, inputTable, queryMeta)
+			self,
+			svcs.CoreArgs.fromRawArgs(self.core.inputTable, inData),
+			queryMeta)
 		yield data
 	
 	def renderHTTP(self, ctx):
@@ -893,31 +893,35 @@ class ProductCore(svcs.DBCore):
 	The core returns a table containing rows with the single column source.
 	Each contains a subclass of ProductBase above.
 
-	All this is so complicated because special processing may take place
-	(user autorisation, cutouts, ...) but primarily because we wanted
-	the tar generation to use this core.  Looking at the mess that's caused
-	suggests that probably was the wrong decision.
+	This core and its supporting machinery handles all the fancy product
+	functionality (user autorisation, cutouts, ...).
 	"""
 	name_ = "productCore"
 
 	def _getRAccrefs(self, inputTable):
 		"""returns a list of RAccref requested within inputTable.
 		"""
-		keysList = [RAccref.fromString(r["accref"])
-			for r in inputTable.rows if "accref" in r]
-		try:
-			parVal = inputTable.getParam("accref")
-			# Unfortunately, there's no telling if we're getting in a list or
-			# a raw value at this point.  We probably should forbid atomic
-			# inputs for consistency.
-			if not isinstance(parVal, list):
-				parVal = [parVal]
+		keys = []
+		args = inputTable.args
+		if args["accref"]:
+			keys.extend(RAccref.fromString(a) for a in args["accref"])
 
-			for v in parVal:
-				keysList.append(RAccref.fromString(v))
-		except base.NotFoundError: # "tar case", accrefs in rows
-			pass
-		return keysList
+		if args.get("pattern"):
+			try:
+				tablepat, filepat = args["pattern"].split("#")
+			except ValueError:
+				raise base.ValidationError(
+					"Must be of the form tablepattern#filepattern", "pattern")
+			with base.getTableConn() as conn:
+				for row in conn.queryToDicts(
+						"SELECT accref FROM dc.products"
+						"  WHERE"
+						"    accref LIKE %(filepat)s"
+						"    AND sourceTable LIKE %(tablepat)s",
+						{"filepat": filepat, "tablepat": tablepat}):
+					keys.append(RAccref.fromString(row["accref"]))
+
+		return keys
 
 	def _getGroups(self, user, password):
 		if user is None:

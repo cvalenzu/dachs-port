@@ -283,6 +283,10 @@ should look if you just want to use this.</meta>
 
 
 <procDef id="expandDates" type="rowfilter">
+	<deprecated>
+		Since this is probably only use useful with inputDDs, we will
+		probably remove this soon unless you protest.
+	</deprecated>
 	<doc>
 	is a row generator to expand time ranges.
 

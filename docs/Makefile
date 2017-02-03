@@ -37,6 +37,13 @@ ALL_PDF=$(subst .rstx,.pdf,$(RST_SOURCES))
 dachs.1: $(RST_DIR)/dachs.1.rstx
 	rst2man --no-datestamp --no-generator $< $@
 
+dachs.1.pdf: dachs.1
+	mandoc -T pdf $< > $@
+
+dachs.1.html: dachs.1
+	mandoc -T html $< > $@
+
+
 ref.rstx:
 	gavo --debug --traceback gendoc refdoc > ref.rstx
 

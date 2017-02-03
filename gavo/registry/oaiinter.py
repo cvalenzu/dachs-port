@@ -369,7 +369,7 @@ class RegistryCore(svcs.Core, base.RestrictionMixin):
 
 	inputTableXML = """
 		<inputTable id="_pubregInput">
-			<param name="args" type="raw"
+			<inputKey name="args" type="raw"
 				multiplicity="single"
 				description="The raw dictionary of input parameters"/>
 		</inputTable>
@@ -411,5 +411,5 @@ class RegistryCore(svcs.Core, base.RestrictionMixin):
 		"""returns an ElementTree containing a OAI-PMH response for the query 
 		described by pars.
 		"""
-		args = inputTable.getParam("args")[0]
+		args = inputTable.getParam("args")
 		return self.runWithPMHDict(args)

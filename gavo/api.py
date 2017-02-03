@@ -54,7 +54,7 @@ from gavo.stc import (dateTimeToJYear, dateTimeToJdn, dateTimeToMJD,
 	jYearToDateTime, jdnToDateTime, mjdToDateTime, parseISODT)
 
 from gavo.svcs import (UnknownURI, ForbiddenURI, Authenticate, 
-	WebRedirect, SeeOther)
+	WebRedirect, SeeOther, Core, OutputTableDef)
 
 from gavo.user.logui import LoggingUI
 

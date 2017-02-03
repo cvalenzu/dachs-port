@@ -429,7 +429,7 @@ class DatalinkMetaMakerTest(testhelpers.VerboseTest):
 
 		coreId = id(core.__dict__)
 		self.assertTrue(coreId in set(id(r) for r in gc.get_referrers(s)))
-		it = svc._makeInputTableFor(renderer, args, core=core)
+		it = svcs.CoreArgs.fromRawArgs(core.inputTable, args)
 		core.runForMeta(svc, it, svcs.emptyQueryMeta)
 		core.finalize()
 		core.inputTable.breakCircles()

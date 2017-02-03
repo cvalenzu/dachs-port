@@ -30,7 +30,6 @@ from nevow import rend
 from nevow import static
 
 from gavo import base
-from gavo import rsc
 from gavo import svcs
 from gavo import utils
 from gavo.protocols import uws
@@ -459,11 +458,24 @@ class RootAction(JobAction):
 	name = ""
 
 	@utils.memoized
-	def getParamInputDD(self):
-		"""returns an InputDD to parse the arguments of the UWS1.1 polling.
+	def getJobInputTD(self):
+		"""returns an InputTable to parse the arguments of the UWS1.1 polling.
 		"""
-		return base.resolveCrossId("//uws#jobresource_wrapper"
-			).getInputDDFor("api")
+		return base.parseFromString(svcs.InputTD,
+			"""
+			<inputTable id="jobresource_args">
+				<inputKey name="PHASE" type="text" multiplicity="single"
+					description="Return immediately unless job is in this phase.">
+					<values>
+						<!-- we reject polling against PENDING, too, since it doesn't make
+						much sense -->
+						<option>QUEUED</option>
+						<option>EXECUTING</option>
+					</values>
+				</inputKey>
+				<inputKey name="WAIT" type="integer" multiplicity="single"
+					description="Seconds to wait with an answer if no change occurred."/>
+			</inputTable>""")
 
 	def doDELETE(self, job, request):
 		"""Implements DELETE on a job resource.
@@ -495,8 +507,9 @@ class RootAction(JobAction):
 		# LISTEN/NOTIFY since the overhead seems rather moderate and
 		# the added complexity of setting up notifcations appeared not
 		# proportional to saving it.
-		args = rsc.makeData(self.getParamInputDD(), forceSource=request.args
-			).getPrimaryTable().getParamDict()
+		args = svcs.CoreArgs.fromRawArgs(
+			self.getJobInputTD(), 
+			request.args).args
 
 		if args["WAIT"] is None:
 			return

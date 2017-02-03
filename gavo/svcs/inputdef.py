@@ -52,10 +52,6 @@ class InputKey(column.ParamBase):
 	Some of the DDL-type attributes (e.g., references) only make sense here
 	if columns are being defined from the InputKey.
 
-	You can give a "defaultForForm" property on inputKeys to supply
-	a string literal default that will be pre-filled in the form
-	renderer and is friends but not for other renderers (like S*AP).
-
 	Properties evaluated:
 
 	* defaultForForm -- a value entered into form fields by default
@@ -68,6 +64,9 @@ class InputKey(column.ParamBase):
 		generally evaluated by the database, and the condDescs do the
 		adaptation themselves.  This is mainly for rare situations like
 		file uploads in custom cores.
+	* notForRenderer -- a renderer name for which this inputKey is suppressed
+	* onlyForRenderer -- a renderer name for which this inputKey will be 
+	  preserved; it will be dropped for all others.
 	"""
 	name_ = "inputKey"
 
@@ -110,6 +109,12 @@ class InputKey(column.ParamBase):
 		if self.restrictedMode and self.widgetFactory:
 			raise base.RestrictedElement("widgetFactory")
 
+		if self.multiplicity is None:
+			if self.isEnumerated():
+				self.multiplicity = "multiple"
+			else:
+				self.multiplicity = "single"
+
 	def onElementComplete(self):
 		self._onElementCompleteNext(InputKey)
 		# compute scaling if an input unit is given
@@ -117,12 +122,6 @@ class InputKey(column.ParamBase):
 		if self.inputUnit:
 			self.scaling = base.computeConversionFactor(self.inputUnit, self.unit)
 
-		if self.multiplicity is None:
-			self.multiplicity = "single"
-			if self.isEnumerated():
-				# these almost always want lists returned.
-				self.multiplicity = "multiple"
-	
 	def onParentComplete(self):
 		if self.parent and hasattr(self.parent, "required"):
 			# children of condDescs inherit their requiredness
@@ -138,22 +137,48 @@ class InputKey(column.ParamBase):
 		"""
 		self._parse(literal)
 
-	def _getVOTableType(self):
-		"""returns the VOTable type for the param.
+	def computeCoreArgValue(self, inputList):
+		"""parses some input for this input key.
 
-		The reason this is overridden is that historically, we've been
-		cavalier about letting in multiple values for a single param
-		(as in enumerated values and such).
+		This takes into account multiplicities, type conversions, and
+		all the remaining horrors.
 
-		It's probably too late to fix this now, so for InputKeys with
-		multiplicity multiple we're allowing arrays, too.
+		It will return a list or a single value, depending on multiplity.
 		"""
-		type, arraysize, xtype = column.ParamBase._getVOTableType(self)
+		if not inputList:
+			if self.value is not None:
+				inputList = [self.value]
 
-		if self.multiplicity=="multiple" and arraysize=='1':
-			arraysize = "*"
+			elif self.values and self.values.default:
+				inputList = [self.values.default]
 
-		return type, arraysize, xtype
+			elif self.required:
+				raise base.ValidationError(
+					"Required parameter %s missing."%self.name,
+					self.name)
+
+			else:
+				return None
+
+		if self.multiplicity=="forced-single" and len(inputList)>1:
+			raise base.MultiplicityError(
+				"Inputs for the parameter %s must not have more than"
+				" one value; hovever, %s was passed in."%(
+					self.name,
+					str(inputList)),
+				colName=self.name)
+
+		if self.multiplicity=="multiple":
+			vals = [v for v in (self._parse(val) for val in inputList)
+				if v is not None]
+			return vals or None
+
+
+		else:
+			if inputList:
+				 return self._parse(inputList[-1])
+			else:
+				return None
 
 	@classmethod
 	def fromColumn(cls, column, **kwargs):
@@ -167,9 +192,6 @@ class InputKey(column.ParamBase):
 
 		instance = cls(None)
 		instance.feedObject("original", column)
-
-		if column.isEnumerated():
-			instance.feedObject("multiplicity", "multiple")
 
 		for k,v in kwargs.iteritems():
 			instance.feed(k, v)
@@ -200,48 +222,119 @@ def filterInputKeys(keys, rendName, adaptor=None):
 		yield key
 	
 
-class InputTable(rscdef.TableDef):
-	"""an input table for a core.
+class InputTD(base.Structure, base.StandardMacroMixin):
+	"""an input for a core.
 
-	For the standard cores, these have no rows but only params, with the
-	exception of ComputedCore, which can build program input from rows.
+	These aren't actually proper tables but actually just collection of
+	the param-like inputKeys.  They serve as input declarations for cores
+	and services (where services derive their inputTDs from the cores' ones by
+	adapting them to the current renderer.  Their main use is for the derivation
+	of contextGrammars.
 
-	Typically, however, the input table definition is made from a core's 
-	condDescs and thus never explicitely defined.  In these cases, 
-	adaptForRenderer becomes relevant.  This is for when one renderer, e.g.,
-	form, needs to expose a different interface than another, e.g., a
-	protocol-based renderer.  SCS is a good example, where the form renderer
-	has a single argument for the position.
+	They can carry metadata, though, which is sometimes convenient when 
+	transporting information from the parameter parsers to the core.
+	
+	For the typical dbCores (and friends), these are essentially never
+	explicitly defined but rather derived from condDescs.
+
+	Do *not* read input values by using table.getParam.  This will only
+	give you one value when a parameter has been given multiple times.
+	Instead, use the output of the contextGrammar (inputParams in condDescs).
+	Only there you will have the correct multiplicities.
 	"""
 	name_ = "inputTable"
-	_params = rscdef.ColumnListAttribute("params",
-		childFactory=InputKey, description='Input parameters for'
-		' this table.', copyable=True, aliases=["param"])
+
+	_inputKeys = rscdef.ColumnListAttribute("inputKeys",
+		childFactory=InputKey, 
+		description='Input parameters for this table.', 
+		copyable=True)
+
+	_groups = base.StructListAttribute("groups",
+		childFactory=rscdef.Group,
+		description="Groups of inputKeys (this is used for form UI formatting).",
+		copyable=True)
+
+	_exclusive = base.BooleanAttribute("exclusive",
+		description="If true, context grammars built from this will"
+			" raise an error if contexts passed in have keys not defined"
+			" by this table",
+		default=False,
+		copyable=True)
+	_rd = rscdef.RDAttribute()
+
+	def __iter__(self):
+		return iter(self.inputKeys)
 
 	def adaptForRenderer(self, renderer):
-		"""returns an inputTable tailored for renderer.
+		"""returns an inputTD tailored for renderer.
 
 		This is discussed in svcs.core's module docstring.
 		"""
-		newParams = list(
-			filterInputKeys(self.params, renderer.name,
+		newKeys = list(
+			filterInputKeys(self.inputKeys, renderer.name,
 				getRendererAdaptor(renderer)))
 
-		if newParams!=self.params:
-			return self.change(params=newParams, parent_=self)
+		if newKeys!=self.inputKeys:
+			return self.change(inputKeys=newKeys, parent_=self)
 		else:
 			return self
+	
+	def resolveName(self, ctx, name):
+		"""returns a column name from a queried table of the embedding core,
+		if available.
+
+		This is a convenicence hack that lets people reference columns from
+		a TableBasedCore by their simple, non-qualified names.
+		"""
+		if self.parent and hasattr(self.parent, "queriedTable"):
+			return self.parent.queriedTable.resolveName(ctx, name)
+		raise base.NotFoundError(id, "Element with id or name", "name path",
+			hint="There is not queried table this name could be resolved in.")
+
+
+class CoreArgs(base.MetaMixin):
+	"""A container for core arguments.
+
+	There's inputTD, which reference the renderer-adapted input table,
+	and args, the ContextGrammar processed input.  For kicks, we also
+	have rawArgs, which is the contextGrammar's input (if you find
+	you're using it, tell us; that's pointing to a problem on our side).
+
+	getParam(name) -> value and getParamDict() -> dict methods are
+	present for backward compatibility.
+	"""
+	def __init__(self, inputTD, args, rawArgs):
+		self.inputTD, self.args, self.rawArgs = inputTD, args, rawArgs
+		base.MetaMixin.__init__(self)
+	
+	def getParam(self, name):
+		return self.args.get(name)
+
+	def getParamDict(self):
+		return self.args
+
+	@classmethod
+	def fromRawArgs(cls, inputTD, rawArgs, contextGrammar=None):
+		"""returns a CoreArgs instance built from an inputDD and 
+		ContextGrammar-parseable rawArgs.
+
+		contextGrammar can be overridden, e.g., to cache or to add
+		extra, non-core keys.
+		"""
+		if contextGrammar is None:
+			contextGrammar = MS(ContextGrammar, inputTD=inputTD)
+		ri = contextGrammar.parse(rawArgs)
+		_ = list(ri)  #noflake: ignored value
+		return cls(inputTD, ri.getParameters(), rawArgs)
 
 
 class ContextRowIterator(grammars.RowIterator):
 	"""is a row iterator over "contexts", i.e. single dictionary-like objects.
 
-	This whole thing is messy because we foolishly decided to have one
-	thing that does both  pre-parsed parameter sets coming out of nevow
-	formal and the raw dict-of-array thing nevow has in its request.
-	That single decision messed up much of this *and* of the param code.
-
-	Ah well.
+	The source token expected here can be a request.args style dictionary
+	with lists of strings as arguments, or a parsed dictionary from nevow
+	formal. Non-list literals in the latter are packed into a list to ensure
+	consistent behaviour.
 	"""
 	def __init__(self, grammar, sourceToken, **kwargs):
 		self.locator = "(internal)"
@@ -249,66 +342,52 @@ class ContextRowIterator(grammars.RowIterator):
 			utils.CaseSemisensitiveDict(sourceToken),
 			**kwargs)
 
-	def _completeRow(self, rawRow):
-		caseNormalized = dict((k.lower(),v) for k, v in rawRow.iteritems())
-		procRow = {}
+	def _ensureListValues(self):
+		"""this turns lonely values in the sourceToken into lists so we
+		don't have to special-case nevow formal dicts.
+		"""
+		for key, value in self.sourceToken.iteritems():
+			if not isinstance(value, list):
+				if value is None:
+					self.sourceToken[key] = []
+				else:
+					self.sourceToken[key] = [value]
+	
+	def _ensureNoExtras(self):
+		"""makes sure sourceToken has no keys not mentioned in the grammar.
 
-		if self.grammar.rejectExtras:
-			extraNames = set(caseNormalized
-				)-set(p.name.lower() for p in self.grammar.inputTable.params)
-			if extraNames:
-				raise base.ValidationError("The following parameter(s) are"
-				" not accepted by this service: %s"%",".join(sorted(extraNames)),
+		Here, we assume case-insensitive arguments for now.  If we ever
+		want to change that... oh, my.
+
+		This is only exectued for grammars with rejectExtras.
+		"""
+		inKeys = set(n.lower() for n in self.sourceToken)
+		expectedKeys = set(k.name.lower() for k in self.grammar.iterInputKeys())
+		if inKeys-expectedKeys:
+			raise base.ValidationError("The following parameter(s) are"
+				" not accepted by this service: %s"%",".join(
+					sorted(inKeys-expectedKeys)),
 				"(various)")
 
-		for ik in self.grammar.inputTable.params:
-			if ik.name in rawRow:
-				val = rawRow[ik.name]
-			else:
-				val = self.grammar.defaults.get(ik.name, None)
-
-			# TODO: we probably should avoid having tuples here in the first place
-			if isinstance(val, tuple):
-				val = list(val)
-
-			if val is not None and not isinstance(val, list):
-				val = [val]
-
-			procRow[ik.name] = val
-
-		return procRow
-
 	def _iterRows(self):
-		if self.grammar.rowKey is not base.NotGiven:
-			sequences = []
+		# we don't really return any rows, but this is where our result
+		# dictionary is built.
+		self._ensureListValues()
+		if self.grammar.rejectExtras:
+			self._ensureNoExtras()
+		
+		self.coreArgs = {} 
 
-			for ik in self.grammar.iterInputKeys():
-				self.locator = "param %s"%ik.name
-				if ik.name==self.grammar.rowKey:
-					continue
+		for ik in self.grammar.iterInputKeys():
+			self.locator = "param %s"%ik.name
+			self.coreArgs[ik.name] = ik.computeCoreArgValue(
+				self.sourceToken.get(ik.name))
 
-				val = self.sourceToken.get(ik.name)
-				if isinstance(val, list):
-					sequences.append((ik.name, itertools.cycle(val)))
-				elif val is None or val==[]:
-					sequences.append((ik.name, itertools.repeat(
-						self.grammar.defaults.get(ik.name))))
-				else:
-					sequences.append((ik.name, itertools.repeat(val)))
-
-			self.locator = "(internal)"
-			inSeq = self.sourceToken[self.grammar.rowKey]
-			if not isinstance(inSeq, list):
-				inSeq = [inSeq]
-
-			for item in inSeq:
-				row = {self.grammar.rowKey: item}
-				for key, iterator in sequences:
-					row[key] = iterator.next()
-				yield row
-
+		if False:
+			yield {}  # contextGrammars yield no rows.
+			
 	def getParameters(self):
-		return self._completeRow(self.sourceToken)
+		return self.coreArgs
 	
 	def getLocator(self):
 		return self.locator
@@ -317,28 +396,22 @@ class ContextRowIterator(grammars.RowIterator):
 class ContextGrammar(grammars.Grammar):
 	"""A grammar for web inputs.
 
-	These are almost exclusively in InputDDs.  They hold InputKeys
-	defining what they take from the context.
-
-	For DBCores, the InputDDs are generally defined implicitely
-	via CondDescs.	Thus, only for other cores will you ever need
-	to bother with ContextGrammars (unless you're going for special
-	effects).
-
 	The source tokens for context grammars are dictionaries; these
-	are either typed dictionaries from nevow, where the values
+	are either typed dictionaries from nevow formal, where the values
 	usually are atomic, or, preferably, the dictionaries of lists
 	from request.args.
 
-	ContextGrammars only yield rows if there's a rowKey defined.
-	In that case, an outer join of all other parameters is returned;
-	with rowKey defined, the input keys are obtained from the table's
-	columns.
+	ContextGrammars never yield rows, so they're probably fairly useless
+	in normal cirumstances.
 
 	In normal usage, they just yield a single parameter row,
 	corresponding to the source dictionary possibly completed with
 	defaults, where non-requried input keys get None defaults where not
 	given.  Missing required parameters yield errors.
+
+	This parameter row honors the multiplicity specification, i.e., single or
+	forced-single are just values, multiple are lists.  The content are
+	*parsed* values (using the InputKeys' parsers).
 
 	Since most VO protocols require case-insensitive matching of parameter
 	names, matching of input key names and the keys of the input dictionary
@@ -346,65 +419,30 @@ class ContextGrammar(grammars.Grammar):
 	"""
 	name_ = "contextGrammar"
 
-	_inputTable = base.ReferenceAttribute("inputTable", 
+	_inputTD = base.ReferenceAttribute("inputTD", 
 		default=base.NotGiven, 
-		description="The table that is to be built using this grammar", 
+		description="The input table from which to take the input keys",
 		copyable=True)
 
-	_inputKeys = rscdef.ColumnListAttribute("inputKeys", 
-		childFactory=InputKey, 
-		description="Input keys this context grammar should parse."
-		"  These must not be given if there is an input table defined.")
-
-	_rowKey = base.UnicodeAttribute("rowKey", 
-		default=base.NotGiven,
-		description="The name of a key that is used to generate"
-			" rows from the input",
-		copyable=True)
-
-	_rejectExtras = base.BooleanAttribute("rejectExtras",
-		default=False,
-		description="If true, the grammar will reject extra input parameters."
-			"  Note that for form-based services, there *are* extra parameters"
-			" not declared in the services' input tables.  Right now,"
-			" contextGrammar does not ignore those.",
+	_inputKeys = base.StructListAttribute("inputKeys",
+		childFactory=InputKey,
+		description="Extra input keys not defined in the inputTD.  This"
+			" is used when services want extra input processed by them rather"
+			" than their core.",
 		copyable=True)
 
 	_original = base.OriginalAttribute("original")
 
 	rowIterator = ContextRowIterator
 
+	rejectExtras = False
 
 	def onElementComplete(self):
-		if self.inputTable is not base.NotGiven:
-			if self.inputKeys!=[]:
-				raise base.StructureError("InputKeys and inputTable must not"
-					" both be given in a context grammar")
-			else:
-				if self.rowKey:
-					self.inputKeys = [InputKey.fromColumn(c) 
-						for c in self.inputTable.columns]
-				else:
-					self.inputKeys = self.inputTable.params
-
-		else:
-			columns = []
-			if self.rowKey:
-				columns = self.inputKeys
-			self.inputTable = MS(InputTable, params=self.inputKeys,
-				columns=columns)
-
-		self.defaults = {}
-		for ik in self.iterInputKeys():
-			if not ik.required:
-				self.defaults[ik.name] = None
-			if ik.value is not None:
-				self.defaults[ik.name] = ik.value
 		self._onElementCompleteNext(ContextGrammar)
+		self.rejectExtras = self.inputTD.exclusive
 
 	def iterInputKeys(self):
-		for ik in self.inputKeys:
-			yield ik
+		return itertools.chain(iter(self.inputTD), iter(self.inputKeys))
 
 
 _OPTIONS_FOR_MULTIS = {
@@ -413,69 +451,3 @@ _OPTIONS_FOR_MULTIS = {
 	"multiple": "",
 }
 
-def makeAutoParmaker(inputTable):
-	"""returns a default parmaker for an inputTable.
-
-	The default action is to just fix multipliticies.
-	"""
-	maps = []
-	for par in inputTable.params:
-		if par.type in par.unprocessedTypes:
-			makeValue = "vars['%s']"%par.name
-		else:
-			makeValue = "getHTTPPar(vars['%s'], identity%s, parName='%s')"%(
-				par.name,
-				_OPTIONS_FOR_MULTIS[par.multiplicity],
-				par.name)
-
-		maps.append(MS(rscdef.MapRule, dest=par.name, content_=makeValue))
-
-	return MS(rscdef.ParmakerDef, maps=maps, id="parameter parser")
-
-
-class InputDescriptor(rscdef.DataDescriptor):
-	"""A data descriptor for defining a core's input.
-
-	In contrast to normal data descriptors, InputDescriptors generate
-	a contextGrammar to feed the table mentioned in the first make if
-	no grammar is given (this typically is the input table of the core).  
-	Conversely, if a contextGrammar is given but no make, a make with a table
-	having params defined by the contextGrammar's inputKeys is 
-	automatically generated.
-
-	Attributes like auto, dependents, sources and the like probably
-	make little sense for input descriptors.
-	"""
-	name_ = "inputDD"
-
-	def completeElement(self, ctx):
-		# If there is a make, i.e. table, infer the context grammar,
-		# if there's a context grammar, infer the table.
-		if self.makes and self.grammar is None:
-			self.feedObject("grammar", MS(ContextGrammar,
-				inputTable=self.makes[0].table))
-		
-		if not self.makes and isinstance(self.grammar, ContextGrammar):
-			rowmaker = base.NotGiven
-			if getattr(self.grammar, "rowKey", False):
-				rowmaker = rscdef.RowmakerDef.makeIdentityFromTable(
-					self.grammar.inputTable)
-
-			self.feedObject("make", MS(rscdef.Make, 
-				table=self.grammar.inputTable,
-				rowmaker=rowmaker,
-				parmaker=makeAutoParmaker(self.grammar.inputTable)))
-		self._completeElementNext(InputDescriptor, ctx)
-
-
-def makeAutoInputDD(core, serviceKeys=[]):
-	"""returns a standard inputDD for a core.
-
-	The standard inputDD is just a context grammar with the core's input
-	keys, and the table structure defined by these input keys.
-	"""
-	return MS(InputDescriptor,
-		grammar=MS(ContextGrammar, 
-			inputKeys=core.inputTable.params+serviceKeys,
-# the rejectExtras thing below is an experiment.  It may go away again.
-			rejectExtras=getattr(core, "rejectExtras", False)))

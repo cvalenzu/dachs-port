@@ -22,7 +22,7 @@ import time
 
 from gavo import base
 from gavo import grammars
-from gavo import rsc
+from gavo import svcs
 from gavo import utils
 from gavo.protocols import products
 from gavo.svcs import streaming
@@ -186,12 +186,14 @@ class ProductTarMaker(object):
 			raise base.ValidationError("This query does not select any"
 				" columns with access references", "_OUTPUT")
 		
-		inputTableRows = []
+		accrefs = []
 		for row in table:
 			for colName in productColumns:
-				inputTableRows.append({"accref": row[colName]})
-		inputTable = rsc.TableForDef(self.rd.getById("forTar").inputTable, 
-			rows=inputTableRows)
+				accrefs.append(row[colName])
+				
+		inputTable = svcs.CoreArgs.fromRawArgs(
+			self.rd.getById("forTar").inputTable, 
+			{"accref": accrefs})
 
 		prods = self.core.run(coreResult.service, inputTable, queryMeta)
 		return self._streamOutTar(prods, request, queryMeta)

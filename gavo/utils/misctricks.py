@@ -606,6 +606,12 @@ class CaseSemisensitiveDict(dict):
 	def __contains__(self, key):
 		return dict.__contains__(self, key) or key.upper() in self._normCased
 
+	def get(self, key, default=None):
+		try:
+			return self[key]
+		except KeyError:
+			return default
+
 	@property
 	def _normCased(self):
 		if self._normCasedCache is None:

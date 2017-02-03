@@ -52,7 +52,11 @@ def getSQLKey(key, value, sqlPars):
 
 	This function is used to build parameter dictionaries for SQL queries, 
 	avoiding overwriting parameters with accidental name clashes.
-	It works like this:
+
+	As an extra service, if value is a list, it is turned into a set
+	(rather than the default, which would be an array).  We don't believe
+	there's a great need to match against arrays.  If you must match against
+	arrays, use numpy arrays.
 
 	>>> sqlPars = {}
 	>>> getSQLKey("foo", 13, sqlPars)
@@ -67,6 +71,9 @@ def getSQLKey(key, value, sqlPars):
 	...   getSQLKey("foo", 15, sqlPars))
 	'WHERE foo<%(foo0)s OR foo>%(foo1)s'
 	"""
+	if isinstance(value, list):
+		value = frozenset(value)
+
 	ct = 0
 	while True:
 		dataKey = "%s%d"%(key, ct)

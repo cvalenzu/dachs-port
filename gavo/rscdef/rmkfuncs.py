@@ -290,10 +290,13 @@ def parseWithNull(literal, baseParser, nullLiteral=base.Undefined,
 	return res
 
 
-@utils.document
 def getHTTPPar(inputData, parser, single=False, forceUnique=False,
 		parName="?"):
 	"""returns a parsed value from inputData.
+
+	Deprecated.  Should no longer be necessary with 1.0-style input
+	processing where you have guaranteed multiplicities after the
+	contextGrammar, and contextGrammars are reasonably cheap to use.
 
 	inputData may be
 

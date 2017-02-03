@@ -364,7 +364,7 @@ class FormMixin(formal.ResourceMixin):
 		container.addField(**getFieldArgsForInputKey(inputKey))
 
 	def _groupQueryFields(self, inputTable):
-		"""returns a list of "grouped" param names from inputTable.
+		"""returns a list of "grouped" inputKey names from inputTable.
 
 		The idea here is that you can define "groups" in your input table.
 		Each such group can contain paramRefs.  When the input table is rendered
@@ -382,7 +382,7 @@ class FormMixin(formal.ResourceMixin):
 				groupedKeys[ref.key] = group
 
 		inputKeySequence, addedNames = [], set()
-		for inputKey in inputTable.params:
+		for inputKey in inputTable.inputKeys:
 			thisName = inputKey.name
 
 			if thisName in addedNames:
@@ -415,7 +415,7 @@ class FormMixin(formal.ResourceMixin):
 
 			elif isinstance(item, basestring):  # param reference
 				self._addInputKey(form, containers[-1], 
-					inputTable.params.getColumnByName(item))
+					inputTable.inputKeys.getColumnByName(item))
 
 			else: 
 				# It's a new group -- if the group has a "style" property and
@@ -434,20 +434,14 @@ class FormMixin(formal.ResourceMixin):
 		"""adds the inputFields of the service to form, setting proper defaults
 		from the field or from data.
 		"""
-		if self.service.inputDD:
-			# the service has a custom inputDD; all we have is the input keys.
-			for item in self.service.getInputKeysFor(self):
-				self._addInputKey(form, form, item)
+		# we have an inputTable.  Handle groups and other fancy stuff
+		self._addQueryFieldsForInputTable(form,
+			self.service.getCoreFor(self).inputTable)
 
-		else:
-			# we have an inputTable.  Handle groups and other fancy stuff
-			self._addQueryFieldsForInputTable(form,
-				self.service.getCoreFor(self).inputTable)
-
-			# and add the service keys manually as appropriate
-			for item in inputdef.filterInputKeys(self.service.serviceKeys,
-					self.name, inputdef.getRendererAdaptor(self)):
-				self._addInputKey(form, form, item)
+		# and add the service keys manually as appropriate
+		for item in inputdef.filterInputKeys(self.service.serviceKeys,
+				self.name, inputdef.getRendererAdaptor(self)):
+			self._addInputKey(form, form, item)
 
 	def _addMetaFields(self, form, queryMeta):
 		"""adds fields to choose output properties to form.

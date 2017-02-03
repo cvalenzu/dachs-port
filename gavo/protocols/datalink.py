@@ -598,9 +598,6 @@ class DatalinkCoreBase(svcs.Core, base.ExpansionDelegator):
 		" front of the proc apps that interpret them.",
 		copyable=True)
 
-	# The following is a hack complemented in inputdef.makeAutoInputDD.
-	# We probably want some other way to do this (if we want to do it
-	# at all)
 	rejectExtras = True
 
 	def completeElement(self, ctx):
@@ -619,7 +616,7 @@ class DatalinkCoreBase(svcs.Core, base.ExpansionDelegator):
 			description="The pubisher DID of the dataset of interest"))
 
 		if self.inputTable is base.NotGiven:
-			self.inputTable = MS(svcs.InputTable, params=self.inputKeys)
+			self.inputTable = MS(svcs.InputTD, inputKeys=self.inputKeys)
 
 		# this is a cheat for service.getTableSet to pick up the datalink
 		# table.  If we fix this for TAP, we should fix it here, too.
@@ -827,8 +824,8 @@ class DatalinkCore(DatalinkCoreBase):
 			if isinstance(descriptors[-1], DatalinkFault):
 				descriptors[-1].raiseException()
 
-		res = self.change(inputTable=MS(svcs.InputTable, 
-			params=inputKeys))
+		res = self.change(inputTable=MS(svcs.InputTD, 
+			inputKeys=inputKeys, exclusive=True))
 
 		# again dispatch on meta or data, this time as regards what to run.
 		if renderer.name=="dlmeta":

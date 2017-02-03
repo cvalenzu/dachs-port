@@ -686,7 +686,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 		# See the same thing in test_tap.  What can I do?
 		return trialhelpers.runQuery(self.renderer, "POST", 
 			"/data/cores/pc/uws.xml", {
-				"opre": ["1"], "opim": ["3"], "powers": ["1", "2", "3"],
+				"opre": ["1"], "opim": ["3"], "powers": ["1 2 3"],
 				"responseformat": "application/x-votable+xml;serialization=TABLEDATA",
 			}
 		).addCallback(checkPosted)

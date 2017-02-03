@@ -260,7 +260,7 @@ def _getArrayDecoderLines(field):
 	else:
 		src.append("for val in tokenizeNormalArr(arrayLiteral):")
 	src.extend(coding.indentList(_decoders[type](field), "  "))
-	src.append("fullRow.append(tuple(row))")
+	src.append("fullRow.append(list(row))")
 	src.append("row = fullRow")
 
 	return [

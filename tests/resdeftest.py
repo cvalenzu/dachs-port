@@ -187,7 +187,7 @@ class ValuesTest(testhelpers.VerboseTest):
 	def testArrayDefault(self):
 		col = base.parseFromString(rscdef.Column,
 			'<column name="foo" type="integer[3]"><values default="1 2 3"/></column>')
-		self.assertEqual(col.values.default, (1, 2, 3))
+		self.assertEqual(col.values.default, [1, 2, 3])
 
 
 class ScriptTest(testhelpers.VerboseTest):
@@ -591,25 +591,19 @@ class ParamTest(testhelpers.VerboseTest):
 		par = base.parseFromString(rscdef.Param,
 			'<param name="foo" type="integer[]">'
 				'10 12 -130</param>')
-		self.assertEqual(par.value, (10, 12, -130))
+		self.assertEqual(par.value, [10, 12, -130])
 
 	def testFloatArray(self):
 		par = base.parseFromString(rscdef.Param,
 			'<param name="foo" type="real[2]">'
 				'10. 12.</param>')
-		self.assertEqual(par.value, (10., 12.))
-
-	def testParseFromArray(self):
-		par = base.parseFromString(rscdef.Param,
-			'<param name="foo" type="integer[]"/>')
-		par.set(['10', '12', '-130'])
-		self.assertEqual(par.value, [10, 12, -130])
+		self.assertEqual(par.value, [10., 12.])
 
 	def testParseFromFloatArray(self):
 		par = base.parseFromString(rscdef.Param,
 			'<param name="foo" type="real[2]"/>')
 		par.set('10. 12.')
-		self.assertEqual(par.value, (10., 12.))
+		self.assertEqual(par.value, [10., 12.])
 
 	def testParseFromStringArray(self):
 		par = base.parseFromString(rscdef.Param,

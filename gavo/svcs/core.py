@@ -137,7 +137,7 @@ class Core(base.Structure):
 	_rd = rscdef.RDAttribute()
 	_inputTable = base.StructAttribute("inputTable", 
 		default=base.NotGiven,
-		childFactory=inputdef.InputTable, 
+		childFactory=inputdef.InputTD, 
 		description="Description of the input data", 
 		copyable=True)
 
@@ -155,7 +155,7 @@ class Core(base.Structure):
 		if self.inputTableXML is not None:
 			if "inputTable" not in kwargs:
 				kwargs["inputTable"] = base.parseFromString(
-					inputdef.InputTable, self.inputTableXML)
+					inputdef.InputTD, self.inputTableXML)
 
 		base.Structure.__init__(self, parent, **kwargs)
 
@@ -167,10 +167,19 @@ class Core(base.Structure):
 
 	def completeElement(self, ctx):
 		self._completeElementNext(Core, ctx)
+		self.initialize()
 		if self.inputTable is base.NotGiven:
-			self.inputTable = base.makeStruct(inputdef.InputTable)
+			self.inputTable = base.makeStruct(inputdef.InputTD)
 		if self.outputTable is base.NotGiven:
 			self.outputTable = self._outputTable.childFactory(self)
+
+	def initialize(self):
+		"""override to configure the custom core before use.
+
+		This is typically where you pull input or output tables
+		from the RD in customCores.  Actual DaCHS code should use
+		completeElement as usual.
+		"""
 
 	def adaptForRenderer(self, renderer):
 		"""returns a core object tailored for renderer.
@@ -205,13 +214,13 @@ class DebugCore(Core):
 				description="(First) value passed (or None)"/>
 		</outputTable>"""
 	
-	def run(self, service, inputData, queryMeta):
+	def run(self, service, inputTable, queryMeta):
 		rows = []
-		for par in inputData.iterParams():
+		for par in inputTable.inputTD:
 			if par.type=="file":
-				value = par.value[1].read()
+				value = inputTable.args[par.name][1].read()
 			else:
-				value = par.value
+				value = inputTable.args[par.name]
 			rows.append({"key": par.name, "value": utils.safe_str(value)})
 		return rsc.TableForDef(self.outputTable, rows=rows)
 

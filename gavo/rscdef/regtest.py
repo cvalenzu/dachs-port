@@ -530,6 +530,8 @@ class RegTest(procdef.ProcApp, unittest.TestCase):
 
 	@utils.document
 	def assertHTTPStatus(self, expectedStatus):
+		"""checks whether the request came back with expectedStatus.
+		"""
 		assert expectedStatus==self.status, ("Bad status received, %s instead"
 			" of %s"%(self.status, expectedStatus))
 

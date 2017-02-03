@@ -195,7 +195,7 @@ class OutputTableDef(rscdef.TableDef):
 			for c in columns])
 
 	@classmethod
-	def fromTableDef(cls, tableDef, ctx):
+	def fromTableDef(cls, tableDef, ctx=None):
 		return cls(None, columns=[OutputField.fromColumn(c) for c in tableDef],
 			forceUnique=tableDef.forceUnique, dupePolicy=tableDef.dupePolicy,
 			primary=tableDef.primary, params=tableDef.params).finishElement(ctx)

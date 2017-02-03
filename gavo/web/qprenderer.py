@@ -68,8 +68,8 @@ class QPRenderer(grend.HTMLResultRenderMixin,
 			raise svcs.UnknownURI("This page is a root page for a"
 				" query-based service.  You have to give a valid value in the"
 				" path.")
-		data = {self.service.getProperty("queryField"): self.queryValue}
-		return self.runServiceWithFormalData(data, ctx
+		return self.runService(
+				{self.service.getProperty("queryField"): [self.queryValue]}
 			).addCallback(self._formatOutput, ctx
 			).addErrback(self._handleError, ctx)
 	

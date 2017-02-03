@@ -123,7 +123,7 @@ class SSAPCore(svcs.DBCore):
 				rowmaker=base.makeStruct(rscdef.RowmakerDef))])
 		dd.setMetaParent(service)
 
-		for inP in self.inputTable.params:
+		for inP in self.inputTable.inputKeys:
 			dd.feedObject("param", inP.change(name="INPUT:"+inP.name))
 
 		dd.setMeta("_type", "meta")
@@ -180,7 +180,7 @@ class SSAPCore(svcs.DBCore):
 			return self._makeMetadata(service)
 
 		limits = [q for q in 
-				(inputTable.getParam("MAXREC", None), inputTable.getParam("TOP"))
+				(inputTable.getParam("MAXREC"), inputTable.getParam("TOP"))
 			if q]
 		if not limits:
 			limits = [base.getConfig("ivoa", "dalDefaultLimit")]

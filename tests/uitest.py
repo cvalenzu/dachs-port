@@ -55,7 +55,7 @@ class MiscCLITest(testhelpers.VerboseTest):
 
 	def testSubCmdHelp(self):
 		self.assertOutput(cli.main, argList=["publish", "--help"], 
-			expectedStdout=lambda msg: "gavo publish [options] {<rd-name>}" in msg)
+			expectedStdout=lambda msg: "dachs publish [options] {<rd-name>}" in msg)
 
 	def testAProg(self):
 		self.assertOutput(cli.main, argList=["stc", "utypes", "Position ICRS"],

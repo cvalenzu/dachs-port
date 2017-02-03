@@ -15,6 +15,17 @@ Version 1.0 (2017-XX-XX)
 	* UWS support is now for version 1.1 (i.e., there's creationDate,
 	  filters in the joblist, and slow polling).
 	
+	* Massive sanitation of input parameter processing.  If you've been
+	  using inputTable, inputDD, or have been doing creative things with
+	  inputKeys, please check the respective services carefully.  See
+	  also "Building Service Interface" in the reference documentation.
+	  Most user-visible change: If you've been using repeated parameters
+	  to fill array-valued inputs, that's no longer allowed.
+	
+	* In DaCHS' SQL interface, tuples now are matched to records and lists
+	  to arrays (was the other way round before).  If you have manual
+	  input to array-like columns, you'll have to change things.
+
 	* Hopefully more useful manpage -- have a peek!
 
 

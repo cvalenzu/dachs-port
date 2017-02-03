@@ -81,7 +81,7 @@ class SqlSetAdapter(object):
 
 
 class SqlArrayAdapter(object):
-	"""An adapter that formats python sequences as SQL arrays
+	"""An adapter that formats python lists as SQL arrays
 
 	This makes, in the shameful tradition of VOTable, empty arrays equal to
 	NULL.
@@ -148,9 +148,9 @@ class NULLAdapter(object):
 	__str__ = getquoted
 
 
-psycopg2.extensions.register_adapter(tuple, SqlArrayAdapter)
+psycopg2.extensions.register_adapter(list, SqlArrayAdapter)
 psycopg2.extensions.register_adapter(numpy.ndarray, SqlArrayAdapter)
-psycopg2.extensions.register_adapter(list, SqlSetAdapter)
+psycopg2.extensions.register_adapter(tuple, SqlSetAdapter)
 psycopg2.extensions.register_adapter(set, SqlSetAdapter)
 psycopg2.extensions.register_adapter(frozenset, SqlSetAdapter)
 
@@ -454,13 +454,13 @@ class PostgresQueryMixin(object):
 
 		This really is a helper for foreignKeyExists.
 		"""
-		colNames = [n.lower() for n in colNames]
+		colNames = set(n.lower() for n in colNames)
 		res = [r[0] for r in 
 			self.query("SELECT attnum FROM pg_attribute WHERE"
 				" attrelid=%(relOID)s and attname IN %(colNames)s",
 				locals())]
 		res.sort()
-		return tuple(res)
+		return res
 
 	def getForeignKeyName(self, srcTableName, destTableName, srcColNames, 
 			destColNames, schema=None):
@@ -469,6 +469,8 @@ class PostgresQueryMixin(object):
 
 		Warning: names in XColNames that are not column names in the respective
 		tables are ignored.
+
+		This raises a ValueError if the foreign keys do not exist.
 		"""
 		try:
 			srcOID = self.getOIDForTable(srcTableName, schema)
@@ -479,29 +481,30 @@ class PostgresQueryMixin(object):
 				destOID, destColNames)
 		except Error: # Some of the items related probably don't exist
 			return False
-		try:
-			res = list(self.query("""
-				SELECT conname FROM pg_constraint WHERE
-				contype='f'
-				AND conrelid=%(srcOID)s
-				AND confrelid=%(destOID)s
-				AND conkey=%(srcColInds)s::SMALLINT[]
-				AND confkey=%(destColInds)s::SMALLINT[]""", locals()))
-		except ProgrammingError: # probably columns do not exist
-			return False
+
+		res = list(self.query("""
+			SELECT conname FROM pg_constraint WHERE
+			contype='f'
+			AND conrelid=%(srcOID)s
+			AND confrelid=%(destOID)s
+			AND conkey=%(srcColInds)s::SMALLINT[]
+			AND confkey=%(destColInds)s::SMALLINT[]""", locals()))
+
 		if len(res)==1:
 			return res[0][0]
 		else:
-			raise DBError("Non-existing or ambiguos foreign key")
+			raise ValueError("Non-existing or ambiguos foreign key")
 
 	def foreignKeyExists(self, srcTableName, destTableName, srcColNames, 
 			destColNames, schema=None):
 		try:
-			return self.getForeignKeyName(srcTableName, destTableName, srcColNames,
-				destColNames, schema)
-		except DBError:
+			_ = self.getForeignKeyName(   #noflake: ignored value
+				srcTableName, destTableName, 
+				srcColNames, destColNames, 
+				schema)
+			return True
+		except ValueError:
 			return False
-		return True
 
 	@utils.memoized
 	def _resolveTypeCode(self, oid):

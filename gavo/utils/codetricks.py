@@ -434,6 +434,7 @@ def makeClassDocs(baseClass, objects):
 	print formatDocs(docs, underliner)
 	return True
 
+_SILENCE_LOCK = threading.RLock()
 
 @contextlib.contextmanager
 def silence(errToo=False):
@@ -442,20 +443,24 @@ def silence(errToo=False):
 	This is used to shut up some versions of pyparsing and pyfits that
 	insist on spewing stuff to stdout from deep within in relatively
 	normal situations.
-	"""
-	realstdout = sys.stdout
-	sys.stdout = open("/dev/null", "w")
-	if errToo:
-		realstderr = sys.stderr
-		sys.stderr = sys.stdout
 
-	try:
-		yield
-	finally:
-		sys.stdout.close()
-		sys.stdout = realstdout
+	Note that this will acquire a lock while things are silenced; this
+	means that silenced things cannot run concurrently.
+	"""
+	with _SILENCE_LOCK:
+		realstdout = sys.stdout
+		sys.stdout = open("/dev/null", "w")
 		if errToo:
-			sys.stderr = realstderr 
+			realstderr = sys.stderr
+			sys.stderr = sys.stdout
+
+		try:
+			yield
+		finally:
+			sys.stdout.close()
+			sys.stdout = realstdout
+			if errToo:
+				sys.stderr = realstderr 
 
 
 @contextlib.contextmanager
@@ -672,7 +677,16 @@ def loadPythonModule(fqName):
 	modpath = os.path.dirname(fqName)
 	sys.path.append(modpath)
 
-	moddesc = imp.find_module(moduleName, [modpath])
+	try:
+		moddesc = imp.find_module(moduleName, [modpath])
+	except ImportError:
+		# cloak the actual import error; since this probably comes from user
+		# code, chances are they want to see something else.  Let's guess a
+		# structure error
+		raise excs.StructureError("Requested module %s not importable."%fqName,
+			hint="If it exists at all, the import might also failed because"
+			' of syntax errors or similar.  Try python -c "import mod" to get'
+			' a clue in that case.')
 	try:
 		imp.acquire_lock()
 		modNs = imp.load_module(moduleName, *moddesc)

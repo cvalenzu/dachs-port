@@ -313,7 +313,8 @@ machinery -->
 	<productCore id="core" queriedTable="products">
 		<!-- core used for the product delivery service -->
 		<condDesc>
-			<inputKey original="accref" id="coreKey" type="raw"/>
+			<inputKey original="accref" id="coreKey" type="raw"
+				multiplicity="multiple"/>
 		</condDesc>
 
 		<outputTable id="pCoreOutput">
@@ -322,48 +323,23 @@ machinery -->
 		</outputTable>
 	</productCore>
 
-	<productCore id="forTar" original="core" limit="10000">
-		<inputTable namePath="products" id="forTarIn">
-			<meta name="description">Input table for the tar making core</meta>
-			<!-- these are expected to be FatProductKeys or plain strings -->
-			<column original="accref" type="raw"/>
-		</inputTable>
-	</productCore>
-
-	<service id="getTar" core="forTar">
+	<service id="getTar">
 		<!-- a standalone service that delivers selectable tars.
 		-->
 		<meta name="title">Tar deliverer</meta>
-		<inputDD>
-			<contextGrammar rowKey="pattern">
+
+		<productCore original="core" limit="10000" id="forTar">
+			<inputTable id="forTarIn">
+				<!-- Input table for the tar making core;
+					the accrefs are expected to be FatProductKeys or plain strings -->
+				<inputKey original="products.accref" type="raw" 
+					multiplicity="multiple"/>
 				<inputKey name="pattern" type="text" description="Product pattern
 					in the form tablePattern#filePatterns, where both parts
-					are interpreted as SQL patterns." required="True"/>
-				<rowfilter name="expandProductPattern">
-					<setup>
-						<code>
-							from gavo import rsc
-							prodTD = base.caches.getRD("//products").getById("products")
-						</code>
-					</setup>
-					<code>
-						try:
-							tablepat, filepat = row["pattern"].split("#")
-						except (ValueError,), ex:
-							raise base.ValidationError(
-								"Must be of the form table.sqlpattern", "pattern")
-						prodTbl = rsc.TableForDef(prodTD)
-						for row in prodTbl.iterQuery(
-								[prodTbl.tableDef.getColumnByName("accref")],
-								"accref LIKE %(filepat)s AND sourceTable LIKE %(tablepat)s",
-								{"filepat": filepat, "tablepat": tablepat}):
-							yield row
-						prodTbl.close()
-					</code>
-				</rowfilter>
-			</contextGrammar>
-			<make table="forTarIn"/>
-		</inputDD>
+					are interpreted as SQL patterns." multiplicity="single"/>
+			</inputTable>
+		</productCore>
+
 	</service>
 
 	<table id="parsedKeys">

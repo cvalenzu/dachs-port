@@ -439,7 +439,7 @@ class NamePathAttribute(base.AtomicAttribute):
 	"""defines an attribute NamePath used for resolution of "original"
 	attributes.
 
-	The NamePathAttribute provides a resolveNamed method as expected
+	The NamePathAttribute provides a resolveName method as expected
 	by base.OriginalAttribute.
 	"""
 	typeDesc_ = "id reference"

@@ -17,7 +17,6 @@ from nevow import rend
 from twisted.internet import defer
 
 from gavo import base
-from gavo import rsc
 from gavo import svcs
 from gavo import utils
 from gavo.protocols import uws
@@ -101,16 +100,40 @@ class JoblistResource(MethodAwareResource, UWSErrorMixin):
 	for credentials.
 	"""
 	@utils.memoized
-	def getJoblistInputDD(self):
-		return base.resolveCrossId("//uws#joblist_wrapper"
-			).getInputDDFor("api")
+	def getJoblistInputTD(self):
+		return base.parseFromString(svcs.InputTD,
+			"""
+			<inputTable>
+				<inputKey name="PHASE" type="text" multiplicity="single"
+					description="Restrict result to jobs in this phase">
+					<values>
+						<option>PENDING</option>
+						<option>QUEUED</option>
+						<option>EXECUTING</option>
+						<option>COMPLETED</option>
+						<option>ERROR</option>
+						<option>ABORTED</option>
+						<option>UNKNOWN</option>
+						<option>HELD</option>
+						<option>SUSPENDED</option>
+						<option>ARCHIVED</option>
+					</values>
+				</inputKey>
+				<inputKey name="AFTER" type="timestamp" multiplicity="single"
+					description="Restrict result to jobs created 
+						after this point in time"/>
+				<inputKey name="LAST" type="integer" multiplicity="single"
+					description="Restrict output to this many records, and choose the
+						most recent ones"/>
+			</inputTable>""")
 
 	def _doGET(self, ctx, request):
 		if request.args.has_key("dachs_authenticate") and not request.getUser():
 			raise svcs.Authenticate()
-
-		args = rsc.makeData(self.getJoblistInputDD(), forceSource=request.args
-			).getPrimaryTable().getParamDict()
+		
+		args = svcs.CoreArgs.fromRawArgs(
+			self.getJoblistInputTD(), 
+			request.args).args
 
 		res = uwsactions.getJobList(self.workerSystem, 
 			request.getUser() or None,
