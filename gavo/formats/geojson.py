@@ -24,6 +24,19 @@ import json
 
 from gavo import base
 from gavo.formats import common
+from gavo.utils import serializers
+
+
+# we need to protect some of our columns from being mapped (by giving
+# them a magic attribute), hence a special MFRegistry
+
+JSON_MF_REGISTRY = serializers.ValueMapperFactoryRegistry()
+registerMF = JSON_MF_REGISTRY.registerFactory
+
+def _rawMapperFactory(colDesc):
+	if hasattr(colDesc.original, "geojson_do_not_touch"):
+		return lambda val: val
+registerMF(_rawMapperFactory)
 
 
 def _makeCRS(gjAnnotation):
@@ -90,6 +103,7 @@ def _getGeometryFactory(tableDef, geometryAnnotation):
 			return {
 				"type": "Point",
 				"coordinates": list(row[geoCol.name].asCooPair())}
+		geoCol.do_not_touch = True
 	
 	elif geoCol.type=="spoly":
 		def annMaker(row):
@@ -97,6 +111,7 @@ def _getGeometryFactory(tableDef, geometryAnnotation):
 				"type": "Polygon",
 				"coordinates": [list(p) for p in
 					row[geoCol.name].asCooPairs()]}
+		geoCol.do_not_touch = True
 	
 	else:
 		raise base.DataError("Cannot serialise %s-valued columns"
@@ -196,9 +211,11 @@ def _makeFeatures(table, gjAnnotation):
 		raise base.ui.logOldExc(
 			base.DataError("Invalid geoJSON annotation on table %s: %s missing"%(
 				table.tableDef.id, msg)))
-	
+
+	sm = base.SerManager(table, acquireSamples=False,
+		mfRegistry=JSON_MF_REGISTRY)
 	return [
-		makeFeature(r) for r in table]
+		makeFeature(r) for r in sm.getMappedValues()]
 
 
 def writeTableAsGeoJSON(table, target, acquireSamples=False):
