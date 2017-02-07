@@ -145,6 +145,10 @@ def _getTableDescForOutput(parsedTree):
 			if params:
 				resTable = resTable.change(params=params)
 			resTable.copyMetaFrom(srcTable)
+			# Emergency fix: just alias the original annotations.
+			# TODO: do this properly, only copying annotations of
+			# columns we actually have.
+			resTable.annotations = srcTable.annotations
 			resTable.id = srcTable.id
 		except base.NotFoundError:
 			# Single source is not one of our tables, hence no metadata

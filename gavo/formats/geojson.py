@@ -206,6 +206,11 @@ def writeTableAsGeoJSON(table, target, acquireSamples=False):
 
 	This requires an annotation with geojson:FeatureCollection.
 	"""
+	# for now, don't bother with complete data items, just serialise the
+	# primary table.
+	if hasattr(table, "getPrimaryTable"):
+		table = table.getPrimaryTable()
+
 	for ann in table.tableDef.annotations:
 		if ann.type=="geojson:FeatureCollection":
 			break
