@@ -27,6 +27,7 @@ from gavo.formats import csvtable #noflake: format registration
 from gavo.formats import jsontable #noflake: format registration
 from gavo.formats import fitstable #noflake: format registration
 from gavo.formats import texttable #noflake: format registration
+from gavo.formats import geojson #noflake: format registration
 from gavo.imp.formal import types as formaltypes
 from gavo.imp.formal.util import render_cssid
 from gavo.svcs import customwidgets

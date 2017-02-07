@@ -1,5 +1,5 @@
 """
-Generating geojson files.
+Generating geojson (RFC 7946) files.
 
 This requires annotation with the geojson (DaCHS-private) data model.
 

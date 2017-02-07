@@ -86,7 +86,8 @@ FORMAT_CODES = {
 		("json", "application/json", "JSON", None),
 	"application/json": 
 		("json", "application/json", "JSON", None),
-
+	"geojson":
+		("geojson", "application/geo-json", "GeoJSON", None),
 }
 
 

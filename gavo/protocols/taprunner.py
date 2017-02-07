@@ -36,6 +36,7 @@ from gavo.base import valuemappers
 from gavo.formats import texttable #noflake: format registration
 from gavo.formats import csvtable #noflake: format registration
 from gavo.formats import jsontable #noflake: format registration
+from gavo.formats import geojson #noflake: format registration
 from gavo.formats import votableread
 from gavo.formats import votablewrite
 from gavo.protocols import adqlglue
