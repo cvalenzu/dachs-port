@@ -793,6 +793,75 @@ class GeojsonTest(testhelpers.VerboseTest):
 						[3.4, -1], [2.2, -1]]}]})
 	
 
+	def testSepSimplexAnnotation(self):
+		td = base.parseFromString(rscdef.TableDef, """<table>
+			<dm>
+				(geojson:FeatureCollection){
+					crs: (geojson:CRS) {
+						type: link
+						properties: (geojson:CRSProperties) {
+							href: "http://where.ever/fantasy"
+							type: simple
+						}
+					}
+					feature: (geojson:Feature) {
+						geometry: (geojson:Geometry) {
+							type: sepsimplex
+							c1min: @c1min
+							c2min: @c2min
+							c1max: @c1max
+							c2max: @c2max
+						}
+					}
+				}
+			</dm>
+			<column name="c1min"/>
+			<column name="c1max"/>
+			<column name="c2min"/>
+			<column name="c2max"/>
+			</table>""")
+		table = rsc.TableForDef(td, rows=[
+			{"c1min": 2.2, "c1max": 3.4, "c2min": -1, "c2max": 2.2},])
+		tx = formats.getFormatted("geojson", table)
+		self.assertEqual(json.loads(tx), {
+			u'crs': {u'type': u'url', 
+				u'properties': {
+						u'href': u'http://where.ever/fantasy', 
+						u'type': u'simple'}}, 
+			u'type': u'FeatureCollection', 
+			u'features': [
+				{u'type': u'Polygon', u'properties': {}, 
+					u'coordinates': [[2.2, -1], [2.2, 2.2], [3.4, 2.2], 
+						[3.4, -1], [2.2, -1]]}]})
+
+	def testGeometryAnnotation(self):
+		td = base.parseFromString(rscdef.TableDef, """<table>
+			<dm>
+				(geojson:FeatureCollection){
+					feature: (geojson:Feature) {
+						geometry: (geojson:Geometry) {
+							type: geometry
+							value: @s_region
+						}
+					}
+				}
+			</dm>
+			<column name="s_region" type="spoly"/>
+		<!--	<column name="s_point" type="spoint"/>-->
+			</table>""")
+		table = rsc.TableForDef(td, rows=[{
+			"s_region": pgsphere.SPoly.fromSODA([1.25, 1.0, 3, 9.5, 0.5, 4.25]),
+# TODO: do make s_point serialisable in both geojson and json.
+#			"s_point": pgsphere.SPoint.fromDegrees(4, 5)
+			},])
+		tx = formats.getFormatted("geojson", table)
+		self.assertEqual(json.loads(tx), {
+		 u'features': [{
+		 	 u'coordinates': [[1.25, 1.0], [3.0, 9.5], [0.5, 4.25]],
+       u'properties': {},
+       u'type': u'Polygon'},],
+			u'type': u'FeatureCollection'})
+
 
 if __name__=="__main__":
 	testhelpers.main(HTMLRenderTest)

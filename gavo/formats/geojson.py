@@ -77,11 +77,40 @@ def _makeFeatureFactory(tableDef, skippedFields, geoFactory):
 	return buildFeature
 
 
+def _getGeometryFactory(tableDef, geometryAnnotation):
+	"""returns a row factory for a geometry-valued column.
+
+	This expects a value key referencing a column typed either
+	spoint or spoly.
+	"""
+	geoCol = geometryAnnotation["value"].value
+
+	if geoCol.type=="spoint":
+		def annMaker(row):
+			return {
+				"type": "Point",
+				"coordinates": list(row[geoCol.name].asCooPair())}
+	
+	elif geoCol.type=="spoly":
+		def annMaker(row):
+			return {
+				"type": "Polygon",
+				"coordinates": [list(p) for p in
+					row[geoCol.name].asCooPairs()]}
+	
+	else:
+		raise base.DataError("Cannot serialise %s-valued columns"
+			" with a 'geometry' geometry type (only spoint and spoly)")
+	
+	return _makeFeatureFactory(tableDef, [geoCol.name], annMaker)
+
+
 def _getSepsimplexFactory(tableDef, geometryAnnotation):
 	"""returns a row factory for polygons specified with a min/max coordinate
 	range.
 
-	This expects c1min/max, c2min/max keys.
+	This expects c1min/max, c2min/max keys.  It does not do anything special
+	if the simplex spans the stitching line.
 	"""
 	c1min = geometryAnnotation["c1min"].value.name
 	c1max = geometryAnnotation["c1max"].value.name
@@ -152,6 +181,7 @@ _FEATURE_MAKERS = {
 	"sepcoo": _getSepcooFactory,
 	"seppoly": _getSeppolyFactory,
 	"sepsimplex": _getSepsimplexFactory,
+	"geometry": _getGeometryFactory,
 }
 
 def _makeFeatures(table, gjAnnotation):
