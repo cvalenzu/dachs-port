@@ -7,6 +7,11 @@ See separate documentation in the reference documentation.
 
 No streaming is forseen for this format for now; whatever a web browser
 can cope with, we can, too.  I hope.
+
+To add more geometry types, pick a type name (typically different
+from what geojson calls the thing because it also depends on the input),
+add it to _FEATURE_MAKERS and write the Factory, taking _getSepcooFactory as
+a model.
 """
 
 #c Copyright 2008-2017, the GAVO project
@@ -36,7 +41,7 @@ def _makeCRS(gjAnnotation):
 				}
 			}
 
-		elif rawCRS["type"]=="url":
+		elif rawCRS["type"]=="link":
 			return {"crs": {
 					"type": "url",
 					"properties": {
@@ -72,8 +77,31 @@ def _makeFeatureFactory(tableDef, skippedFields, geoFactory):
 	return buildFeature
 
 
+def _getSepsimplexFactory(tableDef, geometryAnnotation):
+	"""returns a row factory for polygons specified with a min/max coordinate
+	range.
+
+	This expects c1min/max, c2min/max keys.
+	"""
+	c1min = geometryAnnotation["c1min"].value.name
+	c1max = geometryAnnotation["c1max"].value.name
+	c2min = geometryAnnotation["c2min"].value.name
+	c2max = geometryAnnotation["c2max"].value.name
+
+	return _makeFeatureFactory(tableDef, 
+		[c1min, c2min, c1max, c2max],
+		lambda row: {
+			"type": "Polygon",
+			"coordinates": [
+				[row[c1min], row[c2min]],
+				[row[c1min], row[c2max]],
+				[row[c1max], row[c2max]],
+				[row[c1max], row[c2min]],
+				[row[c1min], row[c2min]]]})
+
+
 def _getSeppolyFactory(tableDef, geometryAnnotation):
-	"""returns a row factory features with polygons made of separate 
+	"""returns a features factory for polygons made of separate 
 	coordinates.
 
 	This expects cn_m keys; it will gooble them up until the first is not
@@ -101,8 +129,9 @@ def _getSeppolyFactory(tableDef, geometryAnnotation):
 			"coordinates": [[row[name1], row[name2]] 
 				for name1, name2 in polyCoos]})
 
+
 def _getSepcooFactory(tableDef, geometryAnnotation):
-	"""returns a row factory features with separate coordinates.
+	"""returns a features factory for points made up of separate coordinates.
 
 	This expects latitude and longitude keys.
 	"""
@@ -116,11 +145,13 @@ def _getSepcooFactory(tableDef, geometryAnnotation):
 			"type": "Point",
 			"coordinates": [row[longCoo], row[latCoo]]})
 
+
 # a dict mapping feature.geometry.type names to row factories dealing
 # with them
 _FEATURE_MAKERS = {
 	"sepcoo": _getSepcooFactory,
 	"seppoly": _getSeppolyFactory,
+	"sepsimplex": _getSepsimplexFactory,
 }
 
 def _makeFeatures(table, gjAnnotation):

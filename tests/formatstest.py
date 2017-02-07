@@ -750,7 +750,48 @@ class GeojsonTest(testhelpers.VerboseTest):
 					u'properties': {u'color': u'blue', u'c3min': 2003, 
 					u'c3max': 3004, u'name': u'rock2'}, 
 				u'coordinates': [[2.2, 3.4], [-1, 2.2], [2.2, 3.4]]}]})
-		
+
+	def testSepSimplexAnnotation(self):
+		td = base.parseFromString(rscdef.TableDef, """<table>
+			<dm>
+				(geojson:FeatureCollection){
+					crs: (geojson:CRS) {
+						type: link
+						properties: (geojson:CRSProperties) {
+							href: "http://where.ever/fantasy"
+							type: simple
+						}
+					}
+					feature: (geojson:Feature) {
+						geometry: (geojson:Geometry) {
+							type: sepsimplex
+							c1min: @c1min
+							c2min: @c2min
+							c1max: @c1max
+							c2max: @c2max
+						}
+					}
+				}
+			</dm>
+			<column name="c1min"/>
+			<column name="c1max"/>
+			<column name="c2min"/>
+			<column name="c2max"/>
+			</table>""")
+		table = rsc.TableForDef(td, rows=[
+			{"c1min": 2.2, "c1max": 3.4, "c2min": -1, "c2max": 2.2},])
+		tx = formats.getFormatted("geojson", table)
+		self.assertEqual(json.loads(tx), {
+			u'crs': {u'type': u'url', 
+				u'properties': {
+						u'href': u'http://where.ever/fantasy', 
+						u'type': u'simple'}}, 
+			u'type': u'FeatureCollection', 
+			u'features': [
+				{u'type': u'Polygon', u'properties': {}, 
+					u'coordinates': [[2.2, -1], [2.2, 2.2], [3.4, 2.2], 
+						[3.4, -1], [2.2, -1]]}]})
+	
 
 
 if __name__=="__main__":
