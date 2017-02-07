@@ -28,6 +28,7 @@ KNOWN_MODELS = {
 	"vo-dml": ("VO-DML.vo-dml.xml", "http://www.ivoa.net/dm/VO-DML.vo-dml.xml"),
 	"dachstoy": ("dachstoy.vo-dml.xml", "http://docs.g-vo.org/dachstoy"),
 	"stc2": ("STC.vo-dml.xml", "http://www.ivoa.net/dm/STC.vo-dml.xml"),
+	"geojson": ("geojson.vo-dml.xml", "http://docs.g-vo.org/geojson"),
 }
 
 

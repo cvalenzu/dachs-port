@@ -7,8 +7,7 @@ HTMLTARGET=vo.ari.uni-heidelberg.de:/var/www/docs/DaCHS
 RST_SOURCES=data_checklist.rstx howDoI.rstx ref.rstx tutorial.rstx\
 	booster.rstx install.rstx stc.rstx processors.rstx adql.rstx\
 	votable.rstx commonproblems.rstx tapquery.rstx develNotes.rstx\
-	opguide.rstx elemref.rstx templating.rstx deploy_docker.rstx\
-	dachs.1.rstx
+	opguide.rstx elemref.rstx templating.rstx dachs.1.rstx
 ALL_HTML=index.html $(subst .rstx,.html,$(RST_SOURCES))
 HTML_FILES=$(ALL_HTML)
 ALL_PDF=$(subst .rstx,.pdf,$(RST_SOURCES))

@@ -143,7 +143,14 @@ class _AttributeGroupAnnotation(AnnotationBase):
 		self.type = type
 		self.modelPrefix, _, _ = parseTypeName(type)
 		self.childRoles = {}
-	
+
+	def __getitem__(self, key):
+		child = self.childRoles.__getitem__(key)
+		if isinstance(child, AtomicAnnotation):
+			return child.value
+		else:
+			return child
+
 	def add(self, role):
 		assert role.name not in self.childRoles
 		self.childRoles[role.name] = role

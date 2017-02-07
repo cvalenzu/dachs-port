@@ -29,10 +29,11 @@ from gavo import rscdesc
 from gavo import utils
 from gavo import votable
 from gavo.base import valuemappers
-from gavo.formats import jsontable
-from gavo.formats import fitstable
-from gavo.formats import texttable
 from gavo.formats import csvtable
+from gavo.formats import fitstable
+from gavo.formats import geojson
+from gavo.formats import jsontable
+from gavo.formats import texttable
 from gavo.formats import votablewrite
 from gavo.svcs import outputdef
 from gavo.utils import pgsphere
@@ -666,6 +667,90 @@ class HTMLRenderTest(testhelpers.VerboseTest):
 			"This column only here for no purpose at all")
 		anchor = self.rendered[1].xpath("dl/dt/a")[0]
 		self.assertEqual(anchor.get("name"), "note-junk")
+
+
+class GeojsonTest(testhelpers.VerboseTest):
+	def testSepcooAnnotation(self):
+		td = base.parseFromString(rscdef.TableDef, """<table>
+			<dm>
+				(geojson:FeatureCollection){
+					crs: (geojson:CRS) {
+						type: name
+						properties: (geojson:CRSProperties) {
+							name: "urn:private:metric"
+						}
+					}
+					feature: (geojson:Feature) {
+						geometry: (geojson:Geometry) {
+							type: sepcoo
+							latitude: @lat
+							longitude: @long
+						}
+					}
+				}
+			</dm>
+			<column name="lat"/>
+			<column name="long"/>
+			<column name="name" type="text"/>
+			<column name="color" type="text"/>
+			</table>""")
+		table = rsc.TableForDef(td, rows=[
+			{"lat": 1.2, "long": 3.4, "name": "rock1", "color": "red"},
+			{"lat": 2.2, "long": -3.4, "name": "rock2", "color": "blue"},])
+		tx = formats.getFormatted("geojson", table)
+		self.assertEqual(json.loads(tx), {
+			"crs": {"type": "name", "properties": {"name": "urn:private:metric"}}, 
+			"type": "FeatureCollection", 
+			"features": [
+				{"type": "Point", "properties": {"name": "rock1", "color": "red"}, 
+					"coordinates": [3.4, 1.2]}, 
+				{"type": "Point", "properties": {"name": "rock2", "color": "blue"}, 
+					"coordinates": [-3.4, 2.2]}]})
+
+	def testSepArrayAnnotation(self):
+		td = base.parseFromString(rscdef.TableDef, """<table>
+			<dm>
+				(geojson:FeatureCollection){
+					crs: (geojson:CRS) {
+						type: name
+						properties: (geojson:CRSProperties) {
+							name: "urn:private:metric"
+						}
+					}
+					feature: (geojson:Feature) {
+						geometry: (geojson:Geometry) {
+							type: seppoly
+							c1_1: @c1min
+							c2_1: @c2min
+							c1_2: @c1max
+							c2_2: @c2max
+						}
+					}
+				}
+			</dm>
+			<column name="c1min"/>
+			<column name="c1max"/>
+			<column name="c2min"/>
+			<column name="c2max"/>
+			<column name="c3min"/>
+			<column name="c3max"/>
+			<column name="name" type="text"/>
+			<column name="color" type="text"/>
+			</table>""")
+		table = rsc.TableForDef(td, rows=[
+			{"c1min": 2.2, "c1max": 3.4, "c2min": -1, "c2max": 2.2,
+				"c3min": 2003, "c3max": 3004,
+				"name": "rock2", "color": "blue"},])
+		tx = formats.getFormatted("geojson", table)
+		self.assertEqual(json.loads(tx), {
+				u'crs': {u'type': u'name', 
+				u'properties': {u'name': u'urn:private:metric'}}, 
+				u'type': u'FeatureCollection', 
+				u'features': [{u'type': u'Polygon', 
+					u'properties': {u'color': u'blue', u'c3min': 2003, 
+					u'c3max': 3004, u'name': u'rock2'}, 
+				u'coordinates': [[2.2, 3.4], [-1, 2.2], [2.2, 3.4]]}]})
+		
 
 
 if __name__=="__main__":

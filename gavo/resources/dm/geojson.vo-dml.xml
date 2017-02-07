@@ -1,0 +1,107 @@
+<vo-dml:model xmlns:vo-dml="http://www.ivoa.net/xml/VODML/v1.0">
+  <name>geojson</name>
+  <description>A schema for annotating tables for geojson 
+  	(RFC 7946)production</description>
+  <title>DaCHS Geojson</title>
+  <author>msdemlei@ari.uni-heidelberg.de</author>
+  <version>1.0</version>
+  <lastModified>2017-02-07T10:28:00</lastModified>
+
+  <objectType>
+  	<vodml-id>FeatureCollection</vodml-id>
+  	<name>FeatureCollection</name>
+  	<description>A GeoJSON dataset</description>
+
+  	<attribute>
+  		<vodml-id>crs</vodml-id>
+  		<name>crs</name>
+  		<description>The reference system</description>
+  		<datatype>
+  			<vodml-ref>CRS</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>0</minOccurs>
+  			<maxOccurs>1</maxOccurs></multiplicity>
+  	</attribute>
+
+  	<attribute>
+  		<vodml-id>features</vodml-id>
+  		<name>features</name>
+  		<description>Rows of data</description>
+  		<datatype>
+  			<vodml-ref>Feature</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>0</minOccurs></multiplicity>
+  	</attribute>
+
+	</objectType>
+
+  <objectType>
+  	<vodml-id>CRS</vodml-id>
+  	<name>CRS</name>
+  	<description>A reference system</description>
+
+  	<attribute>
+  		<vodml-id>type</vodml-id>
+  		<name>type</name>
+  		<description>name or link</description>
+  		<datatype>
+  			<vodml-ref>ivoa:string</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>1</minOccurs>
+  			<maxOccurs>1</maxOccurs></multiplicity>
+		</attribute>
+
+	 	<attribute>
+  		<vodml-id>properties</vodml-id>
+  		<name>properties</name>
+  		<description>CRS properties</description>
+  		<datatype>
+  			<vodml-ref>CRSProperties</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>1</minOccurs>
+  			<maxOccurs>1</maxOccurs></multiplicity>
+		</attribute>
+
+	
+  <dataType>
+  	<vodml-id>CRSProperties</vodml-id>
+  	<name>CRSProperties</name>
+  	<description>Reference system properties; we don't distinguish between
+  		the properties of the various types.</description>
+	
+  	<attribute>
+  		<vodml-id>name</vodml-id>
+  		<name>name</name>
+  		<description>A name of a named reference system</description>
+  		<datatype>
+  			<vodml-ref>ivoa:string</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>0</minOccurs>
+  			<maxOccurs>1</maxOccurs></multiplicity>
+		</attribute>
+
+  	<attribute>
+  		<vodml-id>hre</vodml-id>
+  		<name>href</name>
+  		<description>A reference to a URI reference system</description>
+  		<datatype>
+  			<vodml-ref>ivoa:string</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>0</minOccurs>
+  			<maxOccurs>1</maxOccurs></multiplicity>
+		</attribute>
+
+  	<attribute>
+  		<vodml-id>type</vodml-id>
+  		<name>type</name>
+  		<description>Format of a link-typed crs</description>
+  		<datatype>
+  			<vodml-ref>ivoa:string</vodml-ref>
+  		</datatype>
+  		<multiplicity><minOccurs>0</minOccurs>
+  			<maxOccurs>1</maxOccurs></multiplicity>
+		</attribute>
+  </dataType>
+
+
+</vo-dml:model>

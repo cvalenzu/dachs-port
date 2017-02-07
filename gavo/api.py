@@ -21,7 +21,7 @@ from gavo import web
 getRD = base.caches.getRD
 RD = rscdesc.RD
 
-from gavo.base import (getConfig, setConfig,
+from gavo.base import (getConfig, setConfig, getBinaryName,
 	getDBConnection, DBError,
 	UnmanagedQuerier, AdhocQuerier, 
 	getTableConn, getAdminConn, getUntrustedConn,
