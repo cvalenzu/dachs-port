@@ -56,12 +56,9 @@ Deployment Options
   this is for “conventional” installations, typically using an APT-based
   package manager or perhaps directly from source.
 
-..
-  * DaCHS on Docker (`deploy_docker.html <./deploy_docker.html>`_,
-    `deploy_docker.pdf <./deploy_docker.pdf>`_, 
-    `deploy_docker.rstx <./deploy_docker.rstx>`_) -- an alternative
-    way to run DaCHS within Docker container(s).  Somewhat in development
-    as of 2016.
+* You can also run DaCHS (plus postgres) within Docker containers.
+  See https://github.com/chbrandt/docker-dachs.
+
 
 For Data Center Operators
 -------------------------
