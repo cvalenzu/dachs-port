@@ -30,7 +30,7 @@ from gavo.utils import serializers
 # we need to protect some of our columns from being mapped (by giving
 # them a magic attribute), hence a special MFRegistry
 
-JSON_MF_REGISTRY = serializers.ValueMapperFactoryRegistry()
+JSON_MF_REGISTRY = serializers.defaultMFRegistry.clone()
 registerMF = JSON_MF_REGISTRY.registerFactory
 
 def _rawMapperFactory(colDesc):
@@ -103,7 +103,7 @@ def _getGeometryFactory(tableDef, geometryAnnotation):
 			return {
 				"type": "Point",
 				"coordinates": list(row[geoCol.name].asCooPair())}
-		geoCol.do_not_touch = True
+		geoCol.geojson_do_not_touch = True
 	
 	elif geoCol.type=="spoly":
 		def annMaker(row):
@@ -111,7 +111,7 @@ def _getGeometryFactory(tableDef, geometryAnnotation):
 				"type": "Polygon",
 				"coordinates": [list(p) for p in
 					row[geoCol.name].asCooPairs()]}
-		geoCol.do_not_touch = True
+		geoCol.geojson_do_not_touch = True
 	
 	else:
 		raise base.DataError("Cannot serialise %s-valued columns"

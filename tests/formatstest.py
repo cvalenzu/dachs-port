@@ -847,18 +847,20 @@ class GeojsonTest(testhelpers.VerboseTest):
 				}
 			</dm>
 			<column name="s_region" type="spoly"/>
-		<!--	<column name="s_point" type="spoint"/>-->
+			<column name="observed_at" type="timestamp"/>
+			<column name="s_point" type="spoint"/>
 			</table>""")
 		table = rsc.TableForDef(td, rows=[{
 			"s_region": pgsphere.SPoly.fromSODA([1.25, 1.0, 3, 9.5, 0.5, 4.25]),
-# TODO: do make s_point serialisable in both geojson and json.
-#			"s_point": pgsphere.SPoint.fromDegrees(4, 5)
+			"observed_at": datetime.datetime(2017, 2, 7),
+			"s_point": pgsphere.SPoint.fromDegrees(4, 5)
 			},])
 		tx = formats.getFormatted("geojson", table)
 		self.assertEqual(json.loads(tx), {
 		 u'features': [{
 		 	 u'coordinates': [[1.25, 1.0], [3.0, 9.5], [0.5, 4.25]],
-       u'properties': {},
+       u'properties': {u'observed_at': 2457791.5,
+					u's_point': u'Position UNKNOWNFrame 4. 5.'},
        u'type': u'Polygon'},],
 			u'type': u'FeatureCollection'})
 
