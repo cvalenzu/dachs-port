@@ -40,6 +40,7 @@ class REIterator(FileRowIterator):
 				if self.grammar.commentPat:
 					buffer = self.grammar.commentPat.sub("", buffer)
 				continue
+			self.curLine += mat.group().count("\n")
 			res = buffer[curPos:mat.start()]
 
 			if self.grammar.stopPat and self.grammar.stopPat.match(res):

@@ -804,8 +804,8 @@ class GeojsonTest(testhelpers.VerboseTest):
 							type: simple
 						}
 					}
-					feature: (geojson:Feature) {
-						geometry: (geojson:Geometry) {
+					feature: {
+						geometry: {
 							type: sepsimplex
 							c1min: @c1min
 							c2min: @c2min

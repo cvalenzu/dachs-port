@@ -141,7 +141,12 @@ class _AttributeGroupAnnotation(AnnotationBase):
 	def __init__(self, name, type):
 		AnnotationBase.__init__(self, name)
 		self.type = type
-		self.modelPrefix, _, _ = parseTypeName(type)
+		if self.type is None:
+			# TODO: infer from parent?  from DM?
+			self.modelPrefix = "undefined"
+		else:
+			self.modelPrefix, _, _ = parseTypeName(self.type)
+
 		self.childRoles = {}
 
 	def __getitem__(self, key):
@@ -156,7 +161,7 @@ class _AttributeGroupAnnotation(AnnotationBase):
 		self.childRoles[role.name] = role
 
 	def asSIL(self, suppressType=False):
-		if suppressType:
+		if suppressType or self.type is None:
 			typeAnn = ""
 		else:
 			typeAnn = "(%s) "%self.type

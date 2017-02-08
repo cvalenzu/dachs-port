@@ -193,7 +193,6 @@ class TestSILParser(testhelpers.VerboseTest):
 		self.assertEqual(normalizeSIL(res.asSIL()),
 			'(testdm:testclass) { seq: [a "b c" 3.2] }')
 
-
 	def testComments(self):
 		res = sil.getAnnotation("""/* comment with stuff */
 			(testdm:testclass) /* another comment */ { /* and yet one */
@@ -202,6 +201,18 @@ class TestSILParser(testhelpers.VerboseTest):
 		self.assertEqual(normalizeSIL(res.asSIL()),
 			'(testdm:testclass) { seq: [a "b c" 3.2] }')
 
+	def testNoUntypedRoot(self):
+		self.assertRaisesWithMsg(base.StructureError,
+			"Root of Data Model annotation must have a type.",
+			sil.getAnnotation,
+			("{attr1: (testdm:otherclass) {attr2: val}}",
+				dmrd.getAnnotationMaker(None)))
+
+	def testWithoutType(self):
+		res =sil.getAnnotation("(testdm:testclass){attr1: {attr2: val}}",
+			dmrd.getAnnotationMaker(None))
+		self.assertEqual(normalizeSIL(res.asSIL()),
+			'(testdm:testclass) { { attr2: val} }')
 
 def getByID(tree, id):
 	# (for checking VOTables)

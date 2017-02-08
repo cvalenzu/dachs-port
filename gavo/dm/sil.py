@@ -53,7 +53,13 @@ def _pa_collection(s, p, toks):
 		return ("coll", toks[0], toks[1])
 
 def _pa_obj(s, p, toks):
-	return ("obj", toks[0], toks[1][2])
+	if len(toks)==2:
+		# with type annotation
+		return ("obj", toks[0], toks[1][2])
+	else:
+		# no type annotation; we should later add an annotation based on
+		# the default for the DM
+		return ("obj", None, toks[0][2])
 
 def _pa_objectBody(s, p, toks):
 	return ("uobj", None, toks[1].asList())
@@ -97,7 +103,7 @@ class getGrammar(utils.CachedResource):
 			objectBody = (Literal('{')
 				+ Group(ZeroOrMore( attributeDef ))
 				+ Literal('}')) 
-			obj = typeAnnotation + objectBody
+			obj = Optional(typeAnnotation) + objectBody
 
 			sequenceBody = (Literal('[')
 				+ Group(ZeroOrMore(value | objectBody))
@@ -235,7 +241,12 @@ def getAnnotation(silLiteral, annotationFactory):
 		else:
 			assert False
 
-	assert result is not None
+	if result is None:
+		raise utils.StructureError("Data model annotation yielded no result.")
+	if result.type is None:
+		raise utils.StructureError("Root of Data Model annotation must"
+			" have a type.")
+
 	return result
 
 
