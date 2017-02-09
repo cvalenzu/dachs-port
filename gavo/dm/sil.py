@@ -157,7 +157,6 @@ def _iterObjs(node, seqType, roleName):
 
 		else:
 			# complex child -- yield  events
-			assert child[0]=='uobj'
 			for  grandchild in _parseTreeToEvents(child, seqType=seqType, 
 					roleName=roleName):
 				yield grandchild

@@ -150,9 +150,9 @@ class TestSILGrammar(testhelpers.VerboseTest):
 			('obj', ':testclass', [
 				('attr', 'seq', 
 					('coll', ':otherclass', [
-						('uobj', None, [('attr', 'attr1', 'a')]),
-						('uobj', None, [('attr', 'attr1', 'b')]),
-						('uobj', None, [('attr', 'attr1', 'c')]),]))]))
+						('obj', None, [('attr', 'attr1', 'a')]),
+						('obj', None, [('attr', 'attr1', 'b')]),
+						('obj', None, [('attr', 'attr1', 'c')]),]))]))
 
 	def testImmediateCollection(self):
 		res = sil.getGrammar().parseString("""

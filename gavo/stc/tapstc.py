@@ -253,10 +253,10 @@ def getSimpleSTCSParser():
 		region << (simpleStatement | opExpr | notExpr)
 		
 	def parse(s):
-		if s is None or not s.strip(): # special service: Null values
-			return None
 		if isinstance(s, pgsphere.PgSAdapter):
 			return s
+		if s is None or not s.strip(): # special service: Null values
+			return None
 
 		try:
 			res = utils.pyparseString(region, s, parseAll=True)[0]

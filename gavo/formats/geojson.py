@@ -214,9 +214,15 @@ def _makeFeatures(table, gjAnnotation):
 
 	sm = base.SerManager(table, acquireSamples=False,
 		mfRegistry=JSON_MF_REGISTRY)
-	return [
-		makeFeature(r) for r in sm.getMappedValues()]
 
+	# let geo builders manually ignore rows they can't do anything with
+	features = []
+	for r in sm.getMappedValues():
+		try:
+			features.append(makeFeature(r))
+		except base.SkipThis:
+			pass
+	return features
 
 def writeTableAsGeoJSON(table, target, acquireSamples=False):
 	"""writes a table as geojson.
