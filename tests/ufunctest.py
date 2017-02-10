@@ -225,8 +225,8 @@ class RRFunctionsTest(testhelpers.VerboseTest):
 			"SELECT testgroup FROM test.ufuncex WHERE lower(testgroup) ="
 			" ANY(string_to_array('a#b#c', '#'))"),
 		("select testgroup from test.ufuncex where"
-			" 1=ivo_nocasematch('honk%', testgroup)",
-			"SELECT testgroup FROM test.ufuncex WHERE ('honk%' ilike testgroup)"),
+			" 1=ivo_nocasematch(testgroup, 'honk%')",
+			"SELECT testgroup FROM test.ufuncex WHERE (LOWER(testgroup) like 'honk%')")
 	]
 	
 

@@ -122,14 +122,21 @@ _makeBooleanizer("ivo_hasword",
 	match is performed case-insensitively.  This function in effect
 	provides a surrogate for the ILIKE SQL operator that is missing from
 	ADQL.
+
+	On this site, this is actually implemented using python's and SQL's
+	LOWER, so for everything except ASCII, your milage will vary.
 	""",
 	"integer")
 def _nocasematch(args):
 	if len(args)!=2:
 		raise common.UfuncError("ivo_nocasematch takes exactly two arguments")
+	if args[1].type=='characterStringLiteral':
+		args[1].value = args[1].value.lower()
+	else:
+		args[1] = "LOWER(%s)"%nodes.flatten(args[1])
 	return None
 
-_makeBooleanizer("ivo_nocasematch", "(%(1)s ilike %(2)s)")
+_makeBooleanizer("ivo_nocasematch", "(LOWER(%(1)s) like %(2)s)")
 
 
 @userFunction("ivo_hashlist_has",
