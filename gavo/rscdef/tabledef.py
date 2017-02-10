@@ -48,8 +48,10 @@ class DBIndex(base.Structure):
 	name_ = "index"
 
 	_name = base.UnicodeAttribute("name", default=base.Undefined,
-		description="Name of the index (defaults to something computed from"
-			" columns; the name of the parent table will be prepended in the DB)", 
+		description="Name of the index.  Defaults to something computed from"
+			" columns; the name of the parent table will be prepended in the DB."
+			"  The default will *not* work if you have multiple indices on one"
+			" set of columns.", 
 			copyable=True)
 	_columns = base.StringListAttribute("columns", description=
 		"Table columns taking part in the index (must be given even if there"
@@ -228,7 +230,7 @@ class ForeignKey(base.Structure):
 		try:
 			constraintName = querier.getForeignKeyName(self.parent.getQName(), 
 				self.destTableName, self.source, self.dest)
-		except base.DBError:  # key does not exist.
+		except (ValueError, base.DBError):  # key does not exist.
 			return
 		querier.query("ALTER TABLE %s DROP CONSTRAINT %s"%(self.parent.getQName(), 
 			constraintName))

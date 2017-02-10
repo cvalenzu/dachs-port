@@ -539,12 +539,9 @@ class RegTest(procdef.ProcApp, unittest.TestCase):
 	def assertValidatesXSD(self):
 		"""checks whether the returned data are XSD valid.
 
-		As we've not yet found a python XSD validator capable enough to
-		deal with the complex web of schema files in the VO, this
-		requires a little piece of java (which also means that these tests
-		are fairly resource demanding).	In a checkout of DaCHS, go to the
-		schemata subdirectory and run python makeValidator.py (this needs 
-		a JDK as well as some external libraries; see the makeValidator source).
+		This uses DaCHS built-in XSD validator with the built-in schema
+		files; it hence will in general not retrieve schema files from
+		external sources.
 		"""
 		from gavo.helpers import testtricks
 		msgs = testtricks.getXSDErrors(self.data)
