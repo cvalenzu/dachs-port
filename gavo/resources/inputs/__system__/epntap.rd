@@ -508,7 +508,7 @@
 		<doc><![CDATA[
 			This mixin defines a table suitable for publication via the
 			EPN-TAP protocol, version 0.37.  For new services, use something
-			newer (as of this writing, //epntap#table-2_0).
+			newer (currently, //epntap2#table-2_0).
 
 			According to the standard definition, tables mixing this in
 			should be called ``epn_core``.  The mixin already arranges
@@ -550,56 +550,6 @@
 
 			<FEED source="commoncolumns"/>
 			<FEED source="v037columns"/>
-		</events>
-
-		<FEED source="//products#hackProductsData"/>
-	</mixinDef>
-
-	<mixinDef id="table-2_0">
-		<doc><![CDATA[
-			This mixin defines a table suitable for publication via the
-			EPN-TAP protocol, version 2.0.
-
-			According to the standard definition, tables mixing this in
-			should be called ``epn_core``.  The mixin already arranges
-			for the table to be accessible by ADQL and be on disk.
-
-			This also causes the product table to be populated.
-			This means that grammars feeding such tables need a 
-			`//products#define`_ row filter.  At the very least, you need to say::
-
-				<rowfilter procDef="//products#define">
-					<bind name="table">"\schema.epn_core"</bind>
-				</rowfilter>
-
-			Use the `//epntap#populate`_ apply in rowmakers
-			feeding tables mixing this in.
-
-			See https://voparis-confluence.obspm.fr/display/VES/EPN-TAP+V2.0+parameters
-			for more information on EPN-TAP.
-		]]></doc>
-
-		<mixinPar key="c1unit" description="Unit of the first spatial
-			coordinate">deg</mixinPar>
-		<mixinPar key="c2unit" description="Unit of the second spatial
-			coordinate">deg</mixinPar>
-		<mixinPar key="c3unit" description="Unit of the third spatial
-			coordinate">__EMPTY__</mixinPar>
-		<mixinPar key="regiontype" description="Type of the
-			s_region column.  This can be spoly (the default), scircle,
-			sbox (a coordinate range) or possibly spoint (avoid that, though)."
-			>spoly</mixinPar>
-
-		<events>
-			<adql>True</adql>
-			<onDisk>True</onDisk>
-			<meta name="utype">ivo://ivoa.net/std/epntap#table-1.0</meta>
-
-			<meta name="info" infoName="SERVICE_PROTOCOL" 
-				infoValue="2.0">EPN-TAP</meta>
-
-			<FEED source="commoncolumns"/>
-			<FEED source="v20columns"/>
 		</events>
 
 		<FEED source="//products#hackProductsData"/>
@@ -737,6 +687,4 @@
 
 	<FEED source="procDefTemplate" procname="populate" version="0.37"
 		mixinid="table"/>
-	<FEED source="procDefTemplate" procname="populate-2_0" version="2.0"
-		mixinid="table-2_0"/>
 </resource>
