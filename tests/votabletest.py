@@ -752,21 +752,52 @@ def _getTableWithSimpleSTC():
 		{'alpha': 10, 'delta': -10, 'mag': -1, 'rV': -4, 'tinyflag': "\x80"}])
 
 
+class _SimpleSTCVOT(testhelpers.TestResource):
+	"""A single table with a single coordinate system, serialised into a
+	VOTable.
+	"""
+	def make(self, deps):
+		table = _getTableWithSimpleSTC()
+		source = votablewrite.getAsVOTable(table)
+		return testhelpers.getXMLTree(source, debug=False)
+
+
+class _TwoSystemSTCVOT(testhelpers.TestResource):
+	def make(self, deps):
+		td = base.parseFromString(rscdef.TableDef, """
+			<table>
+				<stc>Position ICRS "ra" "dec"</stc>
+				<stc>Position GALACTIC "gal_l" "gal_b"</stc>
+				<column name="ra"/><column name="dec"/>
+				<column name="gal_l"/><column name="gal_b"/>
+			</table>""")
+		return testhelpers.getXMLTree(
+			votablewrite.getAsVOTable(
+				rsc.TableForDef(td)),
+			debug=False)
+
+
 class STCEmbedTest(testhelpers.VerboseTest):
 	"""tests for proper inclusion of STC in VOTables.
 	"""
-	def testSimpleSTC(self):
-		table = _getTableWithSimpleSTC()
-		tx = votablewrite.getAsVOTable(table)
-		self.failUnless(
-			re.search('<GROUP [^>]*utype="stc:CatalogEntryLocation"', tx))
-		self.failUnless(re.search('<PARAM [^>]*utype="stc:AstroCoo'
-			'rdSystem.SpaceFrame.CoordRefFrame"[^>]* value="ICRS"', tx))
-		self.failUnless(re.search('<FIELD[^>]* ID="alpha" ', tx))
-		mat = re.search(
-			'<FIELDref[^>]*utype="stc:AstroCoords.Position2D.Value2.C2[^>]*>',
-			tx)
-		self.failUnless('ref="delta"' in mat.group())
+	resources = [("tree", _SimpleSTCVOT()), ("twotree", _TwoSystemSTCVOT())]
+
+	def testSingleGroupPresent(self):
+		res = self.tree.xpath("//TABLE/GROUP[@utype='stc:CatalogEntryLocation']")
+		self.assertEqual(len(res), 1)
+
+	def testFrameDefined(self):
+		par = self.tree.xpath("//GROUP[@utype='stc:CatalogEntryLocation']"
+			"/PARAM[@utype='stc:AstroCoordSystem.SpaceFrame.CoordRefFrame']")[0]
+		self.assertEqual(par.get("value"), "ICRS")
+	
+	def testFieldIDed(self):
+		self.assertEqual(len(self.tree.xpath("//FIELD[@ID='alpha']")), 1)
+	
+	def testAlphaReference(self):
+		ref = self.tree.xpath("//GROUP[@utype='stc:CatalogEntryLocation']"
+			"/FIELDref[@utype='stc:AstroCoords.Position2D.Value2.C1']")[0]
+		self.assertEqual(ref.get("ref"), "alpha")
 
 	def testMultiTables(self):
 		# twice the same table -- this is mainly for id mapping
@@ -790,6 +821,37 @@ class STCEmbedTest(testhelpers.VerboseTest):
 				"//FIELDref[@ref='delta0' and @utype='stc:AstroCoords.Position2D.Value2.C2']",
 				]:
 			self.failUnless(len(tree.xpath(path))==1, "%s not found"%path)
+
+	def testCOOSYSEpoch(self):
+		self.assertEqual(self.tree.xpath(
+			"RESOURCE/COOSYS")[0].get("epoch"), "J2015.0")
+
+	def testCOOSYSFrame(self):
+		self.assertEqual(self.tree.xpath(
+			"RESOURCE/COOSYS")[0].get("system"), "ICRS")
+
+	def testCOOSYSGalactic(self):
+		systems = [c.get("system") for c in self.twotree.xpath(
+			"RESOURCE/COOSYS")]
+		self.assertEqual(set(systems), set(["ICRS" , "galactic"]))
+			
+	def testRefsWork(self):
+		sysname = self.tree.xpath("//FIELD[@name='alpha']")[0].get("ref")
+		self.assertEqual(sysname, "system")
+		self.assertEqual(
+			self.tree.xpath("//*[@ID='%s']"%sysname)[0].get("system"),
+			"ICRS")
+	
+	def testRefsWithTwo(self):
+		sysname = self.twotree.xpath("//FIELD[@name='gal_l']")[0].get("ref")
+		self.assertEqual(
+			self.twotree.xpath("//*[@ID='%s']"%sysname)[0].get("system"),
+			"galactic")
+
+		sysname = self.twotree.xpath("//FIELD[@name='dec']")[0].get("ref")
+		self.assertEqual(
+			self.twotree.xpath("//*[@ID='%s']"%sysname)[0].get("system"),
+			"ICRS")
 
 
 class STCParseTest(testhelpers.VerboseTest):

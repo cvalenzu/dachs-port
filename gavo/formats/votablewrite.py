@@ -293,7 +293,7 @@ def _makeValuesForColDesc(colDesc):
 
 
 # keys copied from colDescs to FIELDs in _getFieldFor
-_voFieldCopyKeys = ["name", "datatype", "ucd", "utype"]
+_voFieldCopyKeys = ["name", "datatype", "ucd", "utype", "ref"]
 
 def defineField(ctx, element, colDesc):
 	"""adds attributes and children to element from colDesc.
@@ -331,7 +331,8 @@ def defineField(ctx, element, colDesc):
 				# there's too much that can legitimately go wrong here to bother:
 				pass
 
-	element(**dict((key, colDesc.get(key)) for key in _voFieldCopyKeys))[
+	element(**dict((key, colDesc.get(key) or None) 
+			for key in _voFieldCopyKeys))[
 		V.DESCRIPTION[colDesc["description"]],
 		_makeValuesForColDesc(colDesc),
 		_linkBuilder.build(colDesc.original)
@@ -416,24 +417,84 @@ def _iterParams(ctx, dataSet):
 
 ####################### Tables and Resources
 
+# an ad-hoc mapping of what STC1 has in frame to what VOTable 1.1 has for
+# COOSYS/@system
+STC_FRAMES_TO_COOSYS = {
+	'ICRS': 'ICRS',
+	'FK5': 'eq_FK5',
+	'FK4': 'eq_FK4',
+	'ECLIPTIC': 'ecl_FK5',  # neglecting the odds there's actually ecl_FK4 data
+	'GALACTIC_II': 'galactic',
+	'SUPERGALACTIC': 'supergalactic'}
 
 
-def _iterSTC(tableDef, serManager):
+def _makeCOOSYSFromSTC(utypeMap, serManager):
+	"""returns a VOTable 1.1 COOSYS element inferred from a map of stc utypes
+	to STC1 values.
+
+	We let through coordinate frames not defined in VOTable 1.1 at the
+	expense of making the VOTables XSD-invalid with such frames; this
+	seems preferable to not declaring anything.
+
+	As a side effect, this will change column/@ref attributes (possibly also
+	param/@ref).  If a column is part of two STC structures, the last
+	one will win.  Yeah, that spec sucks.
+	"""
+	val = V.COOSYS()
+	sysId = serManager.makeIdFor(val, "system")
+	val(ID=sysId)
+
+	if "stc:astrocoords.position2d.epoch" in utypeMap:
+		val(epoch="%s%s"%(
+			utypeMap.get("stc:astrocoords.position2d.epoch.yeardef", "J"),
+			utypeMap["stc:astrocoords.position2d.epoch"]))
+	
+	stcFrame = utypeMap.get(
+		"stc:astrocoordsystem.spaceframe.coordrefframe", None)
+	val(system=STC_FRAMES_TO_COOSYS.get(stcFrame, stcFrame))
+
+	try:
+		if "stc:astrocoords.position2d.value2.c1" in utypeMap:
+			serManager.getColumnByName(
+					str(utypeMap["stc:astrocoords.position2d.value2.c1"]))[
+				"ref"] = sysId
+		if "stc:astrocoords.position2d.value2.c2" in utypeMap:
+			serManager.getColumnByName(
+					str(utypeMap["stc:astrocoords.position2d.value2.c2"]))[
+				"ref"] = sysId
+	except KeyError:
+		# this can happen if there are literals or params in the
+		# position.  We can't make a meaningful coosys in that case
+		# anyway, so we simply give up.
+		pass
+
+	return val
+
+
+def _iterSTC(ctx, tableDef, serManager):
 	"""adds STC groups for the systems to votTable fetching data from 
 	tableDef.
 	"""
-	def getIdFor(colRef):
+	def getColumnFor(colRef):
 		try:
-			return serManager.getColumnByName(colRef.dest)["id"]
+			return serManager.getColumnByName(colRef.dest)
 		except KeyError:
 			# in ADQL processing, names are lower-cased, and there's not
 			# terribly much we can do about it without breaking other things.
 			# Hence, let's try and see whether our target is there with 
 			# case normalization:
-			return serManager.getColumnByName(colRef.dest.lower())["id"]
-	for ast in tableDef.getSTCDefs():
-		yield modelgroups.marshal_STC(ast, getIdFor)
+			return serManager.getColumnByName(colRef.dest.lower())
+	
+	def getIdFor(colRef):
+		return getColumnFor(colRef)["id"]
 
+	for ast in tableDef.getSTCDefs():
+		container, utypeMap = modelgroups.marshal_STC(ast, getIdFor)
+		yield container
+		# in addition, try to come up with a legacy COOSYS specification
+		ctx.getEnclosingResource()[
+			_makeCOOSYSFromSTC(utypeMap, serManager)]
+		
 
 def _iterNotes(serManager):
 	"""yields GROUPs for table notes.
@@ -506,7 +567,7 @@ def makeTable(ctx, table):
 	result = V.TABLE()
 	with ctx.activeContainer(result):
 		# start out with VO-DML annotation so everything that needs
-		# and id has one.
+		# an id has one.
 		if ctx.produceVODML:
 			for ann in table.tableDef.annotations:
 				try:
@@ -514,6 +575,11 @@ def makeTable(ctx, table):
 				except Exception, msg:
 					# never fail just because stupid DM annotation doesn't work out
 					base.ui.notifyError("DM annotation failed: %s"%msg)
+
+		# iterate STC before serialising the columns so the columns
+		# have the stupid ref to COOSYS
+		if ctx.version>(1,1):
+			result[_iterSTC(ctx, table.tableDef, sm)]
 
 		result(
 				name=table.tableDef.id,
@@ -531,8 +597,6 @@ def makeTable(ctx, table):
 			_linkBuilder.build(table.tableDef),
 			]
 
-		if ctx.version>(1,1):
-			result[_iterSTC(table.tableDef, sm)]
 
 		return votable.DelayedTable(result,
 			sm.getMappedTuples(),

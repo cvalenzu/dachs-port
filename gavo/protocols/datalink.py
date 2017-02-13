@@ -380,7 +380,7 @@ class _ServiceDescriptor(object):
 
 		res = V.RESOURCE(ID=ctx.getOrMakeIdFor(self), type="meta",
 			utype="adhoc:service")[
-			[modelgroups.marshal_STC(ast, getIdFor)
+			[modelgroups.marshal_STC(ast, getIdFor)[0]
 				for ast in stcSpecs],
 			V.PARAM(arraysize="*", datatype="char", 
 				name="accessURL", ucd="meta.ref.url",

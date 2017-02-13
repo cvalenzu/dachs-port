@@ -139,7 +139,8 @@
 	<table id="adql" adql="True" onDisk="True">
 		<meta name="source">1635QB41.G135......</meta>
 		<stc>
-			Position ICRS GEOCENTER "alpha" "delta" Redshift VELOCITY "rV"
+			Position ICRS GEOCENTER Epoch J2015.0 
+				"alpha" "delta" Redshift VELOCITY "rV"
 		</stc>
 		<group name="weird_columns" utype="col:weird.name">
 			<columnRef dest="alpha" utype="col:weird.reason"/>

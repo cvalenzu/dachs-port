@@ -98,7 +98,17 @@ class SerManager(utils.IdManagerMixin):
 		self.mappers = tuple(mfRegistry.getMapper(annCol) for annCol in self)
 
 	def getColumnByName(self, name):
-		return self.byName[name]
+		"""returns an AnnotatedColumn element for name.
+
+		To help out in case name has gone through postgres, this will try
+		name lowercased if it doesn't match in normal case.
+
+		This will raise a KeyError if name can't be found anyway.
+		"""
+		try:
+			return self.byName[name]
+		except:
+			return self.byName[name.lower()]
 
 	def _compileMapFunction(self, funcLines):
 		"""helps _make(Dict|Tuple)Factory.

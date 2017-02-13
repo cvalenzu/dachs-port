@@ -273,6 +273,7 @@ class AnnotatedColumn(object):
 			"description": self.original.description,
 			# id is managed by SerManager
 			"id": None,
+			"ref": None,  # used for legacy COOSYS only
 		}
 
 	def __getitem__(self, key):

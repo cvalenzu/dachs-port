@@ -1,6 +1,9 @@
 """
 Data model related code.
 
+This is legacy stuff.  Cool folks would use the stuff from gavo.dm.  When
+there's actually something useful to be done with it.
+
 This is intended for STC groups and possibly similarly handled data models.
 
 Basically, these come in groups with certain utypes; these in turn contain
@@ -132,9 +135,11 @@ def marshal_STC(ast, getIdFor):
 	ColRefs (with column names in their dest) to unique ids.
 	"""
 	container = V.GROUP(utype="stc:CatalogEntryLocation")
+	utypeMap = {}
 	for utype, value in stc.getUtypes(ast, includeDMURI=True):
 		try:
 			container[_makeUtypeContainer(utype, value, getIdFor)]
+			utypeMap[utype.lower()] = value
 		except KeyError:  # column referenced is not in result
 			pass
-	return container
+	return container, utypeMap

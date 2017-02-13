@@ -180,6 +180,7 @@ class VOTable(object):
 		pass
 
 	class COOSYS(_VOTElement):
+		_mayBeEmpty = True
 		_a_ID = None
 		_a_epoch = None
 		_a_equinox = None

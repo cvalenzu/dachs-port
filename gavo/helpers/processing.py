@@ -149,7 +149,6 @@ class FileProcessor(object):
 				except base.SkipThis:
 					continue
 				except Exception, ex:
-					import ipdb;ipdb.set_trace()
 					ex.source = srcId
 					if self.opts.bailOnError:
 						sys.stderr.write("*** %s\n"%srcId)
