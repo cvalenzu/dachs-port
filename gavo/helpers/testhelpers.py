@@ -110,10 +110,6 @@ else:
 				" before trying again.\n"%(base.getConfig("rootDir")))
 			sys.exit(1)
 
-	else:
-		# run any pending upgrades (that's a test for them, too... of sorts)
-		from gavo.user import upgrade
-		upgrade.upgrade()
 
 	# the following only needs to be set correctly if you run 
 	# twisted trial-based tests
@@ -727,6 +723,11 @@ def main(testClass, methodPrefix=None):
 		from gavo.user import logui
 		logui.LoggingUI(base.ui)
 	
+	if "GAVO_OOTTEST" not in os.envion:
+		# run any pending upgrades (that's a test for them, too... of sorts)
+		from gavo.user import upgrade
+		upgrade.upgrade()
+
 	try:
 		# two args: first one is class name, locate it in caller's globals
 		# and ignore anything before any dot for cut'n'paste convenience

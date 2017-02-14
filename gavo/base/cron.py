@@ -108,8 +108,8 @@ class AbstractJob(object):
 class IntervalJob(AbstractJob):
 	"""A job that's executed roughly every interval seconds.
 
-	interval can be negative, in which case the job is scheduled for immediate
-	execution.
+	interval can be negative, in which case the job is scheduled for (almost)
+	immediate execution.
 	"""
 	def __init__(self, interval, name, callable):
 		self.interval = interval
@@ -253,7 +253,8 @@ class Queue(object):
 			return
 		nextWakeup = self.jobs[0][0]
 		if self.scheduleFunction is not None:
-			self.scheduleFunction(max(0, nextWakeup-time.time()), self._runNextJob)
+			self.scheduleFunction(max(0, nextWakeup-time.time()), 
+				self._runNextJob)
 
 	def runEvery(self, seconds, name, callable):
 		"""schedules callable to be run every seconds.

@@ -225,7 +225,9 @@ class _DebugScheduler(object):
 		forgets it otherwise.
 		"""
 		if wakeTime<30:
-			job()
+			# take job out of the execution context, as this may be during
+			# an import, and we don't want to create threads during imports.
+			reactor.callLater(0.5, job)
 
 
 def _startServer():

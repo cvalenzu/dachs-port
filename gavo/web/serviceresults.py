@@ -19,7 +19,6 @@ from nevow import static
 from nevow import tags as T
 from twisted.internet import threads
 
-
 from gavo import base
 from gavo import formats
 from gavo import utils

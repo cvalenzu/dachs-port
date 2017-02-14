@@ -11,6 +11,7 @@ support some other database, this would need massive refactoring.
 #c This program is free software, covered by the GNU GPL.  See the
 #c COPYING file in the source distribution.
 
+import imp
 
 import contextlib
 import itertools
@@ -1117,6 +1118,13 @@ def _makeConnectionManager(profileName, minConn=5, maxConn=20,
 	poolLock = threading.Lock()
 
 	def makePool():
+		# the following check is a rough canary that hopefully will warn
+		# now and then when a thread is being started during module import
+		# (also, pyscopg imports are the most likely to deadlock).
+		# Yes, this is a bit ad-hoc.
+		if imp.lock_held():
+			raise OperationalError(
+				"Attempt to make a pool with the import lock held")
 		with poolLock:
 			pool.append(CustomConnectionPool(minConn, maxConn, profileName,
 				autocommitted))

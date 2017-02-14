@@ -758,9 +758,10 @@ class TestRunner(object):
 	def __init__(self, suites, serverURL=None, 
 			verbose=True, dumpNegative=False, tags=None,
 			timeout=45, failFile=None, nRepeat=1,
-			execDelay=0, nThreads=8):
+			execDelay=0, nThreads=8, printTitles=False):
 		self.verbose, self.dumpNegative = verbose, dumpNegative
 		self.failFile, self.nRepeat = failFile, nRepeat
+		self.printTitles = printTitles
 		if tags:
 			self.tags = tags
 		else:
@@ -823,6 +824,10 @@ class TestRunner(object):
 		"""starts a new test in a thread of its own.
 		"""
 		test = self.testList.popleft()
+		if self.printTitles:
+			sys.stderr.write(" <%s> "%test.title)
+			sys.stderr.flush()
+
 		newThread = threading.Thread(target=self.runOneTest, 
 			args=(test, self.threadId, self.execDelay))
 		newThread.description = test.description
@@ -1009,8 +1014,11 @@ def parseCommandLine(args=None):
 	parser = argparse.ArgumentParser(description="Run tests embedded in RDs")
 	parser.add_argument("id", type=str,
 		help="RD id or cross-RD identifier for a testable thing.")
-	parser.add_argument("-v", "--verbose", help="Talk while working",
+	parser.add_argument("-v", "--verbose", help="Dump info on failed test",
 		action="store_true", dest="verbose")
+	parser.add_argument("-V", "--titles", help="Write title when starting"
+		" a test.",
+		action="store_true", dest="printTitles")
 	parser.add_argument("-d", "--dump-negative", help="Dump the content of"
 		" failing tests to stdout",
 		action="store_true", dest="dumpNegative")
@@ -1036,6 +1044,10 @@ def parseCommandLine(args=None):
 		" to be run in parallel",
 		action="store", type=int, dest="nThreads", 
 		default=8)
+	parser.add_argument("--seed", help="Seed the RNG with this number."
+		"  Note that this doesn't necessarily make the execution sequence"
+		" predictable, just the submission sequence.",
+		action="store", type=int, dest="randomSeed", default=None)
 
 	return parser.parse_args(args)
 
@@ -1045,6 +1057,8 @@ def main(args=None):
 	"""
 	tags = None
 	args = parseCommandLine(args)
+	if args.randomSeed:
+		random.seed(args.randomSeed)
 	if args.tag:
 		tags = set([args.tag])
 	if args.serverURL:
@@ -1060,6 +1074,7 @@ def main(args=None):
 		"timeout": args.timeout,
 		"execDelay": args.execDelay,
 		"nThreads": args.nThreads,
+		"printTitles": args.printTitles,
 	}
 
 	if args.id=="ALL":
