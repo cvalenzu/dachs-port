@@ -723,7 +723,7 @@ def main(testClass, methodPrefix=None):
 		from gavo.user import logui
 		logui.LoggingUI(base.ui)
 	
-	if "GAVO_OOTTEST" not in os.envion:
+	if "GAVO_OOTTEST" not in os.environ:
 		# run any pending upgrades (that's a test for them, too... of sorts)
 		from gavo.user import upgrade
 		upgrade.upgrade()

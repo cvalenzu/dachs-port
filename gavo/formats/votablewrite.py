@@ -24,6 +24,7 @@ import warnings
 from gavo import base
 from gavo import dm
 from gavo import rsc
+from gavo import stc
 from gavo import utils
 from gavo import votable
 from gavo.base import meta
@@ -427,6 +428,26 @@ STC_FRAMES_TO_COOSYS = {
 	'GALACTIC_II': 'galactic',
 	'SUPERGALACTIC': 'supergalactic'}
 
+# these are utypes for which column refs should be ref-ed to the COOSYS.
+COLUMN_REF_UTYPES = [
+	"stc:astrocoords.position2d.value2.c1",
+	"stc:astrocoords.position2d.value2.c2",
+	"stc:astrocoords.position2d.error2.c1",
+	"stc:astrocoords.position2d.error2.c2",
+	"stc:astrocoords.velocity2d.value2.c1",
+	"stc:astrocoords.velocity2d.value2.c2",
+	"stc:astrocoords.velocity2d.error2.c1",
+	"stc:astrocoords.velocity2d.error2.c2",
+	"stc:astrocoords.redshift.value",
+	"stc:astrocoords.position3d.value3.c1"
+	"stc:astrocoords.position3d.value3.c2"
+	"stc:astrocoords.position3d.value3.c3"
+	"stc:astrocoords.time.timeinstant"
+	"stc:astrocoords.velocity3d.value3.c1"
+	"stc:astrocoords.velocity3d.value3.c2"
+	"stc:astrocoords.velocity3d.value3.c3"
+]
+
 
 def _makeCOOSYSFromSTC(utypeMap, serManager):
 	"""returns a VOTable 1.1 COOSYS element inferred from a map of stc utypes
@@ -440,35 +461,26 @@ def _makeCOOSYSFromSTC(utypeMap, serManager):
 	param/@ref).  If a column is part of two STC structures, the last
 	one will win.  Yeah, that spec sucks.
 	"""
-	val = V.COOSYS()
-	sysId = serManager.makeIdFor(val, "system")
-	val(ID=sysId)
+	coosys = V.COOSYS()
+	sysId = serManager.makeIdFor(coosys, "system")
+	coosys(ID=sysId)
 
 	if "stc:astrocoords.position2d.epoch" in utypeMap:
-		val(epoch="%s%s"%(
+		coosys(epoch="%s%s"%(
 			utypeMap.get("stc:astrocoords.position2d.epoch.yeardef", "J"),
 			utypeMap["stc:astrocoords.position2d.epoch"]))
 	
 	stcFrame = utypeMap.get(
 		"stc:astrocoordsystem.spaceframe.coordrefframe", None)
-	val(system=STC_FRAMES_TO_COOSYS.get(stcFrame, stcFrame))
+	coosys(system=STC_FRAMES_TO_COOSYS.get(stcFrame, stcFrame))
 
-	try:
-		if "stc:astrocoords.position2d.value2.c1" in utypeMap:
-			serManager.getColumnByName(
-					str(utypeMap["stc:astrocoords.position2d.value2.c1"]))[
-				"ref"] = sysId
-		if "stc:astrocoords.position2d.value2.c2" in utypeMap:
-			serManager.getColumnByName(
-					str(utypeMap["stc:astrocoords.position2d.value2.c2"]))[
-				"ref"] = sysId
-	except KeyError:
-		# this can happen if there are literals or params in the
-		# position.  We can't make a meaningful coosys in that case
-		# anyway, so we simply give up.
-		pass
+	for utype in COLUMN_REF_UTYPES:
+		if utype in utypeMap:
+			val = utypeMap[utype]
+			if isinstance(val, stc.ColRef):
+				serManager.getColumnByName(str(val))["ref"] = sysId
 
-	return val
+	return coosys
 
 
 def _iterSTC(ctx, tableDef, serManager):

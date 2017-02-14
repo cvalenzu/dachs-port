@@ -830,6 +830,10 @@ class STCEmbedTest(testhelpers.VerboseTest):
 		self.assertEqual(self.tree.xpath(
 			"RESOURCE/COOSYS")[0].get("system"), "ICRS")
 
+	def testCOOSYSExtraCoords(self):
+		sysname = self.tree.xpath("//FIELD[@name='rV']")[0].get("ref")
+		self.assertEqual(sysname, "system")
+
 	def testCOOSYSGalactic(self):
 		systems = [c.get("system") for c in self.twotree.xpath(
 			"RESOURCE/COOSYS")]
