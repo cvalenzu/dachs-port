@@ -176,7 +176,7 @@ class IdAttribute(attrdef.UnicodeAttribute):
 			ctx.registerId(parent.id, parent)
 			parent.qualifiedId = ctx.getQualifiedId(literal)
 	
-	def getCopy(self, parent, newParent):
+	def getCopy(self, parent, newParent, ctx):
 		return None  # ids may not be copied
 
 	def makeUserDoc(self):

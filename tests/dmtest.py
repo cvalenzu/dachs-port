@@ -244,9 +244,9 @@ class AnnotationTest(testhelpers.VerboseTest):
 				</dm><column name="col1" ucd="stuff"/></table>""")
 		col = t.annotations[0].childRoles["attr1"].value
 		self.assertEqual(col.ucd, "stuff")
-	
 
-class _DirectVOT(testhelpers.TestResource):
+
+class _OneAnnotationTable(testhelpers.TestResource):
 	def make(self, deps):
 		td = base.parseFromString(rscdef.TableDef,
 			"""<table id="foo">
@@ -269,10 +269,18 @@ class _DirectVOT(testhelpers.TestResource):
 					<column name="dej2000"/>
 				</table>""")
 		
-		t = rsc.TableForDef(td, rows=[
+		return rsc.TableForDef(td, rows=[
 			{"col1": "1.5", "raj2000": 0.3, "dej2000": 3.1}])
-		
-		return testhelpers.getXMLTree(votablewrite.getAsVOTable(t, 
+
+_ONE_ANNOTATION_TABLE = _OneAnnotationTable()
+
+
+class _DirectVOT(testhelpers.TestResource):
+	resources = [("table", _ONE_ANNOTATION_TABLE)]
+
+	def make(self, deps):
+		return testhelpers.getXMLTree(votablewrite.getAsVOTable(	
+			deps["table"],
 			ctx=votablewrite.VOTableContext(version=(1,4))), debug=False)
 
 
@@ -383,6 +391,20 @@ class QuantityTest(testhelpers.VerboseTest):
 	def testParamAnnotated(self):
 		pass # Asked upstream how this is supposed to work.
 
+
+class CopyTest(testhelpers.VerboseTest):
+	resources = [("table", _ONE_ANNOTATION_TABLE)]
+
+	def testSimpleCopy(self):
+		newTD = self.table.tableDef.copy(None)
+		ann = newTD.annotations[0]
+		self.assertEqual(ann["maker"][0], "Oma")
+		self.assertEqual(ann["maker"][2].value, newTD.getByName("artisan"))
+		self.assertEqual(ann["width"].value, newTD.getByName("col1"))
+		self.assertEqual(ann["location"]["x"], "0.1")
+		self.assertEqual(ann["location"]["y"].value,
+			newTD.getByName("raj2000"))
+			
 
 if __name__=="__main__":
 	testhelpers.main(DirectSerTest)

@@ -228,13 +228,13 @@ class StructureBase(object):
 			raise common.logOldExc(common.StructureError(
 				"Attempt to copy from invalid source: %s"%unicode(msg)))
 
-	def getCopyableAttributes(self, ignoreKeys=set()):
+	def getCopyableAttributes(self, ignoreKeys=set(), ctx=None):
 		"""returns a dictionary mapping attribute names to copyable children.
 
 		ignoreKeys can be a set or dict of additional attribute names to ignore.
 		The children are orphan deep copies.
 		"""
-		return dict((att.name_, att.getCopy(self, None))
+		return dict((att.name_, att.getCopy(self, None, ctx))
 			for att in self.attrSeq
 				if att.copyable and att.name_ not in ignoreKeys)
 
@@ -243,29 +243,35 @@ class StructureBase(object):
 		the passed values.
 		"""
 		parent = kwargs.pop("parent_", self.parent)
-		attrs = self.getCopyableAttributes(kwargs)
-		attrs.update(kwargs)
+		runExits, ctx = False, kwargs.pop("ctx", None)
+		if ctx is None:
+			runExits, ctx = True, parsecontext.ParseContext()
 
-		newInstance = self.__class__(parent, **attrs).finishElement(
-			parsecontext.ParseContext())
+		attrs = self.getCopyableAttributes(kwargs, ctx)
+		attrs.update(kwargs)
+		
+		newInstance = self.__class__(parent, **attrs).finishElement(ctx)
 
 		# reparent things without a parent to newInstance.  We don't want to do
 		# this unconditionally since we unwisely share some structs.
-		for _, value in kwargs.iteritems():
+		for name, value in kwargs.iteritems():
 			if not isinstance(value, list):
 				value = [value]
 			for item in value:
 				if hasattr(item, "parent") and item.parent is None:
 					item.parent = newInstance
-
+	
+		if runExits:
+			ctx.runExitFuncs(newInstance)
 		return newInstance
 
-	def copy(self, parent):
+	def copy(self, parent, ctx=None):
 		"""returns a deep copy of self, reparented to parent.
+
+		This is a shallow wrapper around change, present for backward
+		compatibility.
 		"""
-		return self.__class__(parent, 
-			**self.getCopyableAttributes()).finishElement(
-				parsecontext.ParseContext())
+		return self.change(parent_=parent, ctx=ctx)
 
 	def adopt(self, struct):
 		struct.parent = self

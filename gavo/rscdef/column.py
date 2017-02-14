@@ -136,7 +136,7 @@ class TableManagedAttribute(base.AttributeDef):
 		if val!=self.default_:
 			yield ("value", self.name_, _AttBox(val))
 
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		# these never get copied; the values are potentially shared 
 		# between many objects, so the must not be changed anyway.
 		return getattr(instance, self.name_)

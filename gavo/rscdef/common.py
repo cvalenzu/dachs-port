@@ -424,9 +424,9 @@ class ColumnListAttribute(base.StructListAttribute):
 	def default_(self):
 		return ColumnList()
 	
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		return ColumnList(base.StructListAttribute.getCopy(self,
-			instance, newParent))
+			instance, newParent, ctx))
 	
 	def replace(self, instance, oldStruct, newStruct):
 		if oldStruct.name!=newStruct.name:

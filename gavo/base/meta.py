@@ -241,7 +241,7 @@ class MetaAttribute(attrdef.AttributeDef):
 	def feedObject(self, instance, value):
 		self.meta_ = value
 
-	def getCopy(self, parent, newParent):
+	def getCopy(self, parent, newParent, ctx):
 		"""creates a deep copy of the current meta dictionary and returns it.
 
 		This is used when a MetaMixin's attribute is set to copyable and a

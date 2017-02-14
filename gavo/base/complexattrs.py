@@ -81,7 +81,7 @@ class ListOfAtomsAttribute(CollOfAtomsAttribute):
 			getattr(instance, self.name_).append(value)
 			self.doCallbacks(instance, value)
 
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		return getattr(instance, self.name_)[:]
 
 	def unparse(self, value):
@@ -115,7 +115,7 @@ class SetOfAtomsAttribute(CollOfAtomsAttribute):
 			getattr(instance, self.name_).add(value)
 			self.doCallbacks(instance, value)
 
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		return set(getattr(instance, self.name_))
 
 
@@ -229,7 +229,7 @@ class DictAttribute(attrdef.AttributeDef):
 			yield ("value", "content_", self.itemAttD.unparse(value))
 			yield ("end", self.xmlName_, None)
 	
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		return getattr(instance, self.name_).copy()
 
 	def makeUserDoc(self):
@@ -350,10 +350,10 @@ class StructAttribute(attrdef.AttributeDef):
 		ctx.setPositionOn(res)
 		return res
 
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		val = getattr(instance, self.name_)
 		if val is not None:
-			return val.copy(newParent)
+			return val.copy(newParent, ctx=ctx)
 	
 	def replace(self, instance, oldStruct, newStruct):
 		setattr(instance, self.name_, newStruct)
@@ -460,8 +460,9 @@ class StructListAttribute(StructAttribute):
 		else:
 			self.addStruct(instance, value)
 	
-	def getCopy(self, instance, newParent):
-		res = [c.copy(newParent) for c in getattr(instance, self.name_)]
+	def getCopy(self, instance, newParent, ctx):
+		res = [c.copy(newParent, ctx=ctx) 
+			for c in getattr(instance, self.name_)]
 		return res
 
 	def replace(self, instance, oldStruct, newStruct):

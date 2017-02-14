@@ -17,8 +17,9 @@ These are objects having at least the following attributes and methods:
 	- feedObject(instance, ob) -> None -- adds ob to instance's attribute value.
 		This will usually just result in setting the attribute; for compound
 		attributes, this may instead append to a list, add to a set, etc.
-	- getCopy(instance, newParent) -> value -- returns the python value of the 
-		attribute in instance, copying mutable values (deeply) in the process.
+	- getCopy(instance, newParent, ctx) -> value -- returns the python value 
+		of the attribute in instance, copying mutable values (deeply) in the 
+		process.
 	- iterParentMethods() -> iter((name, value)) -- iterates over methods
 		to be inserted into the parent class.
 	- makeUserDoc() -> returns some RST-valid string describing what the object
@@ -138,7 +139,7 @@ class AttributeDef(object):
 		raise NotImplementedError("%s doesn't implement feeding literals"%
 			self.__class__.__name__)
 
-	def getCopy(self, instance, newParent):
+	def getCopy(self, instance, newParent, ctx):
 		raise NotImplementedError("%s cannot be copied."%
 			self.__class__.__name__)
 
@@ -186,7 +187,8 @@ class AtomicAttribute(AttributeDef):
 		setattr(instance, self.name_, value)
 		self.doCallbacks(instance, value)
 
-	def getCopy(self, instance, newParent):  # We assume atoms are immutable here
+	def getCopy(self, instance, newParent, ctx):  
+		# We assume atoms are immutable here
 		return getattr(instance, self.name_)
 
 	def makeUserDoc(self):

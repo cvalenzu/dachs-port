@@ -220,7 +220,14 @@ class CollectionAnnotation(AnnotationBase):
 		if self.type is not None:
 			self.modelPrefix, _, _ = parseTypeName(type)
 		self.children = []
-	
+
+	def __getitem__(self, index):
+		child = self.children[index]
+		if isinstance(child, AtomicAnnotation):
+			return child.value
+		else:
+			return child
+
 	def add(self, child):
 		self.children.append(child)
 	

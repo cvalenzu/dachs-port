@@ -23,12 +23,12 @@ from gavo.dm import sil
 class DataModelRoles(base.Structure):
 	"""an annotation of a table in terms of data models.
 
-	The content of this element is a Simple Instance Language term.
+	The content of this element is a Simple Instance Language clause.
 	"""
 
 # We defer the parsing of the contained element to (hopefully) the
 # end of the parsing of the RD to enable forward references with
-# too many headaches (stubs don't cut it: we need to know types).
+# too many headaches (stubs don't cut it: we (may) need to know types).
 # 
 # There's an additional complication in that we may want to 
 # access parsed annotations while parsing other annotations
@@ -47,8 +47,8 @@ class DataModelRoles(base.Structure):
 					self.content_, getAnnotationMaker(self.parent))
 				self.parent.annotations.append(self._parsedAnnotation)
 			except Exception, ex:
-				raise base.StructureError(str(ex),
-					pos=self.getSourcePosition())
+				raise base.ui.logOldExc(base.StructureError(str(ex),
+					pos=self.getSourcePosition()))
 			self._buildAnnotation = lambda: None
 		self._buildAnnotation = _buildAnnotation
 
@@ -65,11 +65,10 @@ class DataModelRoles(base.Structure):
 		self._buildAnnotation()
 		return self._parsedAnnotation
 
-	def getCopy(self, instance, newParent):
-		# we'll have to re-parse since we want to reference the new columns
-		self.parent.annotations.append(
-			sil.getAnnotation(self.content_, 
-				functools.partial(makeAttributeAnnotation, newParent)))
+	def getCopy(self, instance, newParent, ctx):
+		# newParent could be None or incomplete at this point.  So,
+		# let's copy the old sil and resolve references later.
+		return self.__class__(newParent, content_=self.content_)
 
 
 def makeAttributeAnnotation(container, attName, attValue):

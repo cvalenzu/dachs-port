@@ -595,6 +595,6 @@ def makeCombinedData(baseDD, tablesForRoles):
 	newDD = baseDD.change(
 		makes=[MS(rscdef.Make, table=t.tableDef, rowmaker=None, role=role)
 			for role, t in tablesForRoles.iteritems()])
-	newDD.meta_ = baseDD._metaAttr.getCopy(baseDD, newDD)
+	newDD.meta_ = baseDD._metaAttr.getCopy(baseDD, newDD, None)
 	return Data(newDD, tables=dict((t.tableDef.id, t) 
 		for t in tablesForRoles.values()))
