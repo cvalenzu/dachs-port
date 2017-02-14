@@ -211,7 +211,7 @@ Procedures available for rowmaker apply
     "//siap#setMeta", "//ssap#setMeta",
     "//siap#getBandFromFilter", "//ssap#setMixcMeta",
     "//slap#fillBasic",
-    "//epntap#populate", "//epntap#populate-2_0",
+    "//epntap#populate", "//epntap2#populate-2_0",
     ])(docStructure)
 
 

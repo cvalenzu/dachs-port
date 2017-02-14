@@ -432,8 +432,9 @@ class FancyQueryCore(TableBasedCore, base.RestrictionMixin):
 		" All other percents must be escaped by doubling them.", 
 		default=base.Undefined,
 		copyable=True)
-	_timeout = base.FloatAttribute("timeout", default=5., description=
-		"Seconds until the query is aborted")
+	_timeout = base.FloatAttribute("timeout", default=5., 
+		description="Seconds until the query is aborted",
+		copyable=True)
 
 	def run(self, service, inputTable, queryMeta):
 		fragment, pars = self._getSQLWhere(inputTable, queryMeta)
@@ -553,8 +554,8 @@ class FixedQueryCore(core.Core, base.RestrictionMixin):
 	"""
 	name_ = "fixedQueryCore"
 
-	_timeout = base.FloatAttribute("timeout", default=15., description=
-		"Seconds until the query is aborted")
+	_timeout = base.FloatAttribute("timeout", default=15., 
+		description="Seconds until the query is aborted", copyable=True)
 	_query = base.UnicodeAttribute("query", default=base.Undefined,
 		description="The query to be executed.  You must define the"
 			" output fields in the core's output table.  The query will"

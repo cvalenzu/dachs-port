@@ -26,7 +26,7 @@ class Color(structure.ParseableStructure):
 	name_ = "color"
 	_r = IntAttribute("r", 255, copyable=True)
 	_g = IntAttribute("g", 255, copyable=True)
-	_b = IntAttribute("b", 255, copyable=True)
+	_b = FloatAttribute("b", 255, copyable=True)
 
 class CopyableColor(Color):
 	_orig = base.OriginalAttribute(forceType=Color)
