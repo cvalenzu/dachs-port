@@ -432,6 +432,8 @@ class FancyQueryCore(TableBasedCore, base.RestrictionMixin):
 		" All other percents must be escaped by doubling them.", 
 		default=base.Undefined,
 		copyable=True)
+	_timeout = base.FloatAttribute("timeout", default=5., description=
+		"Seconds until the query is aborted")
 
 	def run(self, service, inputTable, queryMeta):
 		fragment, pars = self._getSQLWhere(inputTable, queryMeta)
@@ -443,7 +445,7 @@ class FancyQueryCore(TableBasedCore, base.RestrictionMixin):
 			try:
 				return self._makeTable(
 					querier.queryDicts(self.query%fragment, pars,
-							timeout=queryMeta["timeout"]),
+							timeout=self.timeout),
 						self.outputTable, queryMeta)
 			except:
 				mapDBErrors(*sys.exc_info())
