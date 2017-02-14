@@ -502,8 +502,10 @@ def _iterSTC(ctx, tableDef, serManager):
 
 	for ast in tableDef.getSTCDefs():
 		container, utypeMap = modelgroups.marshal_STC(ast, getIdFor)
-		yield container
-		# in addition, try to come up with a legacy COOSYS specification
+		if ctx.version>(1,1):
+			# "Note-style" STC only supported in 1.2 and higher
+			yield container
+		# legacy COOSYS specification supported everywhere
 		ctx.getEnclosingResource()[
 			_makeCOOSYSFromSTC(utypeMap, serManager)]
 		
@@ -590,8 +592,7 @@ def makeTable(ctx, table):
 
 		# iterate STC before serialising the columns so the columns
 		# have the stupid ref to COOSYS
-		if ctx.version>(1,1):
-			result[_iterSTC(ctx, table.tableDef, sm)]
+		result[_iterSTC(ctx, table.tableDef, sm)]
 
 		result(
 				name=table.tableDef.id,
