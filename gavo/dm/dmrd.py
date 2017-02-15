@@ -14,10 +14,51 @@ for attribute annotations.
 
 
 import functools
+import itertools
 
 from gavo import base
 from gavo.dm import common
 from gavo.dm import sil
+
+
+class SynthesizedRoles(base.Structure):
+	"""DM annotation copied and adapted to a new table.
+
+	This is a stand-in for DataModelRoles in tables not parsed from
+	XMLs.  Their DM structure is defined through references the columns and
+	params make to the annotations their originals had.
+
+	These have no attributes but just arrange for the new annotations
+	to be generated.
+	"""
+	name_ = "_synthesizedRoles"
+
+	def _synthesizeAnnotations(self, rd, ctx):
+		annotationMap = {}
+
+		# First, construct a map from column/param annotations in
+		# the old annotations to new columns and params.  As a
+		# side effect, the dmRoles of the new items are cleared.
+		for item in itertools.chain(self.parent.params, self.parent.columns):
+			for annotation in item.dmRoles.oldRoles:
+				annotationMap[annotation()] = item
+			item.dmRoles = []
+
+		# Then, collect the annotations we have to copy
+		oldInstances = set(ann.instance() for ann in annotationMap)
+
+		# tell the instances to copy themselves, replacing references
+		# accordingly.
+		newInstances = []
+		for oldInstance in oldInstances:
+			newInstances.append(
+				oldInstance.copyWithAnnotationMap(
+					annotationMap, self.parent, None))
+		self.parent.annotations = newInstances
+
+	def completeElement(self, ctx):
+		ctx.addExitFunc(self._synthesizeAnnotations)
+		self._completeElementNext(SynthesizedRoles, ctx)
 
 
 class DataModelRoles(base.Structure):
@@ -65,13 +106,14 @@ class DataModelRoles(base.Structure):
 		self._buildAnnotation()
 		return self._parsedAnnotation
 
-	def getCopy(self, instance, newParent, ctx):
-		# newParent could be None or incomplete at this point.  So,
-		# let's copy the old sil and resolve references later.
-		return self.__class__(newParent, content_=self.content_)
+	def copy(self, newParent, ctx):
+		# we use the general mechanism used for recovering annotations from
+		# columns and params in tables here so we're independent of
+		# changes in columns.
+		return SynthesizedRoles(newParent).finishElement(ctx)
 
 
-def makeAttributeAnnotation(container, attName, attValue):
+def makeAttributeAnnotation(container, instance, attName, attValue):
 	"""returns a typed annotation for attValue within container.
 
 	When attValue is a literal, this is largely trivial.  If it's a reference,
@@ -81,11 +123,16 @@ def makeAttributeAnnotation(container, attName, attValue):
 	container in current DaCHS should be a TableDef or something similar;
 	this function expects at least a getByName function and an rd attribute.
 
+	instance is the root of the current annotation.  Complex objects should
+	keep a (weak) reference to that.   We don't have parent links in
+	our dm trees, and without a reference to the root there's no
+	way we can go "up".
+
 	This is usually used as a callback from within sil.getAnnotation and
 	expects Atom and Reference instances as used there.
 	"""
 	if isinstance(attValue, sil.Atom):
-		return common.AtomicAnnotation(attName, attValue)
+		return common.AtomicAnnotation(attName, attValue, instance=instance)
 	
 	elif isinstance(attValue, sil.Reference):
 		# try name-resolving first (resolveId only does id resolving on
@@ -98,8 +145,8 @@ def makeAttributeAnnotation(container, attName, attValue):
 		if not hasattr(res, "getAnnotation"):
 			raise base.StructureError("Element %s cannot be referenced"
 				" within a data model."%repr(res))
-
-		return res.getAnnotation(attName, container)
+		
+		return res.getAnnotation(attName, container, instance)
 
 	else:
 		assert False

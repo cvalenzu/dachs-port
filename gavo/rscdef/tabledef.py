@@ -235,10 +235,10 @@ class ForeignKey(base.Structure):
 		querier.query("ALTER TABLE %s DROP CONSTRAINT %s"%(self.parent.getQName(), 
 			constraintName))
 
-	def getAnnotation(self, roleName, container):
+	def getAnnotation(self, roleName, container, instance):
 		"""returns a dm annotation for this foreign key.
 		"""
-		return dm.ForeignKeyAnnotation(roleName, self)
+		return dm.ForeignKeyAnnotation(roleName, self, instance)
 
 
 class STCDef(base.Structure):

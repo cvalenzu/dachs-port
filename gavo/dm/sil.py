@@ -210,13 +210,20 @@ def getAnnotation(silLiteral, annotationFactory):
 	a Reference in these cases.
 	"""
 	obStack, result = [], None
+	iterator = iterparse(silLiteral)
 
-	for evType, arg1, arg2 in iterparse(silLiteral):
+	# make the root of the DM instance tree
+	evType, arg1, arg2 = iterator.next()
+	assert evType=='obj'
+	root = common.ObjectAnnotation(arg1, arg2, None)
+	obStack.append(root)
+
+	for evType, arg1, arg2 in iterator:
 		if evType=='obj':
-			obStack.append(common.ObjectAnnotation(arg1, arg2))
+			obStack.append(common.ObjectAnnotation(arg1, arg2, root))
 
 		elif evType=='coll':
-			obStack.append(common.CollectionAnnotation(arg1, arg2))
+			obStack.append(common.CollectionAnnotation(arg1, arg2, root))
 
 		elif evType=='pop':
 			newRole = obStack.pop()
@@ -230,12 +237,13 @@ def getAnnotation(silLiteral, annotationFactory):
 
 		elif evType=='attr':
 			obStack[-1].add( #noflake: the del obStack up there is conditional
-				annotationFactory(arg1, arg2))
+				annotationFactory(root, arg1, arg2))
 
 		elif evType=='item':
 			collection = obStack[-1] #noflake: see above
 			assert isinstance(collection, common.CollectionAnnotation)
-			collection.add(annotationFactory(collection.name, arg1)) 
+			collection.add(
+				annotationFactory(root, collection.name, arg1)) 
 
 		else:
 			assert False

@@ -151,6 +151,10 @@ class OldRoles(object):
 	"""
 	def __init__(self, oldRoles):
 		self.oldRoles = oldRoles
+	
+	def __nonzero__(self):
+		# logic below will only construct these with non-empty oldRoles.
+		return True
 
 
 class DMRolesAttribute(base.AttributeDef):
@@ -166,7 +170,8 @@ class DMRolesAttribute(base.AttributeDef):
 
 	def __init__(self, name, description="Undocumented"):
 		base.AttributeDef.__init__(self, 
-			name, default=base.Computed, description=description)
+			name, default=base.Computed, description=description,
+			copyable=True)
 
 	@property
 	def default_(self):
@@ -184,7 +189,11 @@ class DMRolesAttribute(base.AttributeDef):
 		# Wrap the previous contents into a container that will prevent
 		# accidental changes and lets the new parent table figure out
 		# that the roles haven't been updated
-		return OldRoles(getattr(instance, self.name_))
+		val = getattr(instance, self.name_)
+		if val:
+			return OldRoles(val)
+		else:
+			return []
 
 
 class RoEmptyDict(dict):
@@ -668,9 +677,9 @@ class Column(ColumnBase):
 					# can't help it anyway.  Don't complain.
 					pass
 
-	def getAnnotation(self, roleName, container):
+	def getAnnotation(self, roleName, container, instance):
 		if self.parent==container:
-			return dm.ColumnAnnotation(roleName, self)
+			return dm.ColumnAnnotation(roleName, self, instance)
 		else:
 			raise base.ReportableError("You cannot use columns from"
 				" other tables in your DM annotations directly.",
@@ -914,10 +923,10 @@ class Param(ParamBase):
 			val = self.parent.expand(val)
 		return ParamBase.set(self, val)
 
-	def getAnnotation(self, roleName, container):
+	def getAnnotation(self, roleName, container, instance):
 		"""returns a dm annotation for this param (i.e., a paramRef).
 		"""
 		# TODO: Figure out how to make sure that this param actually
 		# ends up in the target VOTable.  Or do we want to enforce
 		# params to be within the table.
-		return dm.ParamAnnotation(roleName, self)
+		return dm.ParamAnnotation(roleName, self, instance)

@@ -233,6 +233,8 @@ class AnnotationTest(testhelpers.VerboseTest):
 		self.assertEqual(t.annotations[0].type, "testdm:testclass")
 		self.assertEqual(t.annotations[0].childRoles["attr1"].value,
 			"test")
+		self.assertEqual(t.annotations[0].childRoles["attr1"].instance(), 
+			t.annotations[0])
 	
 	def testColumnReference(self):
 		t = base.parseFromString(rscdef.TableDef,
@@ -395,13 +397,19 @@ class QuantityTest(testhelpers.VerboseTest):
 class CopyTest(testhelpers.VerboseTest):
 	resources = [("table", _ONE_ANNOTATION_TABLE)]
 
-	def testParamDmRoleLink(self):
+	def testParamDMRoleLink(self):
 		ann = self.table.tableDef.getByName("artisan").dmRoles[0]()
 		self.assertEqual(ann.name, "maker")
 
-	def testColumnDmRoleLink(self):
+	def testColumnDMRoleLink(self):
 		ann = self.table.tableDef.getByName("raj2000").dmRoles[0]()
 		self.assertEqual(ann.name, "y")
+	
+	def testDMRolesCopying(self):
+		col = self.table.tableDef.getByName("raj2000")
+		colCopy = col.copy(None)
+		self.assertEqual(colCopy.dmRoles.__class__.__name__,
+			"OldRoles")
 
 	def testSimpleCopy(self):
 		newTD = self.table.tableDef.copy(None)
