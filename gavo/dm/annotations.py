@@ -26,6 +26,7 @@ class ColumnAnnotation(common.AnnotationBase):
 	def __init__(self, name, column):
 		common.AnnotationBase.__init__(self, name)
 		self.weakref = weakref.ref(column)
+		column.dmRoles.append(weakref.ref(self))
 
 	@property
 	def value(self):
@@ -45,6 +46,7 @@ class ParamAnnotation(common.AnnotationBase):
 	def __init__(self, name, param):
 		common.AnnotationBase.__init__(self, name)
 		self.weakref = weakref.ref(param)
+		param.dmRoles.append(weakref.ref(self))
 
 	@property
 	def value(self):

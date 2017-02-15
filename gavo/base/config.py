@@ -403,9 +403,9 @@ _config = Configuration(
 			" this user."),
 		EnsureTrailingSlashesItem("nevowRoot", default="/",
 			description="Path fragment to the server's root for operation off the"
-				" server's root; this must end with a slash (and, frankly, if"
-				" you must use this feature, you'll probably encounter some bugs."
-				" we want to fix those, though.)"),
+				" server's root; this must end with a slash (setting this"
+				" will currently break essentially the entire web interface."
+				" If you must use it, contact the authors and we will fix things.)"),
 		StringConfigItem("realm", default="X-Unconfigured", 
 			description="Authentication realm to be used (currently,"
 			" only one, server-wide, is supported)"),

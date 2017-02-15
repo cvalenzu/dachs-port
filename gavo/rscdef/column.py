@@ -117,6 +117,9 @@ class TableManagedAttribute(base.AttributeDef):
 	managed by the parent table.
 	
 	That's stc and stcUtype here, currently.
+
+	Do not use this in new code.  This should to when the stc element
+	can safely be replaced by gavo-dm-based stuff (here: DmRoles).
 	"""
 	typeDesc_ = "non-settable internally used value"
 
@@ -140,6 +143,48 @@ class TableManagedAttribute(base.AttributeDef):
 		# these never get copied; the values are potentially shared 
 		# between many objects, so the must not be changed anyway.
 		return getattr(instance, self.name_)
+
+
+class OldRoles(object):
+	"""A sentinel class for Table to signal non-adapted DM roles on a column
+	or param.
+	"""
+	def __init__(self, oldRoles):
+		self.oldRoles = oldRoles
+
+
+class DMRolesAttribute(base.AttributeDef):
+	"""An attribute managing DM roles.
+
+	It is not set directly from XML but filled when a table parses
+	DM annotation.  When copying around columns between tables, this
+	is used to build the new annotation; the value is an oldAnnotations
+	instance rather than a list as usual until the new parent table has
+	started constructing its own DM annotations.
+	"""
+	typeDesc_ = "read-only list of roles played by this column in DMs"
+
+	def __init__(self, name, description="Undocumented"):
+		base.AttributeDef.__init__(self, 
+			name, default=base.Computed, description=description)
+
+	@property
+	def default_(self):
+		return []
+
+	def feedObject(self, instance, value):
+		setattr(instance, self.name_, value)
+
+	def iterEvents(self, instance):
+		# these are entirely externally managed
+		if False:
+			yield None
+	
+	def getCopy(self, instance, newParent, ctx):
+		# Wrap the previous contents into a container that will prevent
+		# accidental changes and lets the new parent table figure out
+		# that the roles haven't been updated
+		return OldRoles(getattr(instance, self.name_))
 
 
 class RoEmptyDict(dict):
@@ -410,6 +455,8 @@ class ColumnBase(base.Structure, base.MetaMixin):
 	_stcUtype = TableManagedAttribute("stcUtype", description="Internally used"
 		" STC information for this column (do not assign to)",
 		default=None, copyable=True)
+	_dmRoles = DMRolesAttribute("dmRoles",
+		description="Roles played by this column; cannot be asigned to.")
 	_properties = base.PropertyAttribute(copyable=True)
 	_original = base.OriginalAttribute()
 

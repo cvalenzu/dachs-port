@@ -395,6 +395,14 @@ class QuantityTest(testhelpers.VerboseTest):
 class CopyTest(testhelpers.VerboseTest):
 	resources = [("table", _ONE_ANNOTATION_TABLE)]
 
+	def testParamDmRoleLink(self):
+		ann = self.table.tableDef.getByName("artisan").dmRoles[0]()
+		self.assertEqual(ann.name, "maker")
+
+	def testColumnDmRoleLink(self):
+		ann = self.table.tableDef.getByName("raj2000").dmRoles[0]()
+		self.assertEqual(ann.name, "y")
+
 	def testSimpleCopy(self):
 		newTD = self.table.tableDef.copy(None)
 		ann = newTD.annotations[0]
