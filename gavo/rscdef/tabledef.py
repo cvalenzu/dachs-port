@@ -436,10 +436,7 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 
 	# this actually induces an attribute annotations with the DM
 	# annotation instances
-	_annotations = base.StructListAttribute("dm",
-		childFactory=dm.DataModelRoles,
-		description="Annotations for data models.",
-		copyable=True)
+	_annotations = dm.DataModelRolesAttribute()
 
 	_properties = base.PropertyAttribute()
 
@@ -549,6 +546,11 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 
 		if self.registration:
 			self.registration.register()
+
+		# if there's no DM annotation yet, there's still a chance that our
+		# columns and params brought some with them.  Try that.
+		if not self.annotations:
+			self.updateAnnotationFromChildren()
 
 	def getElementForName(self, name):
 		"""returns the first of column and param having name name.

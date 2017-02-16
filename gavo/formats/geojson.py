@@ -234,10 +234,9 @@ def writeTableAsGeoJSON(table, target, acquireSamples=False):
 	if hasattr(table, "getPrimaryTable"):
 		table = table.getPrimaryTable()
 
-	for ann in table.tableDef.annotations:
-		if ann.type=="geojson:FeatureCollection":
-			break
-	else:
+	try:
+		ann = table.tableDef.getAnnotationOfType("geojson:FeatureCollection")
+	except base.NotFoundError:
 		raise base.DataError("Table has no geojson:FeatureCollection annotation."
 			"  Cannot serialise to GeoJSON.")
 

@@ -129,30 +129,30 @@ def _getTableDescForOutput(parsedTree):
 	"""
 	ctx = TDContext()
 	columns = [_makeColumnFromFieldInfo(ctx, *fi) 
-			for fi in parsedTree.fieldInfos.seq]
-	resTable = base.makeStruct(rscdef.TableDef, columns=columns,
-		id=parsedTree.suggestAName())
+		for fi in parsedTree.fieldInfos.seq]
 
 	# if this is a simple one-table query, take the metadata and params
 	# from that table.
 	fromNames = [t.qName
 		for t in parsedTree.fromClause.getAllTables()
 		if hasattr(t, "qName")]
+
 	if len(fromNames)==1:
 		try:
 			srcTable = base.caches.getMTH(None).getTableDefForTable(fromNames[0])
-			params = srcTable.params
-			if params:
-				resTable = resTable.change(params=params)
+			# swallow groups for now -- we don't really use them for db tables
+			# but if there are some, they'll be trouble when columns are missing.
+			resTable = srcTable.change(columns=columns, groups=[], primary=())
 			resTable.copyMetaFrom(srcTable)
-			# Emergency fix: just alias the original annotations.
-			# TODO: do this properly, only copying annotations of
-			# columns we actually have.
-			resTable.annotations = srcTable.annotations
 			resTable.id = srcTable.id
+			return resTable
 		except base.NotFoundError:
-			# Single source is not one of our tables, hence no metadata
+			# Single source is not one of our tables, hence no metadata, and
+			# fall through to normal table generation
 			pass
+
+	resTable = base.makeStruct(rscdef.TableDef, columns=columns,
+		id=parsedTree.suggestAName())
 
 	return resTable
 

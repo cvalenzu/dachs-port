@@ -13,6 +13,6 @@ GAVO's VO-DML+VOTable library.
 from gavo.dm.annotations import (ColumnAnnotation, ForeignKeyAnnotation,
 	ParamAnnotation)
 
-from gavo.dm.dmrd import DataModelRoles
+from gavo.dm.dmrd import DataModelRoles, DataModelRolesAttribute
 
 from gavo.dm.vodml import getModelForPrefix, resolveVODMLId, Model

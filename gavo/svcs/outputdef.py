@@ -77,6 +77,7 @@ class OutputField(rscdef.Column):
 	def fromColumn(cls, col):
 		res = cls(None, **col.getAttributes(rscdef.Column))
 		res.stc = col.stc
+		res.dmRoles = rscdef.OldRoles(col.dmRoles)
 		return res.finishElement()
 
 	def expand(self, *args, **kwargs):

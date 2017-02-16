@@ -11,19 +11,16 @@ Tests to do with new-style data modelling and VO-DML serialisation.
 from gavo.helpers import testhelpers
 
 from cStringIO import StringIO
-import datetime
 import re
-import unittest
 
 from gavo import base
 from gavo import dm
 from gavo import rsc
 from gavo import rscdef
 from gavo import rscdesc
-from gavo.dm import common
+from gavo import svcs
 from gavo.dm import dmrd
 from gavo.dm import sil
-from gavo.dm import vodml
 from gavo.formats import votablewrite
 
 
@@ -248,23 +245,32 @@ class AnnotationTest(testhelpers.VerboseTest):
 		self.assertEqual(col.ucd, "stuff")
 
 
-class _OneAnnotationTable(testhelpers.TestResource):
+class _AnnotationTable(testhelpers.TestResource):
 	def make(self, deps):
 		td = base.parseFromString(rscdef.TableDef,
 			"""<table id="foo">
-				<dm>
-					(dachstoy:Ruler) {
-						width: @col1
-						location: 
-							(dachstoy:Location) {
-								x: 0.1
-								y: @raj2000
-								z: @dej2000
+					<dm>
+						(dachstoy:Ruler) {
+							width: @col1
+							location: 
+								(dachstoy:Location) {
+									x: 0.1
+									y: @raj2000
+									z: @dej2000
+								}
+							maker: [
+								Oma "Opa Rudolf" @artisan]
+						}
+					</dm>
+					<dm>
+						(geojson:FeatureCollection) {
+							feature: {
+								geometry: sepcoo
+								long: @raj2000
+								lat: @col1
 							}
-						maker: [
-							Oma "Opa Rudolf" @artisan]
-					}
-				</dm>
+						}
+					</dm>
 					<param name="artisan" type="text">Onkel Fritz</param>
 					<column name="col1" ucd="stuff" type="text"/>
 					<column name="raj2000"/>
@@ -274,11 +280,11 @@ class _OneAnnotationTable(testhelpers.TestResource):
 		return rsc.TableForDef(td, rows=[
 			{"col1": "1.5", "raj2000": 0.3, "dej2000": 3.1}])
 
-_ONE_ANNOTATION_TABLE = _OneAnnotationTable()
+_ANNOTATION_TABLE = _AnnotationTable()
 
 
 class _DirectVOT(testhelpers.TestResource):
-	resources = [("table", _ONE_ANNOTATION_TABLE)]
+	resources = [("table", _ANNOTATION_TABLE)]
 
 	def make(self, deps):
 		return testhelpers.getXMLTree(votablewrite.getAsVOTable(	
@@ -395,7 +401,7 @@ class QuantityTest(testhelpers.VerboseTest):
 
 
 class CopyTest(testhelpers.VerboseTest):
-	resources = [("table", _ONE_ANNOTATION_TABLE)]
+	resources = [("table", _ANNOTATION_TABLE)]
 
 	def testParamDMRoleLink(self):
 		ann = self.table.tableDef.getByName("artisan").dmRoles[0]()
@@ -413,14 +419,53 @@ class CopyTest(testhelpers.VerboseTest):
 
 	def testSimpleCopy(self):
 		newTD = self.table.tableDef.copy(None)
-		ann = newTD.annotations[0]
+		ann = newTD.getAnnotationOfType("dachstoy:Ruler")
 		self.assertEqual(ann["maker"][0], "Oma")
 		self.assertEqual(ann["maker"][2].value, newTD.getByName("artisan"))
 		self.assertEqual(ann["width"].value, newTD.getByName("col1"))
 		self.assertEqual(ann["location"]["x"], "0.1")
 		self.assertEqual(ann["location"]["y"].value,
 			newTD.getByName("raj2000"))
-			
+
+		ann = newTD.getAnnotationOfType("geojson:FeatureCollection")
+		self.assertEqual(ann["feature"]["geometry"], "sepcoo")
+		self.assertEqual(ann["feature"]["long"].value,
+			newTD.getByName("raj2000"))
+
+	def testPartialCopy(self):
+		newTD = self.table.tableDef.change(id="copy", columns=[
+			self.table.tableDef.getByName("dej2000").copy(None)],
+			params=[])
+		ann = newTD.getAnnotationOfType("dachstoy:Ruler")
+		self.assertEqual(ann["maker"][0], "Oma")
+		self.assertEqual(len(ann["maker"]), 2)
+		self.assertEqual(ann["location"]["z"].value,
+			newTD.getByName("dej2000"))
+		self.assertFalse("y" in ann["location"])
+		# the following assertion states that annotations without any
+		# columns/params referenced are not copied into the destination
+		# table.
+		self.assertEqual(len(newTD.annotations), 1)
+	
+	def testOutputTableConstruction(self):
+		newTD = base.makeStruct(svcs.OutputTableDef,
+			columns=[
+				self.table.tableDef.getByName("raj2000").copy(None),
+				self.table.tableDef.getByName("dej2000").copy(None)],
+			params=[
+				self.table.tableDef.getByName("artisan").copy(None)])
+		newTD.updateAnnotationFromChildren()
+		ann = newTD.getAnnotationOfType("dachstoy:Ruler")
+		self.assertEqual(ann["maker"][0], "Oma")
+		self.assertEqual(ann["location"]["z"].value,
+			newTD.getByName("dej2000"))
+		self.assertEqual(len(ann["maker"]), 3)
+
+		ann = newTD.getAnnotationOfType("geojson:FeatureCollection")
+		self.assertEqual(ann["feature"]["geometry"], "sepcoo")
+		self.assertEqual(ann["feature"]["long"].value,
+			newTD.getByName("raj2000"))
+
 
 if __name__=="__main__":
 	testhelpers.main(DirectSerTest)

@@ -150,11 +150,13 @@ class OldRoles(object):
 	or param.
 	"""
 	def __init__(self, oldRoles):
-		self.oldRoles = oldRoles
+		if isinstance(oldRoles, OldRoles):
+			self.oldRoles = oldRoles.oldRoles
+		else:
+			self.oldRoles = oldRoles
 	
 	def __nonzero__(self):
-		# logic below will only construct these with non-empty oldRoles.
-		return True
+		return bool(self.oldRoles)
 
 
 class DMRolesAttribute(base.AttributeDef):

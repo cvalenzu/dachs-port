@@ -2049,6 +2049,13 @@ class QueryTest(testhelpers.VerboseTest):
 				" from tap_schema.columns where column_name ='delta'")
 		self.assertEqual(res.rows, [{'tn': 'TEST.ADQL', 'td': 'a sample dec'}])
 
+	def testDMAnnotation(self):
+		res = self.runQuery("SELECT TOP 1 * FROM %s"%self.tableName)
+		ann = res.tableDef.getAnnotationOfType("geojson:FeatureCollection")
+		self.assertEqual(ann["feature"]["geometry"]["type"], "sepcoo")
+		self.assertEqual(ann["feature"]["geometry"]["latitude"].value, 
+			res.tableDef.getByName("delta"))
+
 
 class SimpleSTCSTest(testhelpers.VerboseTest):
 	def setUp(self):

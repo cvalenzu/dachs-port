@@ -197,6 +197,7 @@ class InputKey(column.ParamBase):
 			instance.feed(k, v)
 		if not "required" in kwargs:
 			instance.feedObject("required", False)
+		instance.dmRoles = rscdef.OldRoles(column.dmRoles)
 		return instance.finishElement(None)
 
 

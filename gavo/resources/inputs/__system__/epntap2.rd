@@ -65,7 +65,7 @@
 			<property key="std">1</property>
 		</column>
 		<column name="access_estsize"	type="integer"
-			ucd="phys.size;meta.file" unit="kByte"
+			ucd="phys.size;meta.file" unit="kbyte"
 			utype="Obs.Access.Size"
 			description="Estimated file size in kbyte.">
 			<property key="std">1</property>

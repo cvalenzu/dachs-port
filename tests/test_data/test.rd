@@ -142,6 +142,17 @@
 			Position ICRS GEOCENTER Epoch J2015.0 
 				"alpha" "delta" Redshift VELOCITY "rV"
 		</stc>
+		<dm>
+			(geojson:FeatureCollection) {
+				feature: {
+					geometry: {
+						type: sepcoo
+						longitude: @alpha
+						latitude: @delta
+					}
+				}
+			}
+		</dm>
 		<group name="weird_columns" utype="col:weird.name">
 			<columnRef dest="alpha" utype="col:weird.reason"/>
 			<columnRef dest="mag"/>

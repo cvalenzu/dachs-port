@@ -33,13 +33,31 @@ class SynthesizedRoles(base.Structure):
 	"""
 	name_ = "_synthesizedRoles"
 
-	def _synthesizeAnnotations(self, rd, ctx):
+	def synthesizeAnnotations(self, rd, ctx):
+		# don't overwrite existing annotations (usually, they
+		# will be the result of a previous run when multiple
+		# annotations are present).
+		if self.parent.annotations:
+			return
+
 		annotationMap = {}
 
 		# First, construct a map from column/param annotations in
 		# the old annotations to new columns and params.  As a
 		# side effect, the dmRoles of the new items are cleared.
 		for item in itertools.chain(self.parent.params, self.parent.columns):
+			if item.parent!=self.parent:
+				# Don't annotate things that don't belong to us.
+				# This is going to hide problems big time.  But touching these
+				# certainly is worse, and if people are missing annotations,
+				# they'll probably notice they have to copy these.
+				continue
+
+			if isinstance(item.dmRoles, list):
+				# item has been processed before, probably as part of another
+				# DM declaration.  No need to repeat that.
+				continue
+
 			for annotation in item.dmRoles.oldRoles:
 				annotationMap[annotation()] = item
 			item.dmRoles = []
@@ -57,7 +75,7 @@ class SynthesizedRoles(base.Structure):
 		self.parent.annotations = newInstances
 
 	def completeElement(self, ctx):
-		ctx.addExitFunc(self._synthesizeAnnotations)
+		ctx.addExitFunc(self.synthesizeAnnotations)
 		self._completeElementNext(SynthesizedRoles, ctx)
 
 
@@ -113,6 +131,46 @@ class DataModelRoles(base.Structure):
 		return SynthesizedRoles(newParent).finishElement(ctx)
 
 
+class DataModelRolesAttribute(base.StructListAttribute):
+	"""an attribute allowing data model annotation using SIL.
+
+	It will also give an annotations attribute on the instance, and a
+	getAnnotationsOfType method letting you pull out a specific annotation.
+	
+	For situation where an existing annotation should be copied from
+	annotations coming in through columns and/or params, the attribute
+	also gives an updateAnnotationFromChildren method.  It will do
+	nothing if some annotation already exists.
+	"""
+	def __init__(self):
+		base.StructListAttribute.__init__(self,
+		"dm",
+		childFactory=DataModelRoles,
+		description="Annotations for data models.",
+		copyable=True)
+
+	def iterParentMethods(self):
+		def getAnnotationOfType(instance, typeName):
+			"""returns the first annotation of the type passed.
+
+			This will raise a NotFoundError if no such annotation is found.
+			"""
+			for ann in instance.annotations:
+				if ann.type==typeName:
+					return ann
+			raise base.NotFoundError(typeName, "annotation", repr(instance),
+				hint="This means that some DaCHS component really needed some dm"
+					" annotation.  You will have to provide it in the table"
+					" element.  See also 'Data Model Annotation' in the ref guide.")
+		
+		yield ("getAnnotationOfType", getAnnotationOfType)
+
+		def updateAnnotationFromChildren(instance):
+			roleSynthesizer = SynthesizedRoles(instance)
+			roleSynthesizer.synthesizeAnnotations(None, None)
+		yield ("updateAnnotationFromChildren", updateAnnotationFromChildren)
+
+
 def makeAttributeAnnotation(container, instance, attName, attValue):
 	"""returns a typed annotation for attValue within container.
 
@@ -140,7 +198,10 @@ def makeAttributeAnnotation(container, instance, attName, attValue):
 		try:
 			res = container.getByName(attValue)
 		except base.NotFoundError:
-			res = base.resolveId(container.rd, attValue, instance=container)
+			if container.rd:
+				res = base.resolveId(container.rd, attValue, instance=container)
+			else:
+				raise
 
 		if not hasattr(res, "getAnnotation"):
 			raise base.StructureError("Element %s cannot be referenced"

@@ -12,12 +12,12 @@ of these.
 #c COPYING file in the source distribution.
 
 
-# topnote[1]: copying Column-, Param-, and GroupRefAnnotations is
-# probably not useful in the typical case; when you copy an annotation,
-# that's probably because you copied a table, and hence your columns and
-# params are different from the original table.  When copying the 
-# annotations, they will still point to the old instances.
-# Still, for consistency, I'm implementing the copy methods here.
+# topnote[1]: copying TableRelativeAnnotations is probably not useful in
+# the typical case; when you copy an annotation, that's probably because
+# you copied a table, and hence your columns and params are different
+# from the original table.  When copying the annotations, they will
+# still point to the old instances.  Still, for consistency, I'm
+# implementing the copy methods here.
 
 
 import weakref
@@ -26,13 +26,13 @@ from gavo.dm import common
 from gavo.votable import V
 
 
-class ColumnAnnotation(common.AnnotationBase):
+class ColumnAnnotation(common.TableRelativeAnnotation):
 	"""An annotation of a table column.
 
 	These reference DaCHS columns.
 	"""
 	def __init__(self, name, column, instance):
-		common.AnnotationBase.__init__(self, name, instance)
+		common.TableRelativeAnnotation.__init__(self, name, instance)
 		self.weakref = weakref.ref(column)
 		column.dmRoles.append(weakref.ref(self))
 
@@ -49,14 +49,14 @@ class ColumnAnnotation(common.AnnotationBase):
 			V.VODML[V.ROLE[common.completeVODMLId(ctx, self.name)]]]
 
 
-class ParamAnnotation(common.AnnotationBase):
+class ParamAnnotation(common.TableRelativeAnnotation):
 	"""An annotation of a table param.
 
 	NOTE: in getVOT, container MUST be the table itself, as the table has
 	params of its own and does *not* share tableDef's one.
 	"""
 	def __init__(self, name, param, instance):
-		common.AnnotationBase.__init__(self, name, instance)
+		common.TableRelativeAnnotation.__init__(self, name, instance)
 		self.weakref = weakref.ref(param)
 		param.dmRoles.append(weakref.ref(self))
 
@@ -88,12 +88,12 @@ def _the(gen):
 		" extra %s"%repr(extra))
 
 
-class GroupRefAnnotation(common.AnnotationBase):
+class GroupRefAnnotation(common.TableRelativeAnnotation):
 	"""An annotation always referencing a group that's not lexically
 	within the parent.
 	"""
 	def __init__(self, name, objectReferenced, instance):
-		common.AnnotationBase.__init__(self, name, instance)
+		common.TableRelativeAnnotation.__init__(self, name, instance)
 		self.objectReferenced = objectReferenced
 
 	def copy(self, newInstance):
@@ -112,14 +112,14 @@ class GroupRefAnnotation(common.AnnotationBase):
 			V.VODML[V.ROLE[common.completeVODMLId(ctx, self.name)]]]
 
 
-class ForeignKeyAnnotation(common.AnnotationBase):
+class ForeignKeyAnnotation(common.TableRelativeAnnotation):
 	"""An annotation pointing to an annotation in a different table.
 
 	These are constructed with the attribute name and the foreign key RD
 	object.
 	"""
 	def __init__(self, name, fk, instance):
-		common.AnnotationBase.__init__(self, name, instance)
+		common.TableRelativeAnnotation.__init__(self, name, instance)
 		self.value = weakref.proxy(fk)
 
 	def copy(self, newInstance):

@@ -19,7 +19,7 @@ about grammars, cores, etc, available.
 from gavo.rscdef.builtingrammars import (GRAMMAR_REGISTRY, getGrammar)
 
 from gavo.rscdef.column import (Column, Option, Values, makeOptions,
-	Param)
+	Param, OldRoles)
 
 from gavo.rscdef.common import (RDAttribute, ResdirRelativeAttribute,
 	ColumnListAttribute, NamePathAttribute, ColumnList, IVOMetaMixin,

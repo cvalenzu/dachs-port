@@ -149,8 +149,8 @@ def resolveId(ctx, id, instance=None, forceType=None):
 	if "#" in id:
 		return resolveCrossId(id, forceType)
 	if ctx is None:
-		raise common.StructureError("Cannot intra-reference when parsing without"
-			" a context")
+		raise common.StructureError(
+			"Cannot intra-reference (%s) when parsing without a context"%id)
 	if "." in id:
 		return resolveComplexId(ctx, id, forceType)
 
