@@ -26,8 +26,64 @@ from gavo import rscdef
 from gavo.rsc import common
 
 
+NUMERIC_TYPES = frozenset(["smallint", "integer", "bigint", "real",
+	"double precision"])
+
+ORDERED_TYPES = frozenset(["timestamp", "text", "unicode"]) | NUMERIC_TYPES
+
+
 class Error(base.Error):
 	pass
+
+
+class ColumnStat(object):
+	"""Column statistics as exposed by Limits.
+
+	These have min, max, and values attributes, all of which can be None.
+	otherwise, min and max are values of the column type, values is a set
+	of those.
+	"""
+	def __init__(self):
+		self.min, self.max = None, None
+		self.values = None
+
+
+class Limits(dict):
+	"""Column statistics (min/max, values) for an in-memory table.
+
+	These are constructed with the rows attribute and a list each for
+	columns for which you want min/max and the values present.
+
+	This then exposes a dictionary interface
+	"""
+	def __init__(self, rows, minmaxColumns, enumColumns):
+		dict.__init__(self)
+		self._addMinmax(rows, minmaxColumns)
+		self._addEnums(rows, enumColumns)
+	
+	def _addMinmax(self, rows, minmaxColumns):
+		stats = [(name, ColumnStat()) for name in minmaxColumns]
+		self.update(dict(stats))
+
+		for row in rows:
+			for name, stat in stats:
+				val = row[name]
+				if val is None:
+					continue
+				if stat.min is None or stat.min>val:
+					stat.min = val
+				if stat.max is None or stat.max<val:
+					stat.max = val
+	
+	def _addEnums(self, rows, enumColumns):
+		stats = [(name, self.get("name", ColumnStat())) for name in enumColumns]
+		self.update(dict(stats))
+		for _, stat in stats:
+			stat.values = set()
+
+		for row in rows:
+			for name, stat in stats:
+				stat.values.add(row[name])
 
 
 class _Feeder(object):
@@ -208,6 +264,7 @@ class BaseTable(base.MetaMixin, common.ParamMixin):
 					"Value is required but was not provided", par.name)
 
 
+
 class InMemoryTable(BaseTable):
 	"""is a table kept in memory.
 
@@ -235,12 +292,26 @@ class InMemoryTable(BaseTable):
 				return
 		self.rows.append(row)
 
-
 	def getRow(self, *args):
 		raise ValueError("Cannot use getRow in index-less table")
 
 	def getFeeder(self, **kwargs):
 		return _Feeder(self, **kwargs)
+
+	def getLimits(self):
+		"""returns a limits instance for this table.
+
+		This is a characterisation of the ranges of things in this table, 
+		pretty much as what dachs info does; if you fix things here, you probaly
+		want to fix things there, too.
+		"""
+		minmaxColumns, enumColumns = [], []
+		for col in self.tableDef:
+			if col.isEnumerated():
+				enumColumns.append(col.name)
+			elif col.type in ORDERED_TYPES or col.type.startswith("char"):
+				minmaxColumns.append(col.name)
+		return Limits(self.rows, minmaxColumns, enumColumns)
 
 
 class InMemoryIndexedTable(InMemoryTable):

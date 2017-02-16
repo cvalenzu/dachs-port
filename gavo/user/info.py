@@ -7,17 +7,17 @@ Commands for obtaining information about various things in the data center.
 #c This program is free software, covered by the GNU GPL.  See the
 #c COPYING file in the source distribution.
 
+# XXX: TODO: we should throw the AnnotationMaker stuff away and
+# move the core of annotateDBTable to rsc.dbtable, and rsc.Limits.
+# There's now inMemoryTable.getLimits that does a similar thing.
 
 from gavo import api
 from gavo import base
 from gavo import svcs
 from gavo import utils
+from gavo.rsc import table
 from gavo.imp.argparse import ArgumentParser
 
-NUMERIC_TYPES = frozenset(["smallint", "integer", "bigint", "real",
-	"double precision"])
-
-ORDERED_TYPES = frozenset(["timestamp", "text", "unicode"]) | NUMERIC_TYPES
 
 
 class AnnotationMaker(object):
@@ -90,9 +90,9 @@ def annotateDBTable(td, extended=True, requireValues=False):
 	for col in td:
 		annotator = AnnotationMaker(col)
 
-		if col.type in ORDERED_TYPES or col.type.startswith("char"):
+		if col.type in table.ORDERED_TYPES or col.type.startswith("char"):
 			if requireValues:
-				if (col.type not in NUMERIC_TYPES 
+				if (col.type not in table.NUMERIC_TYPES 
 						or not col.values
 						or col.values.min is None):
 					continue
@@ -103,7 +103,7 @@ def annotateDBTable(td, extended=True, requireValues=False):
 				"MIN(%(name)s)", nameMaker))
 		
 		if extended:
-			if col.type in NUMERIC_TYPES:
+			if col.type in table.NUMERIC_TYPES:
 				outputFields.append(annotator.getOutputFieldFor("avg",
 					"AVG(%(name)s)", nameMaker))
 			
@@ -114,14 +114,14 @@ def annotateDBTable(td, extended=True, requireValues=False):
 		if annotator.doesWork():
 			annotators.append(annotator)
 
-	table = api.TableForDef(td)
+	dbtable = api.TableForDef(td)
 
-	if not hasattr(table, "iterQuery"):
+	if not hasattr(dbtable, "iterQuery"):
 		raise api.ReportableError("Table %s cannot be queried."%td.getQName(),
 			hint="This is probably because it is an in-memory table.  Add"
 			" onDisk='True' to make tables reside in the database.")
 
-	resultRow = list(table.iterQuery(outputFields, ""))[0]
+	resultRow = list(dbtable.iterQuery(outputFields, ""))[0]
 	for annotator in annotators:
 		annotator.annotate(resultRow)
 

@@ -608,5 +608,25 @@ class DBFeedingTest(tresc.TestWithDBConnection):
 		finally:
 			self.conn.rollback()
 
+
+class LimitsTest(testhelpers.VerboseTest):
+	def testLimitsComputing(self):
+		td = testhelpers.getTestRD().getById("valSpec").copy(None)
+		table = rsc.TableForDef(td,
+			rows=[
+				{"a_num": 13, "enum": None},
+				{"a_num": None, "enum": "bad"},
+				{"a_num": -10, "enum": "horrific"}])
+		lims = table.getLimits()
+
+		self.assertEqual(lims["a_num"].min, -10)
+		self.assertEqual(lims["a_num"].max, 13)
+		self.assertEqual(lims["a_num"].values, None)
+
+		self.assertEqual(lims["enum"].max, None)
+		self.assertEqual(lims["enum"].min, None)
+		self.assertEqual(lims["enum"].values, set([None, "bad", "horrific"]))
+
+
 if __name__=="__main__":
 	testhelpers.main(STCTest)

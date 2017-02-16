@@ -52,7 +52,7 @@ def _combineRowIntoOne(ssaRows):
 	"""makes a "total row" from ssaRows.
 
 	In the resulting row, minima and maxima are representative of the
-	whole result set, and enumerated columsn are set-valued.
+	whole result set, and enumerated columns are set-valued.
 
 	This is useful when generating parameter metadata.
 	"""
@@ -228,7 +228,7 @@ class SSAPCore(svcs.DBCore):
 			dlCore = getDatalinkCore(dlService, res)
 
 			# new and shiny datalink (keep)
-			# (we're just using endpoint 0; it should a the sync service)
+			# (we're just using endpoint 0; it should be the sync service)
 			dlEndpoint = dlCore.datalinkEndpoints[0]
 			vot[dlEndpoint.asVOT(
 				votCtx, dlService.getURL(dlEndpoint.rendName), 
