@@ -628,7 +628,7 @@ class InputKeyTest(testhelpers.VerboseTest):
 
 	def testPlaceholder(self):
 		ftype, fwid, rendered = self._getKeyProps(
-			'<condDesc buildFrom="data/test#valSpec.numeric"/>')
+			'<condDesc buildFrom="data/test#valSpec.a_num"/>')
 		self.assertEqual(rendered.children[0].attributes["placeholder"],
 			"10.0 .. 15.0")
 	

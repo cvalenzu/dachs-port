@@ -196,7 +196,7 @@
 	</data>
 
 	<table id="valSpec" onDisk="True">
-		<column name="numeric" required="True">
+		<column name="a_num" required="True">
 			<values min="10" max="15"/>
 		</column>
 		<column name="enum" type="text">
@@ -224,10 +224,6 @@
 		<make table="valSpec"/>
 		<make table="valuesdoc" role="docrec"/>
 	</data>
-
-	<table id="misctypes" onDisk="True">
-		<column name="box" type="box"/>
-	</table>
 
 	<data id="viziertest">
 		<sources><item>$a$A$aaab$baaab$BAaab$B*$X33+4$a,b$a|b$\it</item></sources>
@@ -276,35 +272,6 @@
 		</rowmaker>
 		<make table="abcd" rowmaker="eoi_abcd"/>
 	</data> 
-
-	<data id="expandOnDate">
-		<dictlistGrammar>
-			<rowfilter procDef="__system__/procs#expandDates">
-				<bind key="dest">"e"</bind>
-				<bind key="start">"start"</bind>
-				<bind key="end">"end"</bind>
-				<bind key="hrInterval">12</bind>
-			</rowfilter>
-		</dictlistGrammar>
-		<rowmaker id="eod_abcd">
-			<map dest="a"/>
-			<map dest="e">@e</map>
-		</rowmaker>
-		<make table="abcd" rowmaker="eod_abcd"/>
-	</data>
-
-	<data id="expandOnDateDefault">
-		<dictlistGrammar>
-			<rowfilter procDef="__system__/procs#expandDates">
-				<bind key="start">"start"</bind>
-				<bind key="end">"end"</bind>
-			</rowfilter>
-		</dictlistGrammar>
-		<rowmaker id="eodd_abcd" idmaps="a">
-			<map dest="e">@curTime</map>
-		</rowmaker>
-		<make table="abcd" rowmaker="eodd_abcd"/>
-	</data>
 
 	<data id="expandComma">
 		<dictlistGrammar>

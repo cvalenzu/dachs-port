@@ -130,11 +130,11 @@ class ValidationTest(testhelpers.VerboseTest):
 		try:
 			recDef.validateRow(rec)
 		except base.ValidationError, ex:
-			self.assertEqual(ex.colName, "numeric")
+			self.assertEqual(ex.colName, "a_num")
 		rec["enum"] = "abysimal"
 		self.assertRaises(base.ValidationError, recDef.validateRow,
 			rec)
-		rec["numeric"] = 14
+		rec["a_num"] = 14
 		self.assert_(recDef.validateRow(rec)==None)
 	
 	def testBadSchema(self):

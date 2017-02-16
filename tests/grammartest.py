@@ -52,33 +52,6 @@ class PredefinedRowfilterTest(testhelpers.VerboseTest):
 			[{'a': u'eins', 'c': 4, 'b': 3, 'd': 3}, 
 				{'a': u'eins', 'c': 4, 'b': 3, 'd': 4}])
 
-	def testDateRange(self):
-		dd = testhelpers.getTestRD().getById("expandOnDate")
-		data = rsc.makeData(dd, forceSource=[{"start": datetime.date(2000, 5, 8), 
-				"end": datetime.date(2000, 5, 10), "a": "line1"},
-			{"start": datetime.date(2005, 5, 8), 
-			"end": datetime.date(2005, 5, 8), "a": "line2"},])
-		self.assertEqual(data.getPrimaryTable().rows, [
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 8, 0, 0)}, 
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 8, 12, 0)}, 
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 9, 0, 0)}, 
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 9, 12, 0)},
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 10, 0, 0)}, 
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 10, 12, 0)}, 
-			{'a': u'line2', 'e': datetime.datetime(2005, 5, 8, 0, 0)}, 
-			{'a': u'line2', 'e': datetime.datetime(2005, 5, 8, 12, 0)}])
-
-	def testDateRangeDefault(self):
-		dd = testhelpers.getTestRD().getById("expandOnDateDefault")
-		data = rsc.makeData(dd, forceSource=[{"start": datetime.date(2000, 5, 8), 
-				"end": datetime.date(2000, 5, 9), "a": "line1"},
-			{"start": datetime.date(2005, 5, 8), 
-			"end": datetime.date(2005, 5, 8), "a": "line2"},])
-		self.assertEqual(data.getPrimaryTable().rows, [
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 8, 0, 0)}, 
-			{'a': u'line1', 'e': datetime.datetime(2000, 5, 9, 0, 0)}, 
-			{'a': u'line2', 'e': datetime.datetime(2005, 5, 8, 0, 0)}])
-
 	def testExpandComma(self):
 		dd = testhelpers.getTestRD().getById("expandComma")
 		data = rsc.makeData(dd, forceSource=[{"stuff": "x,yz,foo, bar ",
