@@ -52,7 +52,9 @@ class Limits(dict):
 	"""Column statistics (min/max, values) for an in-memory table.
 
 	These are constructed with the rows attribute and a list each for
-	columns for which you want min/max and the values present.
+	columns for which you want min/max and the values present.  Note
+	that None in min/max indicates no non-None values were found.  An
+	empty set in values indicates that all values were None.
 
 	This then exposes a dictionary interface
 	"""
@@ -83,7 +85,8 @@ class Limits(dict):
 
 		for row in rows:
 			for name, stat in stats:
-				stat.values.add(row[name])
+				if row[name] is not None:
+					stat.values.add(row[name])
 
 
 class _Feeder(object):

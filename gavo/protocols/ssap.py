@@ -29,22 +29,37 @@ def getRD():
 
 
 class SSADescriptor(datalink.ProductDescriptor):
+	"""SSA descriptors have ssaRow and limits attributes.
+
+	These both reference SSA results.  ssaRow is the first result of
+	the query, which also provides the accref.  limits is a table.Limits 
+	instance for the total result set.
+
+	Warning: limits will be None if this is constructed with fromSSARow.
+	"""
 	ssaRow = None
 
 	@classmethod
 	def fromSSARow(cls, ssaRow, paramDict):
 		"""returns a descriptor from a row in an ssa table and
 		the params of that table.
+
+		Don't use this; the limits attribute will be {} for these.
 		"""
 		paramDict.update(ssaRow)
-		# this could come from _combineRowIntoOne if it ran
-		if "collected_calibs" in ssaRow:
-			ssaRow["collected_calibs"].add(ssaRow["ssa_fluxcalib"])
-			ssaRow["ssa_fluxcalib"] = ssaRow["collected_calibs"]
-
 		ssaRow = paramDict
 		res = cls.fromAccref(ssaRow["ssa_pubDID"], ssaRow['accref'])
 		res.ssaRow = ssaRow
+		res.limits = {}
+		return res
+	
+	@classmethod
+	def fromSSAResult(cls, ssaResult):
+		"""returns a descriptor from an SSA query result (an InMemoryTable
+		instance).
+		"""
+		res = cls.fromSSARow(ssaResult.rows[0], ssaResult.getParamDict())
+		res.limits = ssaResult.getLimits()
 		return res
 
 
@@ -81,8 +96,7 @@ def getDatalinkCore(dlSvc, ssaTable):
 	dlSvc is the datalink service, ssaTable a non-empty SSA result table.
 	"""
 	allowedRendsForStealing = ["dlget"] #noflake: for stealVar downstack
-	totalRow = _combineRowIntoOne(ssaTable.rows)
-	desc = SSADescriptor.fromSSARow(totalRow, ssaTable.getParamDict())
+	desc = SSADescriptor.fromSSAResult(ssaTable)
 	return dlSvc.core.adaptForDescriptors(svcs.getRenderer("dlget"), [desc])
 
 

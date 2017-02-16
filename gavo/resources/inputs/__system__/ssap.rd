@@ -253,7 +253,14 @@
 		<param name="ssa_fluxcalib" type="text"
 			utype="ssa:Char.FluxAxis.Calibration"
 			tablehead="Calib Flux" verbLevel="20"
-			description="Type of flux calibration">\fluxCalibration</param>
+			description="Type of flux calibration"
+			>\fluxCalibration<values>
+				<option>ABSOLUTE</option>
+				<option>CALIBRATED</option>
+				<option>RELATIVE</option>
+				<option>NORMALIZED</option>
+				<option>UNCALIBRATED</option>
+			</values></param>
 		<param name="ssa_binSize" 
 			utype="ssa:Char.SpectralAxis.Accuracy.BinSize" 
 			unit="m" ucd="em.wl;spect.binSize"

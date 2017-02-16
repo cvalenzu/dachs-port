@@ -625,7 +625,7 @@ class LimitsTest(testhelpers.VerboseTest):
 
 		self.assertEqual(lims["enum"].max, None)
 		self.assertEqual(lims["enum"].min, None)
-		self.assertEqual(lims["enum"].values, set([None, "bad", "horrific"]))
+		self.assertEqual(lims["enum"].values, set(["bad", "horrific"]))
 
 
 if __name__=="__main__":

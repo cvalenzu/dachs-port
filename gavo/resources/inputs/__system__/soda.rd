@@ -86,7 +86,8 @@ This is a temporary location for procDefs and friends complying to
 			<par key="descriptorClass" description="The SSA descriptor
 				class to use.  You'll need to override this if the dc.products
 				path doesn't actually lead to the file (see
-				`custom generators &lt;#custom-product-descriptor-generators&gt;`_)."
+				`custom generators &lt;#custom-product-descriptor-generators&gt;`_).
+				This class must have an fromSSAResult constructor."
 				late="True">ssap.SSADescriptor</par>
 			<code>
 				from gavo import rscdef
@@ -99,17 +100,17 @@ This is a temporary location for procDefs and friends complying to
 		
 		<code>
 			with base.getTableConn() as conn:
-				ssaTable = rsc.TableForDef(ssaTD, connection=conn)
-				matchingRows = list(ssaTable.iterQuery(ssaTable.tableDef, 
-					"ssa_pubdid=%(pubdid)s", {"pubdid": pubDID}))
-				if not matchingRows:
+				ssaTable = rsc.TableForDef(ssaTD, connection=conn
+					).getTableForQuery(
+						ssaTD,
+						"ssa_pubdid=%(pubdid)s", 
+						{"pubdid": pubDID})
+				if not ssaTable.rows:
 					return DatalinkFault.NotFoundFault(pubDID,
 						"No spectrum with this pubDID known here")
 
-				# the relevant metadata for all rows with the same PubDID should
-				# be identical, and hence we can blindly take the first result.
-				return descriptorClass.fromSSARow(matchingRows[0],
-					ssaTable.getParamDict())
+				return ssap.SSADescriptor.fromSSAResult(ssaTable)
+
 		</code>
 	</procDef>
 
@@ -151,9 +152,15 @@ This is a temporary location for procDefs and friends complying to
 			<code>
 				supportedCalibs = set(["RELATIVE"])
 				foundCalibs = descriptor.ssaRow["ssa_fluxcalib"]
-				if isinstance(foundCalibs, basestring):
-					foundCalibs = set([foundCalibs])
-				supportedCalibs.update(foundCalibs)
+				# this is tricky: When we have a set of matches, we may be
+				# returning calibrations we cannot serve (since we can only
+				# change to RELATIVE for now).  There's nothing I can really
+				# do about this.
+				if "ssa_fluxcalib" in descriptor.limits:
+					supportedCalibs.update(descriptor.limits["ssa_fluxcalib"].values)
+				else:
+					if isinstance(foundCalibs, basestring):
+						supportedCalibs.add(foundCalibs)
 
 				yield MS(InputKey, name="FLUXCALIB", type="text",
 					multiplicity="forced-single",
@@ -196,8 +203,8 @@ This is a temporary location for procDefs and friends complying to
 					unit="m", ucd="em.wl", 
 					description="Spectral cutout interval",
 					values=MS(Values, 
-						min=descriptor.ssaRow["ssa_specstart"],
-						max=descriptor.ssaRow["ssa_specend"]))
+						min=descriptor.limits["ssa_specstart"].min,
+						max=descriptor.limits["ssa_specend"].max))
     	</code>
   	</metaMaker>
 

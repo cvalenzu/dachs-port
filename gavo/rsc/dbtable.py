@@ -639,13 +639,23 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 
 	def iterQuery(self, resultTableDef=None, fragment="", pars=None, 
 			distinct=False, limits=None, groupBy=None):
-		"""returns an iterator over rows for a table defined
-		by resultTableDef giving the results for a query for
-		fragment and pars.
+		"""like getTableForQuery, except that an iterator over the
+		result rows is returned.
+
+		(there is no advantage in using this as we will pull the entire
+		thing in memory anyway; use qtables if you need streaming).
+		"""
+		for row in self.getTableForQuery(resultTableDef, fragment,
+				pars, distinct, limits, groupBy).rows:
+			yield row
+
+	def getTableForQuery(self, resultTableDef=None, fragment="", pars=None, 
+			distinct=False, limits=None, groupBy=None):
+		"""returns a Table instance  for a query on this table.
 
 		resultTableDef is a TableDef with svc.OutputField columns
 		(rscdef.Column instances will do), or possibly just a list
-		of Columns or their names. Fragment is empty or an SQL 
+		of Columns.  Fragment is empty or an SQL 
 		where-clause with
 		dictionary placeholders, pars is the dictionary filling
 		fragment, distinct, if True, adds a distinct clause,
@@ -656,12 +666,17 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		pars may be mutated in the process.
 		"""
 		if resultTableDef is None:
-			resultTableDef = self.tableDef
+			resultTableDef = self.tableDef.copy(None)
 		resultTableDef, query, pars = self.getQuery(
-			resultTableDef, fragment, pars=pars,
-			distinct=distinct, limits=limits, groupBy=groupBy)
-		for tupRow in self.query(query, pars):
-			yield resultTableDef.makeRowFromTuple(tupRow)
+			resultTableDef, 
+			fragment, 
+			pars=pars,
+			distinct=distinct, 
+			limits=limits, 
+			groupBy=groupBy)
+		return table.InMemoryTable(resultTableDef,
+			rows=[resultTableDef.makeRowFromTuple(tupRow)
+				for tupRow in self.query(query, pars)])
 
 
 class View(DBTable):

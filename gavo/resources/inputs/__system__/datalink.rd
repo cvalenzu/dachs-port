@@ -173,17 +173,16 @@
 		
 		<code>
 			with base.getTableConn() as conn:
-				ssaTable = rsc.TableForDef(ssaTD, connection=conn)
-				matchingRows = list(ssaTable.iterQuery(ssaTable.tableDef, 
-					"ssa_pubdid=%(pubdid)s", {"pubdid": pubDID}))
-				if not matchingRows:
+				ssaTable = rsc.TableForDef(ssaTD, connection=conn
+					).getTableForQuery(
+						ssaTD,
+						"ssa_pubdid=%(pubdid)s", 
+						{"pubdid": pubDID})
+				if not ssaTable.rows:
 					return DatalinkFault.NotFoundFault(pubDID,
 						"No spectrum with this pubDID known here")
 
-				# the relevant metadata for all rows with the same PubDID should
-				# be identical, and hence we can blindly take the first result.
-				return ssap.SSADescriptor.fromSSARow(matchingRows[0],
-					ssaTable.getParamDict())
+				return ssap.SSADescriptor.fromSSAResult(ssaTable)
 		</code>
 	</procDef>
 
@@ -281,8 +280,8 @@
 					unit="m", stc=parSTC, ucd="em.wl", 
 					description="Spectral cutout interval",
 					values=MS(Values, 
-						min=descriptor.ssaRow["ssa_specstart"],
-						max=descriptor.ssaRow["ssa_specend"]))):
+						min=descriptor.limits["ssa_specstart"].min,
+						max=descriptor.limits["ssa_specend"].max))):
 					yield ik
     	</code>
   	</metaMaker>
