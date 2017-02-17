@@ -171,10 +171,12 @@ class ColumnTest(testhelpers.VerboseTest):
 class ValuesTest(testhelpers.VerboseTest):
 	"""tests for the rscdef.Values class and its interaction with Column.
 	"""
-	def testValues(self):
+	def testLimitsParsed(self):
 		col = base.parseFromString(rscdef.Column,
 			'<column name="foo"><values min="-1.5" max="13.75"/></column>')
 		self.assertEqual(col.values.min, -1.5)
+	
+	def testDateBehavior(self):
 		col = base.parseFromString(rscdef.Param,
 			'<param name="foo" type="date"><values><option>'
 			'2000-01-01</option><option>2000-01-02</option></values></param>')
@@ -188,6 +190,20 @@ class ValuesTest(testhelpers.VerboseTest):
 		col = base.parseFromString(rscdef.Column,
 			'<column name="foo" type="integer[3]"><values default="1 2 3"/></column>')
 		self.assertEqual(col.values.default, [1, 2, 3])
+
+	def testCaselessValues(self):
+		col = base.parseFromString(rscdef.Param,
+			'<param name="foo" type="text"><values caseless="True"><option>'
+			'red</option><option>GREEN</option><option>Blue</option>'
+			'</values></param>')
+		self.assertRuns(col.validateValue, ("RED",))
+		self.assertRuns(col.validateValue, ("Green",))
+		self.assertRuns(col.validateValue, ("blue",))
+		self.assertRaisesWithMsg(base.ValidationError, 
+			"Field foo: Value Violet not consistent with legal values [red, GREEN,"
+			" Blue]",
+			col.validateValue, 
+			("Violet",))
 
 
 class ScriptTest(testhelpers.VerboseTest):

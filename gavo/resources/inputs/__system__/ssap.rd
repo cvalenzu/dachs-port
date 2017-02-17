@@ -254,7 +254,7 @@
 			utype="ssa:Char.FluxAxis.Calibration"
 			tablehead="Calib Flux" verbLevel="20"
 			description="Type of flux calibration"
-			>\fluxCalibration<values>
+			>\fluxCalibration<values id="flux_calib_values" caseless="True">
 				<option>ABSOLUTE</option>
 				<option>CALIBRATED</option>
 				<option>RELATIVE</option>

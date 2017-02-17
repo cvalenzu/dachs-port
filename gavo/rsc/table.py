@@ -267,7 +267,6 @@ class BaseTable(base.MetaMixin, common.ParamMixin):
 					"Value is required but was not provided", par.name)
 
 
-
 class InMemoryTable(BaseTable):
 	"""is a table kept in memory.
 

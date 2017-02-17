@@ -315,11 +315,17 @@ class Values(base.Structure):
 		" your source.  Again, for reals, floats and (mostly) text you probably"
 		" do not want to do this.", copyable=True)
 	_multiOk = base.BooleanAttribute("multiOk", False, "Deprecated, use"
-		" multiplicity=multiple instead.", copyable=True)
+		" multiplicity=multiple on input keys instead.", copyable=True)
 	_fromDB = base.ActionAttribute("fromdb", "_evaluateFromDB", description=
 		"A query fragment returning just one column to fill options from (will"
 		" add to options if some are given).  Do not write SELECT or anything,"
 		" just the column name and the where clause.")
+	_caseless = base.BooleanAttribute("caseless",
+		description="When validating, ignore the case of string values."
+			" For non-string types, behaviour is undefined (i.e., DaCHS is"
+			" going to spit on you).",
+		default=False,
+		copyable=True)
 	_original = base.OriginalAttribute()
 
 	validValues = None
@@ -364,7 +370,9 @@ class Values(base.Structure):
 			dbt = dataField.type
 			for opt in self.options:
 				opt.content_ = self.makePythonVal(opt.content_, dbt)
-			self.validValues = set([o.content_ for o in self.options])
+			self.validValues = set(o.content_ for o in self.options)
+			if self.caseless:
+				self.validValues = set(o and o.lower() for o in self.validValues)
 
 		if self.nullLiteral:
 			try:
@@ -393,6 +401,9 @@ class Values(base.Structure):
 
 		if self.validValues is None:
 			return True
+		if self.caseless and value:
+			value = value.lower()
+
 		if isinstance(value, (list, tuple, set)):
 			for val in value:
 				if val and not val in self.validValues:
