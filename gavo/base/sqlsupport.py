@@ -216,37 +216,91 @@ class GAVOConnection(psycopg2.extensions.connection):
 	arguments to the connection; it is used when recovering from
 	a database restart.
 	"""
-	def queryToDicts(self, query, args={}):
+	def setTimeout(self, timeout):
+		"""sets a timeout on queries.
+
+		timeout is in seconds; timeout=0 disables timeouts (this is what
+		postgres does, too)
+		"""
+		# don't use query here since query may call setTimeout
+		cursor = self.cursor()
+		try:
+			if timeout==-12: # Special instrumentation for testing
+				cursor.execute("SET statement_timeout TO 1")
+			elif timeout is not None:
+				cursor.execute(
+					"SET statement_timeout TO %d"%(int(float(timeout)*1000)))
+		finally:
+			cursor.close()
+
+	def getTimeout(self):
+		"""returns the current timeout setting.
+
+		The value is in float seconds.
+		"""
+		cursor = self.cursor()
+		try:
+			cursor.execute("SHOW statement_timeout")
+			rawVal = list(cursor)[0][0]
+			mat = re.match("(\d+)(\w*)$", rawVal)
+			try:
+				return int(mat.group(1))*_PG_TIME_UNITS[mat.group(2)]
+			except (ValueError, AttributeError, KeyError):
+				raise ValueError("Bad timeout value from postgres: %s"%rawVal)
+		finally:
+			cursor.close()
+
+	@contextlib.contextmanager
+	def timeoutSet(self, timeout, cursor):
+		"""a contextmanager to have a timeout set in the controlled 
+		section.
+		"""
+		if timeout is not None:
+			oldTimeout = self.getTimeout()
+			self.setTimeout(timeout)
+
+		yield
+
+		# don't try to restore the timeout on an exception; presumably
+		# things are hosed enough that we'll discard the connection,
+		# and we can't talk to the DB anyway until a rollback.
+		if timeout is not None:
+			self.setTimeout(oldTimeout)
+
+	def queryToDicts(self, query, args={}, timeout=None, caseFixer=None):
 		"""iterates over dictionary rows for query.
 
 		This is mainly for ad-hoc queries needing little metadata.
 
 		The dictionary keys are determined by what the database says the
 		column titles are; thus, it's usually lower-cased variants of what's
-		in the select-list.
+		in the select-list.  To fix this, you can pass in a caseFixer dict
+		that gives a properly cased version of lowercase names.
 		"""
 		cursor = self.cursor()
 		try:
-			cursor.execute(query, args)
-			keys = [cd[0] for cd in cursor.description]
-			for row in cursor:
-				yield dict(zip(keys, row))
+			with self.timeoutSet(timeout, cursor):
+				cursor.execute(query, args)
+				keys = [cd[0] for cd in cursor.description]
+				if caseFixer:
+					keys = [caseFixer.get(key, key) for key in keys]
+				for row in cursor:
+					yield dict(zip(keys, row))
 		finally:
 			cursor.close()
 
-	def query(self, query, args={}):
+	def query(self, query, args={}, timeout=None):
 		"""iterates over result tuples for query.
-
-		This is mainly for ad-hoc queries needing little metadata.
 		"""
 		cursor = self.cursor()
 		try:
-			cursor.execute(query, args)
-			for row in cursor:
-				yield row
+			with self.timeoutSet(timeout, cursor):
+				cursor.execute(query, args)
+				for row in cursor:
+					yield row
 		finally:
 			cursor.close()
-	
+
 	def execute(self, query, args={}):
 		"""executes query in a cursor.
 
@@ -431,10 +485,10 @@ class PostgresQueryMixin(object):
 	def schemaExists(self, schema):
 		"""returns True if the named schema exists in the database.
 		"""
-		matches = self.query("SELECT nspname FROM"
+		matches = list(self.query("SELECT nspname FROM"
 			" pg_namespace WHERE nspname=%(schemaName)s", {
 					'schemaName': schema,
-			}).fetchall()
+			}))
 		return len(matches)!=0
 	
 	def hasIndex(self, tableName, indexName, schema=None):
@@ -443,10 +497,10 @@ class PostgresQueryMixin(object):
 		See _parseTableName on the meaning of the arguments.
 		"""
 		schema, tableName = _parseTableName(tableName, schema)
-		res = self.query("SELECT indexname FROM"
+		res = list(self.query("SELECT indexname FROM"
 			" pg_indexes WHERE schemaname=lower(%(schema)s) AND"
 			" tablename=lower(%(tableName)s) AND"
-			" indexname=lower(%(indexName)s)", locals()).fetchall()
+			" indexname=lower(%(indexName)s)", locals()))
 		return len(list(res))>0
 
 	def _getColIndices(self, relOID, colNames):
@@ -483,8 +537,7 @@ class PostgresQueryMixin(object):
 		except Error: # Some of the items related probably don't exist
 			return False
 
-		res = list(self.query("""
-			SELECT conname FROM pg_constraint WHERE
+		res = list(self.query("""SELECT conname FROM pg_constraint WHERE
 			contype='f'
 			AND conrelid=%(srcOID)s
 			AND confrelid=%(destOID)s
@@ -531,15 +584,20 @@ class PostgresQueryMixin(object):
 		# _parseTableName bombs out on non-regular identifiers, hence
 		# foiling a possible SQL injection
 		_parseTableName(tableName)
-		cursor = self.query("select * from %s limit 0"%tableName)
-		return [(col.name, self._resolveTypeCode(col.type_code)) for col in 
-			cursor.description]
+		cursor = self.connection.cursor()
+		try:
+			cursor.execute("select * from %s limit 0"%tableName)
+			return [(col.name, self._resolveTypeCode(col.type_code)) for col in 
+				cursor.description]
+		finally:
+			cursor.close()
 
 	def roleExists(self, role):
 		"""returns True if there role is known to the database.
 		"""
-		matches = self.query("SELECT usesysid FROM pg_user WHERE usename="
-			"%(role)s", locals()).fetchall()
+		matches = list(self.query(
+			"SELECT usesysid FROM pg_user WHERE usename=%(role)s", 
+			locals()))
 		return len(matches)!=0
 	
 	def getOIDForTable(self, tableName, schema=None):
@@ -557,7 +615,7 @@ class PostgresQueryMixin(object):
 		return res[0][0]
 
 	def _rowExists(self, query, pars):
-		res = self.query(query, pars).fetchall()
+		res = list(self.query(query, pars))
 		return len(res)!=0
 
 	def temporaryTableExists(self, tableName):
@@ -592,8 +650,8 @@ class PostgresQueryMixin(object):
 	def getSchemaPrivileges(self, schema):
 		"""returns (owner, readRoles, allRoles) for schema's ACL.
 		"""
-		res = self.query("SELECT nspacl FROM pg_namespace WHERE"
-			" nspname=%(schema)s", locals()).fetchall()
+		res = list(self.query("SELECT nspacl FROM pg_namespace WHERE"
+			" nspname=%(schema)s", locals()))
 		return self.parsePGACL(res[0][0])
 
 	def getTablePrivileges(self, schema, tableName):
@@ -602,10 +660,10 @@ class PostgresQueryMixin(object):
 
 		*** postgres specific ***
 		"""
-		res = self.query("SELECT relacl FROM pg_class WHERE"
+		res = list(self.query("SELECT relacl FROM pg_class WHERE"
 			" lower(relname)=lower(%(tableName)s) AND"
 			" relnamespace=(SELECT oid FROM pg_namespace WHERE nspname=%(schema)s)",
-			locals()).fetchall()
+			locals()))
 		try:
 			return self.parsePGACL(res[0][0])
 		except IndexError: # Table doesn't exist, so no privileges
@@ -693,13 +751,13 @@ class StandardQueryMixin(object):
 		"""
 		for role in set(foundPrivs)-set(shouldPrivs):
 			if role:
-				self.query("REVOKE ALL PRIVILEGES ON %s FROM %s"%(
+				self.connection.execute("REVOKE ALL PRIVILEGES ON %s FROM %s"%(
 					objectName, role))
 		for role in set(shouldPrivs)-set(foundPrivs):
 			if role:
 				if self.roleExists(role):
-					self.query("GRANT %s ON %s TO %s"%(shouldPrivs[role], objectName,
-						role))
+					self.connection.execute(
+						"GRANT %s ON %s TO %s"%(shouldPrivs[role], objectName, role))
 				else:
 					utils.sendUIEvent("Warning", 
 						"Request to grant privileges to non-existing"
@@ -707,45 +765,22 @@ class StandardQueryMixin(object):
 		for role in set(shouldPrivs)&set(foundPrivs):
 			if role:
 				if shouldPrivs[role]!=foundPrivs[role]:
-					self.query("REVOKE ALL PRIVILEGES ON %s FROM %s"%(
+					self.connection.execute("REVOKE ALL PRIVILEGES ON %s FROM %s"%(
 						objectName, role))
-					self.query("GRANT %s ON %s TO %s"%(shouldPrivs[role], objectName,
+					self.connection.execute("GRANT %s ON %s TO %s"%(shouldPrivs[role], objectName,
 						role))
 
 	def setTimeout(self, timeout):
-		"""sets a timeout on queries.
-
-		timeout is in seconds; timeout=0 disables timeouts (this is what
-		postgres does, too)
+		"""wraps conn.setTimeout for backward compatibility.
 		"""
-		# don't use query here since query may call setTimeout
-		cursor = self.connection.cursor()
-		try:
-			if timeout==-12: # Special instrumentation for testing
-				cursor.execute("SET statement_timeout TO 1")
-			elif timeout is not None:
-				cursor.execute(
-					"SET statement_timeout TO %d"%(int(float(timeout)*1000)))
-		finally:
-			cursor.close()
+		self.connection.setTimeout(timeout)
 
 	def getTimeout(self):
-		"""returns the current timeout setting.
+		"""wraps conn.getTimeout for backward compatibility.
 
 		The value is in float seconds.
 		"""
-		# don't use query here since it may call getTimeout
-		cursor = self.connection.cursor()
-		try:
-			cursor.execute("SHOW statement_timeout")
-			rawVal = list(cursor)[0][0]
-			mat = re.match("(\d+)(\w*)$", rawVal)
-			try:
-				return int(mat.group(1))*_PG_TIME_UNITS[mat.group(2)]
-			except (ValueError, AttributeError, KeyError):
-				raise ValueError("Bad timeout value from postgres: %s"%rawVal)
-		finally:
-			cursor.close()
+		return self.connection.getTimeout()
 
 
 def dictifyRowset(descr, rows):
@@ -776,56 +811,54 @@ class QuerierMixin(PostgresQueryMixin, StandardQueryMixin):
 		self.connection.set_isolation_level(
 			psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
-	def _queryReconnecting(self, query, data):
+	def _queryReconnecting(self, query, data, timeout):
 		"""helps query in case of disconnections.
 		"""
 		self.connection = getDBConnection(
 			**self.connection._getDBConnectionArgs)
 		self._reconnecting = True
-		res = self.query(query, data)
+		res = self.query(query, data, timeout)
 		self._reconnection = False
 		return res
 
 	def query(self, query, data={}, timeout=None):
-		"""runs a single query in a new cursor and returns that cursor.
+		"""wraps conn.query adding logic to re-establish lost connections.
 
-		You will see all exceptions, no transaction management is
-		done here.
+		Don't use this method any more in new code.  It contains wicked
+		logic to tell DDL statements (that run without anyone pulling
+		the results) from actual selects.  That's a bad API.  Also note
+		that the timeout is ignored for DDL statements.
 
-		query will try to re-establish broken connections.
+		Use either connection.query or connection.execute in new code.
 		"""
 		if self.connection is None:
 			raise utils.ReportableError(
 				"SimpleQuerier connection is None.",
 				hint="This ususally is because an AdhocQuerier's query method"
 				" was used outside of a with block.")
-
-		cursor = self.connection.cursor()
+		
 		try:
-
-			if timeout is not None:
-				oldTimeout = self.getTimeout()
-				self.setTimeout(timeout)
-			try:
-				cursor.execute(query, data)
-			finally:
-				if timeout is not None:
-					self.setTimeout(oldTimeout)
-
+			if query[:6].lower()=="select":
+				return self.connection.query(query, data, timeout)
+			else:
+				# it's DDL that we execute directly, ignoring the timeout
+				self.connection.execute(query, data)
 		except DBError, ex:
 			if isinstance(ex, OperationalError) and self.connection.fileno()==-1:
 				if not self._reconnecting:
-					return self._queryReconnecting(query, data)
+					return self._queryReconnecting(query, data, timeout)
 			raise
-		return cursor
 
-	def queryDicts(self, *args, **kwargs):
-		"""as query, but returns dicts with the column names.
+	def queryToDicts(self, *args, **kwargs):
+		"""wraps conn.queryToDicts for backwards compatilitiy.
 		"""
 		cursor = self.query(*args, **kwargs)
 		keys = [d[0] for d in cursor.description]
 		for row in cursor:
 			yield dict(itertools.izip(keys, row))
+
+	# alias for legacy code.  Will probably go away soon.
+	queryDicts = queryToDicts
 
 	def finish(self):
 		self.connection.commit()

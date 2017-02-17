@@ -391,6 +391,30 @@ class TableDefTest(testhelpers.VerboseTest):
 		testhelpers.getTestRD().adopt(t)
 		self.assertEqual(t.getDDL(), "CREATE TEMP TABLE test (a real)")
 
+	def testQueryPlain(self):
+		self.assertEqual(
+			testhelpers.getTestTable("adql").getSimpleQuery(),
+			"SELECT * FROM test.adql")
+
+	def testQueryColumnList(self):
+		self.assertEqual(
+			testhelpers.getTestTable("adql").getSimpleQuery(
+				["alpha", "mag"]),
+			"SELECT alpha, mag FROM test.adql")
+
+	def testQueryBadColumnList(self):
+		self.assertRaisesWithMsg(base.NotFoundError,
+			"column \"\'); drop tables\" could not be located in table adql",
+			testhelpers.getTestTable("adql").getSimpleQuery,
+			(["alpha", "'); drop tables"],))
+	
+	def testQueryEverything(self):
+		self.assertEqual(
+			testhelpers.getTestTable("adql").getSimpleQuery(
+				"alpha, mag", fragments="%(delta)s>0",
+				postfix="ORDER BY rv"),
+			"SELECT alpha, mag FROM test.adql WHERE %(delta)s>0 ORDER BY rv")
+
 
 class _QuotedNamesTable(testhelpers.TestResource):
 	def make(self, ignored):

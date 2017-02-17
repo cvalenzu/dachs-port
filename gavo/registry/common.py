@@ -9,7 +9,6 @@ Common code and definitions for registry support.
 
 
 from gavo import base
-from gavo import rsc
 from gavo import utils
 from gavo.utils import stanxml
 
@@ -59,15 +58,13 @@ def getDependencies(rdId, connection=None):
 	"""returns a list of RD ids that are need for the generation of RRs
 	from rdId.
 	"""
-	t = rsc.TableForDef(getServicesRD().getById("res_dependencies"),
-		connection=connection)
-	try:
-		return [r["prereq"] for r in t.iterQuery(
-			[t.tableDef.getColumnByName("prereq")],
-			"rd=%(rd)s", 
-			{"rd": rdId})]
-	finally:
-		t.close()
+	if connection is None:
+		with base.getTableConn() as conn:
+			return getDependencies(rdId, conn)
+
+	return [r[0] for r in 
+		connection.query(getServicesRD().getById("res_dependencies")
+			.getSimpleQuery(["prereq"], "rd=%(rd)s"), {"rd": rdId})]
 
 
 class DateUpdatedMixin(object):

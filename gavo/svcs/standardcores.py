@@ -14,7 +14,6 @@ These then have to be picked up by renderers and formatted for delivery.
 #c COPYING file in the source distribution.
 
 
-import itertools
 import sys
 
 from gavo import base
@@ -378,26 +377,24 @@ class TableBasedCore(core.Core):
 			[cd.asSQL(inputTable.args, sqlPars, queryMeta)
 				for cd in self.condDescs]), sqlPars
 
-	def _makeTable(self, rowIter, resultTableDef, queryMeta):
-		"""returns a table from the row iterator rowIter, updating queryMeta
-		as necessary.
+	def _processQueryMeta(self, resultTable, queryMeta):
+		"""furnishes resultTable and queryMeta with information on overflows,
+		etc.
 		"""
-		rows = list(rowIter)
-		isOverflowed =  len(rows)>queryMeta.get("dbLimit", 1e10)
+		isOverflowed =  len(resultTable.rows)>queryMeta.get("dbLimit", 1e10)
 		if isOverflowed:
-			del rows[-1]
-		queryMeta["Matched"] = len(rows)
-		res = rsc.TableForDef(resultTableDef, rows=rows)
+			del resultTable.rows[-1]
+		queryMeta["Matched"] = len(resultTable.rows)
 		if isOverflowed:
 			queryMeta["Overflow"] = True
-			res.addMeta("_warning", "The query limit was reached.  Increase it"
+			resultTable.addMeta("_warning", 
+				"The query limit was reached.  Increase it"
 				" to retrieve more matches.  Note that unsorted truncated queries"
 				" are not reproducible (i.e., might return a different result set"
 				" at a later time).")
-			res.addMeta("_queryStatus", "Overflowed")
+			resultTable.addMeta("_queryStatus", "Overflowed")
 		else:
-			res.addMeta("_queryStatus", "Ok")
-		return res
+			resultTable.addMeta("_queryStatus", "Ok")
 	
 	def adaptForRenderer(self, renderer):
 		"""returns a core tailored to renderer renderers.
@@ -438,18 +435,24 @@ class FancyQueryCore(TableBasedCore, base.RestrictionMixin):
 
 	def run(self, service, inputTable, queryMeta):
 		fragment, pars = self._getSQLWhere(inputTable, queryMeta)
-		with base.AdhocQuerier(base.getTableConn) as querier:
+		with base.getTableConn() as conn:
 			if fragment:
 				fragment = " WHERE "+fragment
 			else:
 				fragment = ""
 			try:
-				return self._makeTable(
-					querier.queryDicts(self.query%fragment, pars,
-							timeout=self.timeout),
-						self.outputTable, queryMeta)
+				res = rsc.TableForDef(
+					self.outputTable,
+					rows=list(conn.queryToDicts(
+						self.query%fragment, 
+						pars,
+						timeout=self.timeout,
+						caseFixer=self.outputTable.caseFixer)))
 			except:
 				mapDBErrors(*sys.exc_info())
+
+			self._processQueryMeta(res, queryMeta)
+			return res
 
 
 class DBCore(TableBasedCore):
@@ -503,13 +506,15 @@ class DBCore(TableBasedCore):
 
 			try:
 				try:
-					return self._makeTable(
-						queriedTable.iterQuery(resultTableDef, fragment, pars,
-							**iqArgs), resultTableDef, queryMeta)
+					res = queriedTable.getTableForQuery(
+						resultTableDef, fragment, pars, **iqArgs)
 				except:
 					mapDBErrors(*sys.exc_info())
 			finally:
 				queriedTable.close()
+
+			self._processQueryMeta(res, queryMeta)
+			return res
 
 	def _makeResultTableDef(self, service, inputTable, queryMeta):
 		"""returns an OutputTableDef object for querying our table with queryMeta.
@@ -573,29 +578,21 @@ class FixedQueryCore(core.Core, base.RestrictionMixin):
 			connFactory = base.getWritableTableConn
 		else:
 			connFactory = base.getTableConn
-		with base.AdhocQuerier(connFactory) as querier:
+
+		with connFactory() as conn:
 			try:
-				cursor = querier.query(
-					self.rd.expand(self.query), timeout=self.timeout)
-				if cursor.description is None:
-					return self._parseOutput([], queryMeta)
-				else:
-					return self._parseOutput(list(cursor), queryMeta)
+				rows = list(conn.queryToDicts(
+						self.rd.expand(self.query), timeout=self.timeout,
+						caseFixer=self.outputTable.caseFixer))
+				res = rsc.TableForDef(self.outputTable, rows=rows)
+			except TypeError:
+				# This, we guess, is just someone executing a non-selecting
+				# query (rows = list(None))
+				res = rsc.TableForDef(self.outputTable, rows=[])
 			except:
 				mapDBErrors(*sys.exc_info())
-
-	def _parseOutput(self, dbResponse, queryMeta):
-		"""builds an InternalDataSet out of dbResponse and the outputFields
-		of our service.
-		"""
-		if dbResponse is None:
-			dbResponse = []
-		queryMeta["Matched"] = len(dbResponse)
-		fieldNames = self.outputTable.dictKeys
-		return rsc.TableForDef(self.outputTable,
-			rows=[dict((k,v) 
-					for k,v in itertools.izip(fieldNames, row))
-				for row in dbResponse])
+		queryMeta["Matched"] = len(res.rows)
+		return res
 
 
 class NullCore(core.Core):

@@ -20,7 +20,6 @@ import urllib
 import urlparse
 
 from gavo import base
-from gavo import rsc
 from gavo import svcs
 from gavo import utils
 from gavo.registry import builders
@@ -295,25 +294,26 @@ def getMatchingRows(pars, rscTableDef, getSetFilter):
 	dictionary and a dictionary of query fillers and returning, as appropriate,
 	a condition that implements any conditions on sets within pars
 	"""
-	maxRecords = int(pars.get("maxRecords", 
-		base.getConfig("ivoa", "oaipmhPagesize")))
-	offset = pars.get("resumptionToken", 0)
 	frag, fillers = _parseOAIPars(pars)
 	frag = " AND ".join(
 		f for f in [getSetFilter(pars, fillers), frag] if f)
 
+	maxRecords = int(pars.get("maxRecords", 
+			base.getConfig("ivoa", "oaipmhPagesize")))
+	offset = pars.get("resumptionToken", 0)
+	fillers.update({"maxRecords": maxRecords, "offset": offset})
+
 	try:
-		with base.getTableConn() as conn:
-			srvTable = rsc.TableForDef(rscTableDef, connection=conn) 
-			res = list(srvTable.iterQuery(rscTableDef, frag, fillers,
-				limits=(
-					"LIMIT %(maxRecords)s OFFSET %(offset)s", locals())))
+		res = rscTableDef.doSimpleQuery(
+			fragments=frag, 
+			postfix="LIMIT %(maxRecords)s OFFSET %(offset)s",
+			params=fillers)
 		
 		if len(res)==maxRecords:
 			# there's probably more data, request a resumption token
 			res.append(OAI.resumptionToken[
 				makeResumptionToken(pars, offset+len(res))])
-			res[-1].addChild = lambda:0
+			res[-1].addChild = lambda: 0
 
 	except base.DBError:
 		raise base.ui.logOldExc(

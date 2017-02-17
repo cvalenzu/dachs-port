@@ -43,12 +43,14 @@ def adduser(querier, args):
 	Arg("user", help="the user name to remove")],
 	help="remove a user from the DC server")
 def deluser(querier, args):
-	c = querier.query("DELETE FROM dc.users WHERE username=%(user)s",
+	cursor = querier.connection.cursor()
+	cursor.execute("DELETE FROM dc.users WHERE username=%(user)s",
 		args.__dict__)
-	rowsAffected = c.rowcount
-	c = querier.query("DELETE FROM dc.groups WHERE username=%(user)s",
+	rowsAffected = cursor.rowcount
+	cursor.execute("DELETE FROM dc.groups WHERE username=%(user)s",
 		args.__dict__)
-	rowsAffected += c.rowcount
+	rowsAffected += cursor.rowcount
+	cursor.close()
 	if not rowsAffected:
 		sys.stderr.write("Warning: No rows deleted while deleting user %s\n"%
 			args.user)
@@ -97,8 +99,8 @@ def delfromgroup(querier, args):
 
 @exposedFunction(help="list users known to the DC")
 def listusers(querier, args):
-	data = querier.query("SELECT username, groupname, remarks"
-		" FROM dc.users NATURAL JOIN dc.groups ORDER BY username").fetchall()
+	data = list(querier.query("SELECT username, groupname, remarks"
+		" FROM dc.users NATURAL JOIN dc.groups ORDER BY username"))
 	curUser = None
 	for user, group, remark in data:
 		if user!=curUser:
@@ -193,15 +195,13 @@ def declaredel(querier, args):
 		help="width to compute the preview for", dest="width", default="200"),],
 	help="Precompute previews for the product interface columns in a table.")
 def cacheprev(querier, args):
-	from gavo import api
 	from gavo.web.productrender import PreviewCacheManager
 	from twisted.internet import reactor
 
 	basePath = base.getConfig("inputsDir")
 	td = base.resolveId(None, args.tableId)
-	table = api.TableForDef(td, connection=querier.connection)
-	select = [td.getColumnByName("accref"), td.getColumnByName("mime")]
-	rows = table.iterQuery(select , "")
+	rows = querier.queryToDicts(
+		td.getSimpleQuery(["accref", "mime"]))
 
 	def runNext(token):
 		try:

@@ -283,6 +283,9 @@ class InMemoryTable(BaseTable):
 	def __len__(self):
 		return len(self.rows)
 
+	def __nonzero__(self):
+		return bool(self.rows)
+
 	def removeRow(self, row):
 		self.rows.remove(row)
 

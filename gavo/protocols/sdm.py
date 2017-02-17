@@ -276,14 +276,14 @@ def makeSDMDataForPUBDID(pubDID, ssaTD, spectrumData,
 	the spectrum data from an SSA row (typically, this is going to be
 	the tablesource property of an SSA service).
 	"""
-	with base.getTableConn() as conn:
-		ssaTable = rsc.TableForDef(ssaTD, connection=conn)
-		matchingRows = list(ssaTable.iterQuery(ssaTable.tableDef, 
-			"ssa_pubdid=%(pubdid)s", {"pubdid": pubDID}))
-		if not matchingRows:
-			raise svcs.UnknownURI("No spectrum with pubdid %s known here"%
-				pubDID)
-	return makeSDMDataForSSARow(matchingRows[0], spectrumData,
+	matchingRows = ssaTD.doSimpleQuery(fragments="ssa_pubdid=%(pubDID)s",
+			params={"pubDID": pubDID})
+	if not matchingRows:
+		raise svcs.UnknownURI("No spectrum with pubdid %s known here"%
+			pubDID)
+	return makeSDMDataForSSARow(
+		matchingRows[0], 
+		spectrumData,
 		sdmVersion=sdmVersion)
 
 
@@ -696,12 +696,12 @@ class SDMCore(svcs.Core):
 			try:
 				# XXX TODO: Figure out why the unquote here is required.
 				accref = urllib.unquote(inputTable.getParam("accref"))
-				res = list(ssaTable.iterQuery(ssaTable.tableDef, 
-					"accref=%(accref)s", {"accref": accref}))
+				res = ssaTable.getTableForQuery(ssaTable.tableDef, 
+					"accref=%(accref)s", {"accref": accref})
 				if not res:
 					raise svcs.UnknownURI("No spectrum with accref %s known here"%
 						inputTable.getParam("accref"))
-				ssaRow = res[0]
+				ssaRow = res.rows[0]
 			finally:
 				ssaTable.close()
 

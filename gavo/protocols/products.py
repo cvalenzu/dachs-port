@@ -1045,7 +1045,7 @@ class RAccref(object):
 			return self._productsRowCache
 		except AttributeError:
 			pt = getProductsTable()
-			res = list(pt.iterQuery(pt.tableDef, "accref=%(accref)s", 
+			res = list(pt.getTableForQuery(pt.tableDef, "accref=%(accref)s", 
 				{"accref": self.accref}))
 			if not res:
 				raise base.NotFoundError(self.accref, "accref", "product table",

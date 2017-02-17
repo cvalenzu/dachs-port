@@ -190,14 +190,10 @@ def unpublishFromTAP(rd, connection):
 def getAccessibleTables():
 	"""returns a list of qualified table names for the TAP-published tables.
 	"""
-	tapRD = base.caches.getRD(RD_ID)
-	td = tapRD.getById("tables")
-	table = rsc.TableForDef(td)
-	res = [r["table_name"] for r in 
-		table.iterQuery([td.getColumnByName("table_name")], "",
-			limits=("order by table_name", {}))]
-	table.close()
-	return res
+	with base.getTableConn() as conn:
+		return [r[0]
+			for r in conn.query("select table_name from tap_schema.tables"
+				" order by table_name")]
 
 
 ########################## Maintaining TAP jobs

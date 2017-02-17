@@ -21,7 +21,6 @@ from nevow import url
 
 from gavo import base
 from gavo import registry
-from gavo import rsc
 from gavo import svcs
 from gavo import utils
 from gavo.protocols import creds
@@ -744,15 +743,10 @@ class RDInfoRenderer(grend.CustomTemplateMixin, grend.ServiceBasedPage):
 	customTemplate = svcs.loadSystemTemplate("rdlist.html")
 
 	def data_publishedRDs(self, ctx, data):
-		td = base.caches.getRD("//services").getById("resources")
 		with base.getTableConn() as conn:
-			table = rsc.TableForDef(td, connection=conn)
-			try:
-				return [row["sourceRD"] for row in
-					table.iterQuery([td.getColumnByName("sourceRD")], "", 
-					distinct=True, limits=("ORDER BY sourceRD", {}))]
-			finally:
-				table.close()
+			return [row[0] for row in
+				conn.query(
+					"SELECT DISTINCT sourceRD FROM dc.resources ORDER BY sourceRD")]
 
 	def locateChild(self, ctx, segments):
 		rdId = "/".join(segments)

@@ -158,8 +158,7 @@ class SSAPCore(svcs.DBCore):
 				parent_=self.queriedTable.parent,
 				id="result", onDisk=False,
 				columns=[self.queriedTable.getColumnByName("ssa_targname")])
-			res = rsc.TableForDef(destTD, rows=table.iterQuery(destTD, "",
-				distinct=True))
+			res = table.getTableForQuery(destTD, "", distinct=True)
 			res.noPostprocess = True
 			return res
 	

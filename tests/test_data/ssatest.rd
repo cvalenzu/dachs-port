@@ -180,7 +180,7 @@
  		</embeddedGrammar>
   	<make table="instance">
    		<parmaker>
-     		<apply procDef="//ssap#feedSSAToSDM"/>
+     		<apply procDef="//ssap#feedSSAToSDM" name="datamaker_parfeed"/>
    		</parmaker>
   	</make>
 	</data>

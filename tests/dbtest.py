@@ -379,8 +379,8 @@ class TestMetaTable(TestWithTableCreation):
 
 	def testDcTablesEntry(self):
 		with  base.AdhocQuerier() as q:
-			res = q.query("select * from dc.tablemeta where tableName=%(n)s",
-				{"n": self.tableDef.getQName()}).fetchall()
+			res = list(q.query("select * from dc.tablemeta where tableName=%(n)s",
+				{"n": self.tableDef.getQName()}))
 		qName, srcRd, td, rd, adql = res[0]
 		self.assertEqual(qName, 'test.typesTable')
 		self.assertEqual(srcRd.split("/")[-1], 'test')
@@ -392,8 +392,8 @@ class TestMetaTableADQL(TestWithTableCreation):
 
 	def testDcTablesEntry(self):
 		q = base.UnmanagedQuerier(connection=self.conn)
-		res = q.query("select * from dc.tablemeta where tableName=%(n)s",
-			{"n": self.tableDef.getQName()}).fetchall()
+		res = list(q.query("select * from dc.tablemeta where tableName=%(n)s",
+			{"n": self.tableDef.getQName()}))
 		qName, srcRd, td, rd, adql = res[0]
 		self.assertEqual(qName, 'test.adqltable')
 		self.assertEqual(srcRd.split("/")[-1], 'test')

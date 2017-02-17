@@ -11,21 +11,20 @@ The (DC-internal) service list: querying, adding records, etc.
 from gavo import base
 from gavo import utils
 from gavo import rsc
-from gavo import rscdef
-from gavo import svcs
 from gavo.registry import common
 
 
 def getSetsForResource(restup):
-	"""returns the list of set names the resource described by restup belongs to.
+	"""returns the list of set names the resource described by restup 
+	belongs to.
 	"""
-	tableDef = common.getServicesRD().getById("sets")
-	table = rsc.TableForDef(tableDef)
-	destTableDef = base.makeStruct(rscdef.TableDef,
-		columns=[tableDef.getColumnByName("setName")])
-	return set(str(r["setName"])
-		for r in table.iterQuery(destTableDef, 
-			"sourceRD=%(sourceRD)s AND resId=%(resId)s", restup))
+	with base.getTableConn() as conn:
+		return [str(r[0]) for r in
+			conn.query(
+				common.getServicesRD().getById("sets").getSimpleQuery(
+					["setName"],
+					"sourceRD=%(sourceRD)s AND resId=%(resId)s"),
+				restup)]
 
 
 def getSets():
@@ -50,9 +49,7 @@ def queryServicesList(whereClause="", pars={}, tableName="resources_join"):
 	fields defined there.
 	"""
 	td = common.getServicesRD().getById(tableName)
-	otd = svcs.OutputTableDef.fromTableDef(td, None)
-	table = rsc.TableForDef(td)
-	return [r for r in table.iterQuery(otd, whereClause, pars)]
+	return td.doSimpleQuery(fragments=whereClause, params=pars)
 
 
 def querySubjectsList(setName=None):
@@ -64,13 +61,14 @@ def querySubjectsList(setName=None):
 	setName = setName or 'local'
 	svcsForSubjs = {}
 	td = common.getServicesRD().getById("subjects_join")
-	otd = svcs.OutputTableDef.fromTableDef(td, None)
-	with base.getTableConn() as conn:
-		for row in rsc.TableForDef(td, connection=conn).iterQuery(otd, 
-				"setName=%(setName)s AND subject IS NOT NULL", {"setName": setName}):
-			svcsForSubjs.setdefault(row["subject"], []).append(row)
+	for row in td.doSimpleQuery(
+			fragments="setName=%(setName)s AND subject IS NOT NULL",
+			params={"setName": setName}):
+		svcsForSubjs.setdefault(row["subject"], []).append(row)
+
 	for s in svcsForSubjs.values():
 		s.sort(key=lambda a: a["title"])
+
 	res = [{"subject": subject, "chunk": s}
 		for subject, s in svcsForSubjs.iteritems()]
 	res.sort(lambda a,b: cmp(a["subject"], b["subject"]))

@@ -101,7 +101,8 @@ tables and the RDs the tables come from. -->
 	</data>
 
 	<fixedQueryCore id="queryList"
-		query="SELECT tableName, tableName, tableDesc, resDesc FROM dc.tablemeta WHERE adql ORDER BY tableName">
+		query="SELECT tableName, tableName as tableinfo, tableDesc, resDesc 
+			FROM dc.tablemeta WHERE adql ORDER BY tableName">
 		<outputTable namePath="tablemeta">
 			<outputField original="tableName"/>
 			<outputField name="tableinfo" original="tableName"/>

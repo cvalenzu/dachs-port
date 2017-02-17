@@ -372,25 +372,18 @@ class UWS(object):
 			fragments.append("phase=%(phase)s")
 
 		if last is not None:
-			limits = ("ORDER BY creationTime DESC LIMIT %(limit)s",
-				{'limit': last})
+			postfix = "ORDER BY creationTime DESC LIMIT %(limit)s"
+			pars['limit'] = last
 
 		if after is not None:
 			fragments.append("creationTime>%(after)s")
 
 		td = self.jobClass.jobsTD
 
-		with base.getTableConn() as conn:
-			jobsTable = rsc.TableForDef(td, connection=conn)
-			try:
-				return [(r["jobId"], r["phase"])
-					for r in jobsTable.iterQuery(
-						[td.getColumnByName("jobId"), td.getColumnByName("phase")],
-						fragment=base.joinOperatorExpr("AND", fragments),
-						pars=pars,
-						limits=limits)]
-			finally:
-				jobsTable.close()
+		with base.getTableConn() as conn: 
+			return conn.query(td.getSimpleQuery(["jobId", "phase"],
+				fragments=base.joinOperatorExpr("AND", fragments),
+				postfix=limits), pars)
 
 	def cleanupJobsTable(self, includeFailed=False, includeCompleted=False,
 			includeAll=False, includeForgotten=False):

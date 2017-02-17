@@ -426,7 +426,7 @@ class StringQueryTest(testhelpers.VerboseTest):
 		pars = {}
 		query = "SELECT * FROM %s WHERE %s"%(self.testTable.tableDef.getQName(),
 			base.getSQLForField(self.ik, {"s": expr}, pars))
-		res = self.testTable.query(query, pars).fetchall()
+		res = list(self.testTable.query(query, pars))
 		self.assertEqual(len(res), numberExpected,
 			"Query %s from %r with parameters %s didn't yield exactly"
 				" %d result(s).\nResult is %s."%(
@@ -496,7 +496,7 @@ class MatchMatrixTest(testhelpers.VerboseTest):
 	def runTest(self):
 		for test in _MATCH_MATRIX[1:]:
 			expectation, query, pars = self._computeTest(test)
-			res = set([r[0] for r in self.testtable.query(query, pars).fetchall()])
+			res = set([r[0] for r in self.testtable.query(query, pars)])
 			self.assertEqual(expectation, res, 
 				"Query for %s returned wrong set.\n"
 				"Got %s, expected %s."%(

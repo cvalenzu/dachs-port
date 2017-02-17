@@ -116,12 +116,14 @@ def annotateDBTable(td, extended=True, requireValues=False):
 
 	dbtable = api.TableForDef(td)
 
-	if not hasattr(dbtable, "iterQuery"):
+	if not hasattr(dbtable, "getTableForQuery"):
 		raise api.ReportableError("Table %s cannot be queried."%td.getQName(),
 			hint="This is probably because it is an in-memory table.  Add"
 			" onDisk='True' to make tables reside in the database.")
 
-	resultRow = list(dbtable.iterQuery(outputFields, ""))[0]
+	limitsTable = dbtable.getTableForQuery(outputFields, "")
+	resultRow = limitsTable.rows[0]
+
 	for annotator in annotators:
 		annotator.annotate(resultRow)
 

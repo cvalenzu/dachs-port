@@ -130,7 +130,8 @@ class MetaTableMixin(object):
 	def _cleanFromSourceTable(self):
 		"""removes information about self.tableDef from the tablemeta table.
 		"""
-		self.query("DELETE FROM dc.tablemeta WHERE tableName=%(tableName)s",
+		self.connection.execute(
+			"DELETE FROM dc.tablemeta WHERE tableName=%(tableName)s",
 			{"tableName": self.tableDef.getQName()})
 	
 	def _addToSourceTable(self):
@@ -185,7 +186,7 @@ class DBMethodsMixin(sqlsupport.QuerierMixin):
 			if not self.tableDef.system:
 				base.ui.notifyIndexCreation("Primary key on %s"%self.tableName)
 			try:
-				self.query("ALTER TABLE %s ADD PRIMARY KEY (%s)"%(
+				self.connection.execute("ALTER TABLE %s ADD PRIMARY KEY (%s)"%(
 					self.tableName, ", ".join(self.tableDef.primary)))
 			except sqlsupport.DBError, msg:
 				raise base.ui.logOldExc(
@@ -202,7 +203,7 @@ class DBMethodsMixin(sqlsupport.QuerierMixin):
 		constraintName = str(self.getPrimaryIndexName(self.tableDef.id))
 		if self.tableDef.primary and self.hasIndex(
 				self.tableName, constraintName):
-			self.query("ALTER TABLE %s DROP CONSTRAINT %s"%(
+			self.connection.execute("ALTER TABLE %s DROP CONSTRAINT %s"%(
 				self.tableName, constraintName))
 
 	def _addForeignKeys(self):
@@ -256,7 +257,7 @@ class DBMethodsMixin(sqlsupport.QuerierMixin):
 		For now, matchCondition a boolean SQL expression.  All rows matching
 		it will be deleted.
 		"""
-		self.query(*self.getDeleteQuery(matchCondition, pars))
+		self.connection.execute(*self.getDeleteQuery(matchCondition, pars))
 	
 	def copyIn(self, inFile, binary=True):
 		fmt = " WITH BINARY" if binary else ""
@@ -279,7 +280,7 @@ class DBMethodsMixin(sqlsupport.QuerierMixin):
 			return
 		schemaName = self.tableDef.rd.schema
 		if not self.schemaExists(schemaName):
-			self.query("CREATE SCHEMA %(schemaName)s"%locals())
+			self.connection.execute("CREATE SCHEMA %(schemaName)s"%locals())
 			self.setSchemaPrivileges(self.tableDef.rd)
 		return self
 
@@ -385,9 +386,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		cursor.close()
 
 	def __len__(self):
-		with self.connection.cursor() as cursor:
-			cursor.execute("SELECT count(*) FROM %s"%self.tableName)
-			return cursor.fetchall()[0][0]
+		return list(self.query("select count(*) from %s"%self.getQName()))[0][0]
 
 	def exists(self):
 		if self.tableDef.temporary:
@@ -408,7 +407,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		else:
 			base.ui.notifyDBTableModified(self.tableName)
 
-		self.query("ANALYZE %s"%self.tableName)
+		self.connection.execute("ANALYZE %s"%self.tableName)
 		if self.ownedConnection:
 			self.connection.commit()
 		return self
@@ -437,7 +436,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		Use this only to add one or two rows, otherwise go for getFeeder.
 		"""
 		try:
-			self.query(self.addCommand, row)
+			self.connection.execute(self.addCommand, row)
 		except sqlsupport.IntegrityError:
 			raise base.ui.logOldExc(
 				base.ValidationError("Row %s cannot be added since it clashes"
@@ -480,7 +479,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		self._definePrimaryKey()
 
 		if self.tableDef.dupePolicy=="drop":
-			self.query("CREATE OR REPLACE RULE updatePolicy AS"
+			self.connection.execute("CREATE OR REPLACE RULE updatePolicy AS"
 				" ON INSERT TO %s WHERE"
 				" EXISTS(SELECT * FROM %s WHERE %s)"
 				" DO INSTEAD NOTHING"%(self.tableName, self.tableName, 
@@ -491,7 +490,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 			# the rule does not fire and we get a pkey violation.
 			# Furthermore, special NULL handling is required -- we
 			# do not check columns that have NULLs in new or old.
-			self.query("CREATE OR REPLACE RULE updatePolicy AS"
+			self.connection.execute("CREATE OR REPLACE RULE updatePolicy AS"
 				" ON INSERT TO %s WHERE"
 				" EXISTS(SELECT 1 FROM %s WHERE %s)"
 				" DO INSTEAD NOTHING"%(self.tableName, self.tableName, 
@@ -502,20 +501,20 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 			args = {
 				"table": self.tableName, 
 				"matchCond": getMatchCondition()}
-			self.query('CREATE OR REPLACE FUNCTION "dropOld_%(table)s"()'
+			self.connection.execute('CREATE OR REPLACE FUNCTION "dropOld_%(table)s"()'
 				' RETURNS trigger AS $body$\n'
 				" BEGIN\n"
 				" IF (EXISTS(SELECT 1 FROM %(table)s WHERE %(matchCond)s)) THEN\n"
 				"   DELETE FROM %(table)s WHERE %(matchCond)s;\n"
 				" END IF;\n"
 				" RETURN NEW;\nEND\n$body$ LANGUAGE plpgsql"%args)
-			self.query(
+			self.connection.execute(
 				'CREATE TRIGGER "dropOld_%(table)s" BEFORE INSERT OR UPDATE'
 				' ON %(table)s FOR EACH ROW EXECUTE PROCEDURE "dropOld_%(table)s"()'%
 				args)
 
 		elif self.tableDef.dupePolicy=="overwrite":
-			self.query("CREATE OR REPLACE RULE updatePolicy AS"
+			self.connection.execute("CREATE OR REPLACE RULE updatePolicy AS"
 				" ON INSERT TO %s WHERE"
 				" EXISTS(SELECT %s FROM %s WHERE %s)"
 				" DO INSTEAD UPDATE %s SET %s WHERE %s"%(self.tableName, 
@@ -535,7 +534,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 	def create(self):
 		base.ui.notifyDebug("Create DB Table %s"%self.tableName)
 		self.ensureSchema()
-		self.query(self.tableDef.getDDL())
+		self.connection.execute(self.tableDef.getDDL())
 		self.newlyCreated = True
 		return self.configureTable()
 
@@ -574,7 +573,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		"""
 		if self.exists():
 			self.runScripts("beforeDrop")
-			self.query("DROP %s %s CASCADE"%(what, self.tableName))
+			self.connection.execute("DROP %s %s CASCADE"%(what, self.tableName))
 			if not self.nometa:
 				self.cleanFromMeta()
 		return self
@@ -611,7 +610,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		"""returns a result table definition, query string and a parameters
 		dictionary for a query against this table.
 
-		See iterQuery for the meaning of the arguments.
+		See getTableForQuery for the meaning of the arguments.
 		"""
 		if pars is None:
 			pars = {}
@@ -715,7 +714,8 @@ class View(DBTable):
 	def create(self):
 		base.ui.notifyDebug("Create DB View %s"%self.tableName)
 		self.ensureSchema()
-		self.query(self.tableDef.expand(self.tableDef.viewStatement))
+		self.connection.execute(
+			self.tableDef.expand(self.tableDef.viewStatement))
 		return self.configureTable()
 
 	def makeIndices(self):

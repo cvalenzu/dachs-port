@@ -752,6 +752,11 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 				within="table %s"%self.id)
 
 	def getURL(self, rendName, absolute=True):
+		"""returns the URL DaCHS will show the table info page for this table
+		under.
+
+		Of course the URL is only valid for imported tables.
+		"""
 		basePath = "%stableinfo/%s"%(
 			base.getConfig("web", "nevowRoot"),
 			self.getQName())
@@ -770,6 +775,73 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 			self.getQName(),
 			", ".join(column.getDDL() for column in self))
 		return statement
+
+	def getSimpleQuery(self, 
+			selectClause=None, 
+			fragments="",
+			postfix=""):
+		"""returns a query against this table.
+
+		selectClause is a list of column names (in which case the names
+		are validated against the real column names and you can use
+		user input) or a literal string (in which case you must not provide
+		user input or have a SQL injection hole).
+
+		fragments (the WHERE CLAUSE) and postfix are taken as literal strings (so
+		they must not contain user input).
+
+		This is purely a string operation, so you'll have your normal
+		value references in fragments and postfix, and should maintain
+		the parameter dictionaries as usual.
+
+		All parts are optional, defaulting to pulling the entire table.
+		"""
+		parts = ["SELECT"]
+
+		if selectClause is None:
+			parts.append("*")
+		elif isinstance(selectClause, list):
+			parts.append(", ".join(
+				self.getColumnByName(colName).name for colName in selectClause))
+		else:
+			parts.append(selectClause)
+	
+		parts.append("FROM %s"%self.getQName())
+
+		if fragments:
+			parts.append("WHERE %s"%fragments)
+
+		if postfix:
+			parts.append(postfix)
+
+		return " ".join(parts)
+
+	@property
+	def caseFixer(self):
+		return dict((col.name.lower(), col.name) for col in self)
+
+	def doSimpleQuery(self, 
+			selectClause=None, 
+			fragments="", 
+			params=None,
+			postfix=""):
+		"""runs a query generated via getSimpleQuery and returns a list
+		of rowdicts.
+
+		This uses a table connection and queryToDicts; the keys in the 
+		dictionaries will have the right case for this table's columns, though.
+
+		params is a dictionary of fillers for fragments and postfix.
+		"""
+		with base.getTableConn() as conn:
+			return list(
+				conn.queryToDicts(
+					self.getSimpleQuery(
+						selectClause,
+						fragments,
+						postfix),
+					params,
+					caseFixer=self.caseFixer))
 
 	def macro_colNames(self):
 		"""returns an SQL-ready list of column names of this table.
