@@ -156,7 +156,7 @@ This is a temporary location for procDefs and friends complying to
 				# returning calibrations we cannot serve (since we can only
 				# change to RELATIVE for now).  There's nothing I can really
 				# do about this.
-				if descriptor.limits["ssa_fluxcalib"].values:
+				if "ssa_fluxcalib" in descriptor.limits:
 					supportedCalibs.update(descriptor.limits["ssa_fluxcalib"].values)
 				else:
 					if isinstance(foundCalibs, basestring):
