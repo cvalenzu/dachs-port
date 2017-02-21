@@ -14,7 +14,6 @@ from gavo.rsc import dbtable
 from gavo.rsc import table
 
 
-
 def TableForDef(tableDef, suppressIndex=False, 
 		parseOptions=common.parseNonValidating, **kwargs):
 	"""returns a table instance suitable for holding data described by
@@ -50,33 +49,3 @@ def TableForDef(tableDef, suppressIndex=False,
 			**kwargs)
 
 
-def makeTableForQuery(queriedTable, resultTableDef, fragment, pars, 
-		distinct=False, limits=None, suppressIndex=True,
-		connection=None):
-	"""returns a table from resultTableDef containing the results for
-	a query for fragment and pars in queriedTable.
-
-	resultTableDef must be a TableDef with svc.OutputField columns
-	(which you can easily generate from columns using 
-	svc.OutputTableDef.fromColumns)
-
-	queriedTable must be a DBTable instance.
-
-	The other arguments are just handed through to dbtable.iterQuery.
-	"""
-	return TableForDef(resultTableDef, suppressIndex=suppressIndex,
-		connection=connection,
-		rows=[r for r in queriedTable.iterQuery(resultTableDef, fragment, pars,
-			distinct, limits)])
-
-
-def makeTableFromRows(tableDef, iterator):
-	"""returns a table for tableDef, taking raw rows from iterator
-	and using a default-None rowmaker.
-	"""
-	t = TableForDef(tableDef)
-	rmk = rscdef.RowmakerDef.makeTransparentFromTable(tableDef
-		).compileForTableDef(tableDef)
-	for row in iterator:
-		t.addRow(rmk(row, t))
-	return t
