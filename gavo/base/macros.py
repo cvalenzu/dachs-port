@@ -168,6 +168,14 @@ class MacroPackage(object):
 		"""
 		return '"%s"'%(arg.replace('"', '\\"'))
 
+	def macro_sqlquote(self, arg):
+		"""returns the argument as a quoted string, unless it is 'NULL' or
+		None, in which case just NULL is returned.
+		"""
+		if arg is None or arg=='NULL':
+			return "NULL"
+		return "'%s'"%arg.replace("'", "''")
+
 
 class StandardMacroMixin(MacroPackage):
 	"""is  a mixin providing some macros for scripting's MacroExpander.

@@ -203,6 +203,14 @@ class TableMacroTest(testhelpers.VerboseTest):
 				>1975-03-02</param></table>""")
 		self.assertEqual(t.expand("\getParam{foo}"), "1975-03-02")
 
+	def testSQLQuote(self):
+		t = base.parseFromString(rscdef.TableDef,
+			"""<table id="test"><param name="foo" type="text"
+				>bar's param</param></table>""")
+		self.assertEqual(t.expand("\sqlquote{\getParam{foo}}"), 
+			"'bar''s param'")
+		self.assertEqual(t.expand("\sqlquote{\getParam{fake}{NULL}}"), 
+			"NULL")
 
 
 if __name__=="__main__":

@@ -711,7 +711,8 @@
 			>NULL</mixinPar>
 		<!-- TODO: fix pgsphere to know how to cast scircles to spolys
 			>scircle(ssa_location, ssa_aperture*pi()/180.)</mixinPar> -->
-		<mixinPar name="collection">\getParam{ssa_collection}{NULL}</mixinPar>
+		<mixinPar name="collectionName">
+			\sqlquote{\getParam{ssa_collection}{NULL}}</mixinPar>
 		<mixinPar name="creatorDID">ssa_creatorDID</mixinPar>
 		<mixinPar name="dec">degrees(lat(ssa_location))</mixinPar>
 		<mixinPar name="ra">degrees(long(ssa_location))</mixinPar>
@@ -719,8 +720,10 @@
 		<mixinPar name="emMin">ssa_specstart</mixinPar>
 		<mixinPar name="expTime">ssa_timeExt</mixinPar>
 		<mixinPar name="fov">ssa_aperture</mixinPar>
-		<mixinPar name="instrumentName">'\getParam{ssa_instrument}{NULL}'</mixinPar>
-		<mixinPar name="oUCD">'\getParam{ssa_fluxucd}'</mixinPar>
+		<mixinPar name="instrumentName"
+			>\sqlquote{\getParam{ssa_instrument}{NULL}}</mixinPar>
+		<mixinPar name="oUCD"
+			>\sqlquote{\getParam{ssa_fluxucd}}</mixinPar>
 		<mixinPar name="productType">'spectrum'</mixinPar>
 		<mixinPar name="sResolution">\getParam{ssa_spaceRes}{NULL}/3600.</mixinPar>
 		<mixinPar name="tMax">ssa_dateObs+ssa_timeExt/2</mixinPar>
@@ -728,7 +731,7 @@
 		<mixinPar name="targetName">ssa_targname</mixinPar>
 		<mixinPar name="targetClass">ssa_targclass</mixinPar>
 		<mixinPar name="title">ssa_dstitle</mixinPar>
-		<mixinPar name="emUCD">'\getParam{ssa_fluxucd}'</mixinPar> 
+		<mixinPar name="emUCD">\sqlquote{\getParam{ssa_fluxucd}}</mixinPar> 
 	</mixinDef>
 
 	<table id="emptyobscore" onDisk="True"
