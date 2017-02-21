@@ -495,10 +495,13 @@
 				vars["ssa_"+kw] = userPars[kw]
 			alpha = parseFloat(alpha)
 			delta = parseFloat(delta)
+
+			vars["ssa_region"] = vars["ssa_location"] = None
 			if alpha is not None and delta is not None:
 				vars["ssa_location"] = pgsphere.SPoint.fromDegrees(alpha, delta)
-			else:
-				vars["ssa_location"] = None
+				if aperture:
+					vars["ssa_region"] = pgsphere.SCircle.fromSODA(
+						[alpha, delta, aperture]).asPoly(6)
 		</code>
 	</procDef>
 
@@ -1116,6 +1119,28 @@
 					substrate.setMeta("utype", "spec:Spectrum")
 			</code>
 		</processEarly>
+	</mixinDef>
+
+	<mixinDef id="simpleCoverage">
+		<doc>
+			A mixin furnishes a table with an ssa_region column giving 
+			a polygonal coverage.  For SSA, that's unnecessary, but it's
+			highly recommended if you have data with positional and aperture
+			data and will publish it via obscore, too (which in turn is highly
+			recommended).
+
+			The column will be filled with a hexagon approximating the aperture
+			by //ssap#setMeta, so usually you're set with this mixin.
+
+			To make it visible in obscore, however, you must bind the
+			``coverage`` mixin par of //obscore#publishSSAPHCD to ``ssa_region``.
+		</doc>
+		<events>
+			<column name="ssa_region" type="spoly"
+				tablehead="Coverage"
+				description="Rough coverage based on location and aperture."
+				verbLevel="30"/>
+		</events>
 	</mixinDef>
 
 	<procDef type="apply" id="feedSSAToSDM">

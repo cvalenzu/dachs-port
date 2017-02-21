@@ -177,7 +177,7 @@ class SCircle(PgSAdapter):
 		return "scircle '< (%.10f, %.10f), %.10f >'"%(
 			self.center.x, self.center.y, self.radius)
 
-	def asPoly(self):
+	def asPoly(self, nSegments=32):
 		# approximate the circle with 32 line segments and don't worry about
 		# circles with radii larger than 90 degrees.
 		# We compute the circle around the north pole and then rotate
@@ -189,7 +189,7 @@ class SCircle(PgSAdapter):
 			mathtricks.getRotX(math.pi/2-self.center.y))
 
 		points = []
-		for i in range(32):
+		for i in range(nSegments):
 			angle = i/16.*math.pi
 			dx, dy = r*math.sin(angle), r*math.cos(angle)
 			points.append(SPoint(

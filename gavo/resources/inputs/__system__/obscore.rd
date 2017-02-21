@@ -609,7 +609,8 @@
 			description="Approximate diameter of region covered">NULL</mixinPar>
 		<mixinPar name="coverage" description="A polygon giving the
 			spatial coverage of the data set; this must always be in
-			ICRS.  Instead of an SPOLY other pgsphere areas might work, too."
+			ICRS.  This is cast to an pgsphere spoly, which currently means that
+			you have to provide an spoly (reference), too."
 			>NULL</mixinPar>
 		<mixinPar name="tMin" description="MJD for the lower bound of
 			times covered in the data set (e.g. start of exposure).  Use
@@ -702,6 +703,13 @@
 			of the parameters, but most of them should already be all right.
 			To find out what the parameters described as "preset for SSAP"
 			mean, refer to //obscore#publish.
+
+			Note that this mixin does *not* set coverage (obscore: s_region).
+			This is because although we could make a circle from ssa_location
+			and ssa_aperture, circles are not allowed in DaCHS' s_region (which
+			has a fixed type of spoly).  The recommended solution to still
+			have s_region is to add (and index) a custom field in the ssa table 
+			and compute some sort of spolys for the coverage.
 		</doc>
 
 		<LFEED source="_publishProduct"/>
@@ -709,8 +717,6 @@
 
 		<mixinPar name="coverage"
 			>NULL</mixinPar>
-		<!-- TODO: fix pgsphere to know how to cast scircles to spolys
-			>scircle(ssa_location, ssa_aperture*pi()/180.)</mixinPar> -->
 		<mixinPar name="collectionName">
 			\sqlquote{\getParam{ssa_collection}{NULL}}</mixinPar>
 		<mixinPar name="creatorDID">ssa_creatorDID</mixinPar>
