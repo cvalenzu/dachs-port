@@ -68,25 +68,11 @@ from gavo.utils import pyfits
 # TODO: make this configurable -- globally?  by service?
 PREVIEW_SIZE = 200
 
+PRODUCTS_TDID = "//products#products"
+
 REMOTE_URL_PATTERN = re.compile("(https?|ftp)://")
 
 MS = base.makeStruct
-
-
-def _getProductsTable():
-	"""returns an instance of the products table.
-
-	Clients should use the getProductsTable below to save the cost of
-	constructing the table.
-	"""
-	td = base.caches.getRD("//products").getById("products")
-	conn = base.getDBConnection("admin", autocommitted=True)
-	return rsc.TableForDef(td, connection=conn)
-
-
-getProductsTable = utils.CachedGetter(
-	_getProductsTable,
-	isAlive=lambda t: not t.connection.closed)
 
 
 @utils.memoized
@@ -1044,9 +1030,8 @@ class RAccref(object):
 		try:
 			return self._productsRowCache
 		except AttributeError:
-			pt = getProductsTable()
-			res = list(pt.getTableForQuery(pt.tableDef, "accref=%(accref)s", 
-				{"accref": self.accref}))
+			res = base.resolveCrossId(PRODUCTS_TDID).doSimpleQuery(
+				fragments="accref=%(accref)s", params={"accref": self.accref})
 			if not res:
 				raise base.NotFoundError(self.accref, "accref", "product table",
 					hint="Product URLs may disappear, though in general they should"

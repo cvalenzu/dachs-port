@@ -297,20 +297,20 @@ class DBTableQueryTest(tresc.TestWithDBConnection):
 	def testPlainQuery(self):
 		resdef = svcs.OutputTableDef.fromTableDef(
 			self.rd.getTableDefById("xy"), None)
-		res = rsc.makeTableForQuery(self.data.tables["xy"], resdef, "", {})
+		res = self.data.tables["xy"].getTableForQuery(resdef, "", {})
 		self.assertEqual(len(res.rows), 11)
 	
 	def testDistinctQuery(self):
 		resdef = svcs.OutputTableDef.fromTableDef(
 			self.rd.getTableDefById("xy"), None)
-		res = rsc.makeTableForQuery(self.data.tables["xy"], resdef, "", {},
-			distinct=True, connection=self.conn)
+		res = self.data.tables["xy"].getTableForQuery(resdef, "", {},
+			distinct=True)
 		self.assertEqual(len(res.rows), 10)
 
 	def testWithLimit(self):
 		resdef = svcs.OutputTableDef.fromTableDef(
 			self.rd.getTableDefById("xy"), None)
-		res = rsc.makeTableForQuery(self.data.tables["xy"], resdef, "", {},
+		res = self.data.tables["xy"].getTableForQuery(resdef, "", {},
 			limits=("ORDER BY y LIMIT %(limit_)s", {"limit_": 4}))
 		self.assertEqual(len(res.rows), 4)
 		self.assertEqual(res.rows[-1], {u'y': u'xx', u'x': 7})
@@ -318,7 +318,7 @@ class DBTableQueryTest(tresc.TestWithDBConnection):
 	def testWithWhere(self):
 		resdef = svcs.OutputTableDef.fromTableDef(
 			self.rd.getTableDefById("xy"), None)
-		res = rsc.makeTableForQuery(self.data.tables["xy"], resdef, 
+		res = self.data.tables["xy"].getTableForQuery(resdef, 
 			"x=%(x)s", {"x":9})
 		self.assertEqual(len(res.rows), 2)
 
