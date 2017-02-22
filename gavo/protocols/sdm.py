@@ -240,6 +240,8 @@ def makeSDMDataForSSARow(ssaRow, spectrumData,
 	with base.getTableConn() as conn:
 		resData = rsc.makeData(spectrumData, forceSource=ssaRow,
 			connection=conn)
+	resData.setMeta("utype", "spec:Spectrum")
+
 	resTable = resData.getPrimaryTable()
 	resTable.setMeta("description",
 		"Spectrum from %s"%products.makeProductLink(ssaRow["accref"]))

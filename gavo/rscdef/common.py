@@ -548,7 +548,7 @@ def getStandardPubDID(path):
 	In a rowmaker, you'll usually use the \\standardPubDID macro.
 	"""
 	#	Why add inputsDir first and remove it again?  Well, I want to keep
-	# getInputsRelativePath in the look since it does some validation
+	# getInputsRelativePath in the loop since it does some validation
 	# and may, at some point, do more.
 	if path[0]!="/":
 		path = os.path.join(base.getConfig("inputsDir"), path)
