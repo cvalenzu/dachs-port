@@ -74,10 +74,19 @@ class QPRenderer(grend.HTMLResultRenderMixin,
 			).addErrback(self._handleError, ctx)
 	
 	def _formatOutput(self, res, ctx):
-# XXX TODO: We need a sensible common output framework, and quick.
-# Then do away with the quick VOTable hack
 		if res.queryMeta["format"]=="VOTable":
+			# Hm... can we get rid of this hack?
 			return VOTableResource(res)
+
+		# Hm... I suppose this and the corresponding stuff in 
+		# UnifiedDALRenderer should be merged.
+		if isinstance(res.original, tuple):  
+			# core returned a complete document (mime and string)
+			request = inevow.IRequest(ctx)
+			mime, payload = res.original
+			request.setHeader("content-type", mime)
+			return streaming.streamOut(lambda f: f.write(payload), request)
+
 		nMatched = res.queryMeta.get("Matched", 0)
 		if nMatched==0:
 			raise svcs.UnknownURI("No record matching %s."%(

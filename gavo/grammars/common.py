@@ -479,7 +479,7 @@ class GrammarMacroMixin(base.StandardMacroMixin):
 		set retrieved through the datalink service.
 
 		You would write \fullDLURL{dlsvc} here, and the macro will expand into
-		something like http://yourserver/currd/dlget?ID=ivo://whatever.
+		something like http://yourserver/currd/dlsvc/dlget?ID=ivo://whatever.
 
 		dlService is the id of the datalink service in the current RD.
 
