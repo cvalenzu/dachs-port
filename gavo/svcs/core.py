@@ -70,7 +70,6 @@ CORE_REGISTRY = {
 	"pythonCore": ("svcs.computedcore", "PythonCore"),
 	"registryCore": ("registry.oaiinter", "RegistryCore"),
 	"scsCore": ("protocols.scs", "SCSCore"),
-	"sdmCore": ("protocols.sdm", "SDMCore"),
 	"siapCutoutCore": ("protocols.siap", "SIAPCutoutCore"),
 	"ssapCore": ("protocols.ssap", "SSAPCore"),
 	"tapCore": ("protocols.tap", "TAPCore"),

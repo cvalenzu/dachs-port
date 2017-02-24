@@ -721,79 +721,6 @@ class ScaledFITSProduct(ProductBase):
 		return streaming.streamOut(self._writeStuffTo, request)
 
 
-class DCCProduct(ProductBase):
-	"""A class representing a product returned by a DC core.
-
-	Do not use this any more.  It is superseded by datalink.  You can put
-	datalink URLs into dc.product's accessPath.
-
-	The source path of the rAccref's productsRow must have the form
-	dcc://<rd.id>/<core id>?<coreAccref>; rd.id is the rd id with slashes
-	replaced by dots.  This means this scheme doesn't work for RDs with ids
-	containing dots, but you shouldn't do that in the first place.  coreAccref is
-	just an opaque string that does not necessarily match the product's accref,
-	but probably will in most cases.
-
-	The context grammar receives a dictionary with the param dict, plus
-	the coreAccref as accref.  The core must return an actual mime type 
-	and a string.
-
-	As a special service, iterData here can take a svcs.QueryMeta
-	instance which, if given, is passed on to the core.
-	
-	See SDMCore for an example for how this can work.
-	"""
-	def __init__(self, rAccref):
-		ProductBase.__init__(self, rAccref)
-		self.params = rAccref.params
-		self.name = os.path.basename(self.pr["accref"])
-		self._parseAccessPath()
-
-	_schemePat = re.compile("dcc://")
-
-	@classmethod
-	def fromRAccref(cls, rAccref, grammar=None):
-		if cls._schemePat.match(rAccref.productsRow["accessPath"]):
-			return cls(rAccref)
-
-	def _makeName(self):
-		self.name = "untitled"  # set in the constructor
-	
-	def _parseAccessPath(self):
-		# The scheme is manually handled to shoehorn urlparse into supporting
-		# queries (and, potentially, fragments)
-		ap = self.pr["accessPath"]
-		if not ap.startswith("dcc:"):
-			raise svcs.UnknownURI("DCC products can only be generated for dcc"
-				" URIs")
-		res = urlparse.urlparse(ap[4:])
-		self.core = base.caches.getRD(
-			res.netloc.replace(".", "/")).getById(res.path.lstrip("/"))
-		self.accref = res.query
-
-	def iterData(self, queryMeta=svcs.emptyQueryMeta):
-		inData = self.params.copy()
-		inData["accref"] = self.accref
-		self.generatedContentType, data = self.core.run(
-			self,
-			svcs.CoreArgs.fromRawArgs(self.core.inputTable, inData),
-			queryMeta)
-		yield data
-	
-	def renderHTTP(self, ctx):
-		return threads.deferToThread(self.iterData, 
-			svcs.QueryMeta.fromContext(ctx)
-		).addCallback(self._deliver, ctx)
-	
-	def _deliver(self, resultIterator, ctx):
-		result = "".join(resultIterator)
-		request = inevow.IRequest(ctx)
-		request.setHeader("content-type", self.generatedContentType)
-		request.setHeader("content-disposition", 'attachment; filename="%s"'%
-			str(self.name))
-		return result
-
-
 # The following list is checked by getProductForRAccref in sequence.
 # Each product is asked in turn, and the first that matches wins.
 # So, ORDER IS ALL-IMPORTANT here.
@@ -803,7 +730,6 @@ PRODUCT_CLASSES = [
 	NonExistingProduct,
 	UnauthorizedProduct,
 	RemoteProduct,
-	DCCProduct,
 	CutoutProduct,
 	ScaledFITSProduct,
 	FileProduct,

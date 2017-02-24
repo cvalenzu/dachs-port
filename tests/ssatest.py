@@ -659,27 +659,6 @@ class SSATableTest(testhelpers.VerboseTest):
 		# for that here.
 
 
-class SDMRenderTest(testhelpers.VerboseTest):
-	resources = [("ssatable", tresc.ssaTestTable)]
-
-	def testUnknownURI(self):
-		pk = _FakeRAccref.fromString(
-			"dcc://data.ssatest/mksdm?data/ssatest/foobar")
-		pk.setProductsRow({
-			"accref": "data/ssatest/foobar",
-			"accessPath": "dcc://data.ssatest/mksdm?foobar",
-			"mime": "application/fits"})
-		prod = list(base.makeStruct(products.ProductsGrammar, groups=[]
-			).parse([pk]))[0]["source"]
-		self.assertEqual(prod.name, "foobar")
-		self.assertEqual(prod.core, getRD().getById("mksdm"))
-		self.assertRaisesWithMsg(
-			svcs.UnknownURI,
-			"No spectrum with accref foobar known here",
-			list,
-			(prod.iterData(),))
-
-
 class _FakeRAccref(products.RAccref):
 	"""a RAccref that lets you manually provide a productsRow.
 	"""
@@ -695,12 +674,10 @@ class _RenderedSDMResponse(testhelpers.TestResource):
 	resources = [("ssatable", tresc.ssaTestTable)]
 
 	def make(self, deps):
-		rAccref = _FakeRAccref.fromString("bar")
-		rAccref.setProductsRow({
-			"accref": "spec1.ssatest.vot",
-			"accessPath": "dcc://data.ssatest/mksdm?data/spec1.ssatest.vot",})
-		prod = products.getProductForRAccref(rAccref)
-		rawVOT = "".join(prod.iterData(svcs.QueryMeta({"_TDENC": True})))
+		res = getRD().getById("dl").run("dlget",
+			{ "ID": "ivo://test.inv/test1",
+				"FORMAT": "application/x-votable+xml;serialization=tabledata"})
+		_, rawVOT = res.original
 		return rawVOT, testhelpers.getXMLTree(rawVOT, debug=False)
 
 
@@ -738,10 +715,10 @@ class SDMTableTest(testhelpers.VerboseTest):
 
 	def testDataPresent(self):
 		tree = self.stringAndTree[1]
-		firstRow = tree.xpath("//TR")[0]
+		firstRow = tree.xpath("//TR")[1]
 		self.assertEqual(
 			[el.text for el in firstRow.xpath("TD")],
-			["3000.0", "30.0"])
+			["1755.0", "1753.0"])
 
 	def testContainerUtypes(self):
 		tree = self.stringAndTree[1]
@@ -761,14 +738,10 @@ class SDMTableTest(testhelpers.VerboseTest):
 		self.assertEqual(
 			tree.xpath("//FIELD[@name='spectral']/DESCRIPTION")[0].text,
 			"Wavelength")
-	
-	def testDescriptionDefault(self):
-		tree = self.stringAndTree[1]
 		self.assertEqual(
 			tree.xpath("//FIELD[@name='flux']/DESCRIPTION")[0].text,
-			"The dependent variable of this spectrum ("
-			"see the ucd for its physical meaning)")
-	
+			"Stellar surface flux density")
+
 	def testSpectralUnitUsed(self):
 		tree = self.stringAndTree[1]
 		self.assertEqual(
@@ -788,12 +761,10 @@ class _RenderedSDM2Response(testhelpers.TestResource):
 	resources = [("ssatable", tresc.ssaTestTable)]
 
 	def make(self, deps):
-		ssaRow = list(deps["ssatable"].iterQuery(
-			fragment="accref='data/spec2.ssatest'"))[0]
-		_, rawVOT = sdm.formatSDMData(
-			sdm.makeSDMDataForSSARow(ssaRow, 
-				deps["ssatable"].tableDef.rd.getById("sdmdata"), "2"),
-			base.votableType+";serialization=tabledata")
+		res = getRD().getById("dl").run("dlget",
+			{ "ID": "ivo://test.inv/test1",
+				"FORMAT": "application/x-votable+xml;content=spec2"})
+		_, rawVOT = res.original
 		return rawVOT, testhelpers.getXMLTree(rawVOT, debug=False)
 
 
@@ -811,12 +782,12 @@ class SDM2TableTest(testhelpers.VerboseTest):
 		res = self._getUniqueByXPath(
 			"//PARAM[@utype='spec2:Char.SpatialAxis.Coverage.Location.Value']")
 		self.assertEqual(res.get('value'), 
-			'10.999999998889821 14.0000000011914')
+			'10.100000002783013 15.199999999820202')
 
 	def testParameterSet(self):
 		res = self._getUniqueByXPath(
 			"//PARAM[@utype='spec2:DataID.DatasetID']")
-		self.assertEqual(res.get('value'), 'ivo://test.inv/test2')
+		self.assertEqual(res.get('value'), 'ivo://test.inv/test1')
 
 	def testSpecGroupsPresent(self):
 		group = self._getUniqueByXPath("//GROUP[@utype='spec2:Target']")
@@ -837,10 +808,10 @@ class SDM2TableTest(testhelpers.VerboseTest):
 
 	def testDataPresent(self):
 		tree = self.stringAndTree[1]
-		firstRow = tree.xpath("//TR")[0]
+		firstRow = tree.xpath("//TR")[1]
 		self.assertEqual(
 			[el.text for el in firstRow.xpath("TD")],
-			["3000.0", "30.0"])
+			["1755.0", "1753.0"])
 
 	def testContainerUtypes(self):
 		tree = self.stringAndTree[1]
@@ -860,14 +831,6 @@ class SDM2TableTest(testhelpers.VerboseTest):
 				"//FIELD[@utype='spec2:Data.SpectralAxis.Value']/DESCRIPTION")[0].text,
 			"Wavelength")
 	
-	def testDescriptionDefault(self):
-		tree = self.stringAndTree[1]
-		self.assertEqual(
-			tree.xpath(
-				"//FIELD[@utype='spec2:Data.FluxAxis.Value']/DESCRIPTION")[0].text,
-			"The dependent variable of this spectrum ("
-			"see the ucd for its physical meaning)")
-	
 	def testSpectralUnitUsed(self):
 		tree = self.stringAndTree[1]
 		self.assertEqual(
@@ -882,7 +845,7 @@ class SDM2TableTest(testhelpers.VerboseTest):
 		p = self.stringAndTree[1].xpath(
 			"//PARAM[@utype='spec2:Char.SpectralAxis.Coverage.Bounds.Start']")[0]
 		self.assertEqual(p.get("unit"), "m")
-		self.assertEqual(p.get("value"), "5e-07")
+		self.assertEqual(p.get("value"), "4e-07")
 	
 	def testModelName(self):
 		p = self.stringAndTree[1].xpath(
@@ -948,43 +911,6 @@ class SDMFITSTest(testhelpers.VerboseTest):
 		card = hdr.ascard["SPEC_BW"]
 		self.assertEqual(card.value, 1e-7)
 		self.assertEqual(card.comment, "[m]")
-
-
-class _RenderedSEDResponse(testhelpers.TestResource):
-	resources = [("ssatable", tresc.ssaTestTable)]
-
-	def make(self, deps):
-		rAccref = _FakeRAccref.fromString("bar?dm=sed")
-		rAccref.setProductsRow({
-			"accref": "spec1.ssatest.vot",
-			"accessPath": "dcc://data.ssatest/mksdm?data/spec1.ssatest.vot",})
-		prod = products.getProductForRAccref(rAccref)
-		rawVOT = "".join(prod.iterData(svcs.QueryMeta({"_TDENC": True})))
-		return rawVOT, testhelpers.getXMLTree(rawVOT)
-
-
-class SEDTableTest(testhelpers.VerboseTest):
-# Once we have an actual implementation of the SED data model, do
-# this properly (right now, it's a horrendous hack just to
-# please specview)
-	resources = [("stringAndTree", _RenderedSEDResponse())]
-
-	def testContainerUtypes(self):
-		tree = self.stringAndTree[1]
-		votRes = tree.xpath("//RESOURCE")[0]
-		self.assertEqual(votRes.get("utype"), "sed:SED")
-		table = votRes.xpath("//TABLE")[0]
-		self.assertEqual(table.get("utype"), "sed:Segment")
-
-	def testSpectUtype(self):
-		spectField = self.stringAndTree[1].xpath("//FIELD[@name='spectral']")[0]
-		self.assertEqual(spectField.get("utype"), 
-			"sed:Segment.Points.SpectralCoord.Value")
-
-	def testFluxUtype(self):
-		spectField = self.stringAndTree[1].xpath("//FIELD[@name='flux']")[0]
-		self.assertEqual(spectField.get("utype"), 
-			"sed:Segment.Points.Flux.Value")
 
 
 class MixcTableTest(testhelpers.VerboseTest):

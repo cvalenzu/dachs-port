@@ -121,30 +121,6 @@
 		</make>
 	</data>
 
-	<table id="spectrum">
-		<mixin ssaTable="hcdtest"
-			spectralDescription="Wavelength"
-			>//ssap#sdm-instance</mixin>
-	</table>
-
-	<sdmCore id="mksdm" queriedTable="hcdtest">
-		<data id="sdmdata">
-			<embeddedGrammar>
-				<iterator>
-					<code>
-						for i in range(20):
-							yield {"spectral": 3000+i, "flux": 30-i}
-					</code>
-				</iterator>
-			</embeddedGrammar>
-			<make table="spectrum">
-				<parmaker>
-					<apply procDef="//ssap#feedSSAToSDM"/>
-				</parmaker>
-			</make>
-		</data>
-	</sdmCore>
-
 	<service id="s" allowed="ssap.xml">
 		<ssapCore queriedTable="hcdtest" id="foocore">
 			<FEED source="//ssap#hcd_condDescs"/>

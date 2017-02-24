@@ -15,19 +15,14 @@ code should go here.
 
 import datetime
 import os
-import urllib
-import warnings
 from cStringIO import StringIO
 
 from gavo import base
 from gavo import formats
 from gavo import rsc
-from gavo import rscdef
 from gavo import svcs
 from gavo import utils
-from gavo import votable
 from gavo.formats import fitstable
-from gavo.formats import votablewrite
 from gavo.protocols import products
 
 
@@ -130,29 +125,6 @@ _SDM_TO_SED_UTYPES = {
 	"spec:Spectrum.Data.FluxAxis.Value": "sed:Segment.Points.Flux.Value",
 	"spec2:Data.FluxAxis.Value": "sed:Segment.Points.Flux.Value",
 }
-
-
-def hackSDMToSED(data):
-	"""changes some utypes to make an SDM compliant data instance look a bit
-	like one compliant to the sed data model.
-
-	This is a quick hack to accomodate specview.  When there's a usable
-	SED data model and we have actual data for it, add real support
-	for it like there's for SDM.
-	"""
-	data.setMeta("utype", "sed:SED")
-	table = data.getPrimaryTable()
-	table.setMeta("utype", "sed:Segment")
-	# copy the table definition to avoid clobbering the real attributes.
-	# All this sucks.  At some point we'll want real SED support
-	table.tableDef = table.tableDef.copy(table.tableDef.parent)
-	for col in table.tableDef:
-		if col.utype in _SDM_TO_SED_UTYPES:
-			col.utype = _SDM_TO_SED_UTYPES[col.utype]
-	for param in table.tableDef.params:
-		if param.utype in _SDM_TO_SED_UTYPES:
-			param.utype = _SDM_TO_SED_UTYPES[param.utype]
-
 
 
 SDM1_TO_SDM2_IRREGULARS = {
@@ -641,84 +613,3 @@ def mangle_fluxcalib(sdmTable, newCalib):
 	raise base.ValidationError("Do not know how to turn a %s spectrum"
 		" into a %s one."%(sdmTable.getParam("ssa_fluxcalib"), newCalib), 
 		"FLUXCALIB")
-
-
-################## The SDM core (usable in dcc: accrefs).  
-################## Superceded by datalink, scheduled for removal 2016
-
-def makeSDMVOT(table, **votContextArgs):
-	"""returns SDM-compliant xmlstan for a table containing an SDM-compliant
-	spectrum.
-	"""
-	table.addMeta("_votableRootAttributes", 
-		'xmlns:spec="http://www.ivoa.net/xml/SpectrumModel/v1.01"')
-	return votablewrite.makeVOTable(table, **votContextArgs)
-
-
-class SDMCore(svcs.Core):
-	"""A core for making (VO)Tables according to the Spectral Data Model.
-
-	Do *not* use this any more, use datalink to do this.
-
-	Here, the input table consists of the accref of the data to be generated.
-	The data child of an SDMVOTCore prescribes how to come up with the
-	table.  The output table is the (primary) table of the data instance.
-
-	If you find yourself using this, please let the authors know.  We
-	tend to believe SDMCores should no longer be necessary in the presence
-	of getData, and hence we might want to remove this at some point.
-	"""
-	name_ = "sdmCore"
-	inputTableXML = """<inputTable id="inFields">
-			<inputKey name="accref" type="text" required="True"
-				description="Accref of the data within the SSAP table."/>
-			<inputKey name="dm" type="text" description="Data model to
-				generate the table for (sdm or sed)">sdm</inputKey>
-		</inputTable>"""
-	_queriedTable = base.ReferenceAttribute("queriedTable",
-		default=base.Undefined, description="A reference to the SSAP table"
-			" to search the accrefs in", copyable=True)
-	_sdmDD = base.StructAttribute("sdmDD", default=base.Undefined,
-		childFactory=rscdef.DataDescriptor,
-		description="A data instance that builds the SDM table.  You'll need"
-		" a custom or embedded grammar for those that accepts an SDM row"
-		" as input.", copyable=True)
-
-	def onElementComplete(self):
-		warnings.warn("SDMCore is deprecated, and chances are you don't need"
-			" need it.  See http://docs.g-vo.org/DaCHS/commonproblems.html for"
-			" details.", DeprecationWarning)
-		self._onElementCompleteNext(SDMCore)
-		if self.sdmDD.getMeta("utype", default=None) is None:
-			self.sdmDD.setMeta("utype", "spec:Spectrum")
-
-	def run(self, service, inputTable, queryMeta):
-		with base.getTableConn() as conn:
-			ssaTable = rsc.TableForDef(self.queriedTable, connection=conn)
-			try:
-				# XXX TODO: Figure out why the unquote here is required.
-				accref = urllib.unquote(inputTable.getParam("accref"))
-				res = ssaTable.getTableForQuery(ssaTable.tableDef, 
-					"accref=%(accref)s", {"accref": accref})
-				if not res:
-					raise svcs.UnknownURI("No spectrum with accref %s known here"%
-						inputTable.getParam("accref"))
-				ssaRow = res.rows[0]
-			finally:
-				ssaTable.close()
-
-		resData = makeSDMDataForSSARow(ssaRow, self.sdmDD)
-
-		votContextArgs = {}
-		if queryMeta["tdEnc"]:
-			votContextArgs["tablecoding"] = "td"
-
-		# This is for VOSpec, in particular the tablecoding; I guess once
-		# we actually support the sed DM, this should go, and the
-		# specview links should use sed dcc sourcePaths.
-		if inputTable.getParam("dm")=="sed":
-			hackSDMToSED(resData)
-			votContextArgs["tablecoding"] = "td"
-
-		return (base.votableType,
-			votable.asString(makeSDMVOT(resData, **votContextArgs)))
