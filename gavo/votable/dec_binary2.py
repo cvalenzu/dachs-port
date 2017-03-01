@@ -29,18 +29,19 @@ def getRowDecoderSource(tableDefinition):
 	source = [
 		"def codec(inF):", 
 		"  row = []",
-		"  nullMap = nullFlags.getFromFile(inF)", ]
+		"  try:",
+		"    nullMap = nullFlags.getFromFile(inF)", 
+		"  except IOError:",  # EOF while reading null map: correct end of stream.
+		"    return None",
+		]
 
 	for index, field in enumerate(
 			tableDefinition.iterChildrenOfType(VOTable.FIELD)):
 		source.extend([
 			"  try:",]+
 			coding.indentList(getLinesFor(field), "    ")+[
-			"  except IOError:",  # EOF on empty row is ok.
-			"    if inF.atEnd and row==[]:",
-			"      return None",
-			"    raise",
 			"  except:",
+			"    import ipdb;ipdb.set_trace()",
 			"    raise common.BadVOTableLiteral('%s', repr(inF.lastRes))"%(
 				field.datatype),
 			])

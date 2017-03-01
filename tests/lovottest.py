@@ -833,7 +833,7 @@ class Binary2ReadTest(testhelpers.VerboseTest):
 # 15
 			'<FIELD datatype="short" arraysize="*"><VALUES null="16"/></FIELD>',
 			'\x00\x00\x00\x00\x03\x00\x01\x00\x10\x00\x02'
-			'\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+			'\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00',
 			[[[1, None, 2]], [None], [[]]],
 		), (
 			'<FIELD datatype="int" arraysize="2"/>',

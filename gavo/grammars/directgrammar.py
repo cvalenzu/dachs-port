@@ -147,10 +147,12 @@ class CBooster(object):
 class DirectGrammar(base.Structure, base.RestrictionMixin):
 	"""A user-defined external grammar.
 
-	See the separate document on user-defined code on more on direct grammars.
+	See the `separate document`_ on user-defined code on more on direct grammars.
 
 	Also note the program gavomkboost that can help you generate core for
 	the C boosters used by direct grammars.
+
+	.. separate document: http://docs.g-vo.org/DaCHS/booster.html
 	"""
 	name_ = "directGrammar"
 
