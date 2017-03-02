@@ -268,11 +268,11 @@ class SetupTest(testhelpers.VerboseTest):
 class TypeSafetyTest(testhelpers.VerboseTest):
 	def testRejects(self):
 		self.assertRaisesWithMsg(base.StructureError,
-			"At [<foo><testApp procDef=\"//da...], (1, 53): The procDef"
+			"At [<foo><testApp procDef=\"//so...], (1, 49): The procDef"
 				" trivialFormatter has type dataFormatter, but here t_t procDefs"
 				" are required.",
 			base.parseFromString,
-			(Foo, '<foo><testApp procDef="//datalink#trivialFormatter"/></foo>'))
+			(Foo, '<foo><testApp procDef="//soda#trivialFormatter"/></foo>'))
 
 
 class SourceKeepingTest(testhelpers.VerboseTest):

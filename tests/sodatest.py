@@ -893,6 +893,94 @@ class SODAFITSTest(testhelpers.VerboseTest):
 		self.failUnless("NAXIS3  =                    1" in data)
 
 
+class DatalinkSTCTest(testhelpers.VerboseTest):
+	resources = [("fitsTable", tresc.fitsTable)]
+
+	def testSTCDefsPresent(self):
+		svc = api.parseFromString(svcs.Service, """<service id="foo"
+				allowed="dlmeta,dlget">
+			<datalinkCore>
+				<descriptorGenerator procDef="//soda#fits_genDesc"/>
+				<metaMaker>
+					<setup>
+						<code>
+							parSTC = stc.parseQSTCS("PositionInterval ICRS BARYCENTER"
+								' "RA_MIN" "DEC_MIN" "RA_MAX" "DEC_MAX"')
+						</code>
+					</setup>
+					<code>
+						for name in ["RA", "DEC"]:
+							for ik in genLimitKeys(MS(InputKey, name=name, stc=parSTC)):
+								yield ik
+					</code>
+				</metaMaker>
+			</datalinkCore></service>""")
+		svc.parent = testhelpers.getTestRD()
+		mime, data = svc.run("dlmeta", {
+			"ID": [rscdef.getStandardPubDID("data/ex.fits")]}).original
+		tree = testhelpers.getXMLTree(data, debug=False)
+		self.assertEqual(len(tree.xpath(
+			"//GROUP[@utype='stc:CatalogEntryLocation']/PARAM")), 4)
+		self.assertEqual(len(tree.xpath(
+			"//GROUP[@utype='stc:CatalogEntryLocation']/PARAMref")), 4)
+		self.assertEqual(tree.xpath(
+			"//PARAM[@utype='stc:AstroCoordSystem.SpaceFrame.ReferencePosition']"
+			)[0].get("value"), "BARYCENTER")
+
+		# follow a reference
+		id = tree.xpath("//PARAMref[@utype='stc:AstroCoordArea"
+			".Position2VecInterval.HiLimit2Vec.C2']")[0].get("ref")
+		self.assertEqual(tree.xpath("//PARAM[@ID='%s']"%id)[0].get("name"),
+			"DEC_MAX")
+
+	def testTwoSystems(self):
+		svc = api.parseFromString(svcs.Service, """<service id="foo"
+				allowed="dlmeta, dlget">
+			<datalinkCore>
+				<descriptorGenerator procDef="//soda#fits_genDesc"/>
+				<metaMaker>
+					<setup>
+						<code>
+							parSTC = stc.parseQSTCS("PositionInterval ICRS BARYCENTER"
+								' "RA_MIN" "DEC_MIN" "RA_MAX" "DEC_MAX"')
+						</code>
+					</setup>
+					<code>
+						for name in ["RA", "DEC"]:
+							for ik in genLimitKeys(MS(InputKey, name=name, stc=parSTC)):
+								yield ik
+					</code>
+				</metaMaker>
+				<metaMaker>
+					<setup>
+						<code>
+							parSTC = stc.parseQSTCS("PositionInterval GALACTIC"
+								' "LAMB_MIN" "BET_MIN" "LAMB_MAX" "BET_MAX"')
+						</code>
+					</setup>
+					<code>
+						for name in ["LAMB", "BET"]:
+							for ik in genLimitKeys(MS(InputKey, name=name, stc=parSTC)):
+								yield ik
+					</code>
+				</metaMaker>
+
+			</datalinkCore></service>""")
+		svc.parent = testhelpers.getTestRD()
+		mime, data = svc.run("dlmeta", {
+			"ID": [rscdef.getStandardPubDID("data/ex.fits")]}).original
+
+		tree = testhelpers.getXMLTree(data, debug=False)
+		self.assertEqual(len(tree.xpath(
+			"//GROUP[@utype='stc:CatalogEntryLocation']")), 2)
+		ids = [el.get("ref") for el in
+				tree.xpath("//PARAMref[@utype='stc:AstroCoordArea"
+				".Position2VecInterval.HiLimit2Vec.C2']")]
+		names = set(tree.xpath("//PARAM[@ID='%s']"%id)[0].get("name")
+			for id in ids)
+		self.assertEqual(names, set(["DEC_MAX", "BET_MAX"]))
+
+
 def _iterWCSSamples():
 	for center in [
 			(0, 0),
@@ -1077,7 +1165,7 @@ class SDMDatalinkTest(testhelpers.VerboseTest):
 	resources = [("ssaTable", tresc.ssaTestTable)]
 
 	def runService(self, params):
-		return api.resolveCrossId("data/ssatest#dlnew").run("dlget", params)
+		return api.resolveCrossId("data/ssatest#dl").run("dlget", params)
 
 	def testRejectWithoutPUBDID(self):
 		self.assertRaisesWithMsg(api.ValidationError,
@@ -1147,7 +1235,7 @@ class SDMDatalinkTest(testhelpers.VerboseTest):
 		self.failUnless(payload.endswith("1928.0	1580.0\n"))
 
 	def testNormalize(self):
-		mime, payload = api.resolveCrossId("data/ssatest#dlnew").run("ssap.xml",
+		mime, payload = api.resolveCrossId("data/ssatest#dl").run("ssap.xml",
 			{"ID": ['ivo://test.inv/test1'], 
 				"FORMAT": "application/x-votable+xml;serialization=tabledata", 
 				"BAND": ["1.9e-7 1.92e-7"], 

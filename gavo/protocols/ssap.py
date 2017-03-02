@@ -273,9 +273,3 @@ class SSAPCore(svcs.DBCore):
 		else:
 			raise base.ValidationError("Missing or invalid value for REQUEST.",
 				"REQUEST")
-
-
-class SSAPProcessCore(SSAPCore):
-	"""Temporary Hack; delete when ccd700 is ported to a sane infrastructure.
-	"""
-	name_ = "ssapProcessCore"

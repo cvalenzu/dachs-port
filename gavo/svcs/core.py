@@ -74,9 +74,6 @@ CORE_REGISTRY = {
 	"ssapCore": ("protocols.ssap", "SSAPCore"),
 	"tapCore": ("protocols.tap", "TAPCore"),
 	"uploadCore": ("svcs.uploadcores", "UploadCore"),
-
-# Temporary hack to avoid validation errors on ccd700 in development
-	"ssapProcessCore": ("protocols.ssap", "SSAPProcessCore"),
 }
 
 

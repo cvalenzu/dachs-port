@@ -290,11 +290,11 @@ class SDMDatalinkMetaTest(testhelpers.VerboseTest):
 	def testLimits(self):
 		self.assertAlmostEqual(
 			float(self.data[0].xpath(
-				"GROUP/PARAM[@name='LAMBDA_MAX']/VALUES/MIN")[0].get("value")),
+				"GROUP/PARAM[@name='BAND']/VALUES/MIN")[0].get("value")),
 			4e-7)
 		self.assertAlmostEqual(
 			float(self.data[0].xpath(
-				"GROUP/PARAM[@name='LAMBDA_MIN']/VALUES/MAX")[0].get("value")), 
+				"GROUP/PARAM[@name='BAND']/VALUES/MAX")[0].get("value")), 
 			8e-7)
 
 	def testLeftOverEnumeration(self):
@@ -324,124 +324,6 @@ class SDMDatalinkMetaTest(testhelpers.VerboseTest):
 			"//FIELD[@ID='%s']"%param.get("ref"))[0]
 		self.assertEqual(srcField.get("name"), "ssa_pubDID")
 	
-
-class SDMDatalinkTest(_WithSSATableTest):
-
-	renderer = "dlget"
-
-	def testRejectWithoutPUBDID(self):
-		self.assertRaisesWithMsg(base.ValidationError,
-			"Field ID: ID is mandatory with dlget",
-			self.runService,
-			("dl", {}))
-
-	def testVOTDelivery(self):
-		res = self.runService("dl",
-			{"ID": 'ivo://test.inv/test1', "FORMAT": "application/x-votable+xml"})
-		mime, payload = res.original
-		self.assertEqual(mime, "application/x-votable+xml")
-		self.failUnless('xmlns:spec="http://www.ivoa.net/xml/SpectrumModel/v1.01'
-			in payload)
-		self.failUnless('QJtoAAAAAABAm2g' in payload)
-
-	def testTextDelivery(self):
-		res = self.runService("dl",
-			{"ID": 'ivo://test.inv/test1', 
-				"FORMAT": "text/plain"})
-		mime, payload = res.original
-		self.failUnless(isinstance(payload, str))
-		self.failUnless("1754.0\t1754.0\n1755.0\t1753.0\n"
-			"1756.0\t1752.0" in payload)
-
-	def testCutoutFull(self):
-		res = self.runService("dl",
-			{"ID": ['ivo://test.inv/test1'], 
-				"FORMAT": ["text/plain"], "LAMBDA_MIN": ["1.762e-7"],
-				"LAMBDA_MAX": ["1.764e-7"]})
-		mime, payload = res.original
-		self.assertEqual(payload, 
-			'1762.0\t1746.0\n1763.0\t1745.0\n1764.0\t1744.0\n')
-		self.failIf('<TR><TD>1756.0</TD>' in payload)
-
-	def testCutoutHalfopen(self):
-		res = self.runService("dl",
-			{"ID": ['ivo://test.inv/test1'], 
-				"FORMAT": ["application/x-votable+xml;serialization=tabledata"], 
-				"LAMBDA_MIN": ["1.927e-7"]})
-		mime, payload = res.original
-		self.failUnless('xmlns:spec="http://www.ivoa.net/xml/SpectrumModel/v1.01'
-			in payload)
-		self.failUnless('<TR><TD>1927.0</TD><TD>1581.0</TD>' in payload)
-		self.failIf('<TR><TD>1756.0</TD>' in payload)
-		tree = testhelpers.getXMLTree(payload, debug=False)
-		self.assertEqual(tree.xpath("//PARAM[@utype="
-			"'spec:Spectrum.Char.SpectralAxis.Coverage.Bounds.Start']"
-			)[0].get("value"), "1.927e-07")
-		self.assertAlmostEqual(float(tree.xpath("//PARAM[@utype="
-			"'spec:Spectrum.Char.SpectralAxis.Coverage.Bounds.Extent']"
-			)[0].get("value")), 1e-10)
-
-	def testEmptyCutoutFails(self):
-		res = self.runService("dl", {"ID": 'ivo://test.inv/test1', 
-				"FORMAT": "application/x-votable+xml",
-				"LAMBDA_MAX": "1.927e-8"})
-		mime, payload = res.original
-		self.assertTrue('<STREAM encoding="base64"></STREAM>' in payload)
-
-	def testOriginalCalibOk(self):
-		mime, payload = self.runService("dl",
-			{"ID": 'ivo://test.inv/test1', 
-				"FORMAT": "text/plain", 
-				"FLUXCALIB": "UNCALIBRATED"}).original
-		self.failUnless(payload.endswith("1928.0	1580.0\n"))
-
-	def testNormalize(self):
-		mime, payload = getRD().getById("dl").run("ssap.xml",
-			{"ID": ['ivo://test.inv/test1'], 
-				"FORMAT": "application/x-votable+xml;serialization=tabledata", 
-				"LAMBDA_MIN": ["1.9e-7"], "LAMBDA_MAX": ["1.92e-7"], 
-				"FLUXCALIB": "RELATIVE"}).original
-		self.failUnless("<TD>1900.0</TD><TD>0.91676" in payload)
-		tree = testhelpers.getXMLTree(payload, debug=False)
-		self.assertEqual(tree.xpath(
-			"//PARAM[@utype='spec:Spectrum.Char.FluxAxis.Calibration']")[0].get(
-				"value"),
-			"RELATIVE")
-
-	def testBadCalib(self):
-		self.assertRaisesWithMsg(base.ValidationError,
-			"Field FLUXCALIB: 'ferpotschket' is not a valid value for FLUXCALIB",
-			self.runService,
-			("dl", {"ID": 'ivo://test.inv/test1', 
-				"FORMAT": "text/plain", 
-				"FLUXCALIB": ["ferpotschket"]}))
-
-	def testBadPubDID(self):
-		self.assertRaisesWithMsg(svcs.UnknownURI,
-			"No spectrum with this pubDID known here (pubDID: ivo://test.inv/bad)",
-			self.runService,
-				("dl", {"ID": 'ivo://test.inv/bad'}))
-
-	def testRandomParamFails(self):
-		self.assertRaisesWithMsg(base.ValidationError,
-			"Field (various): The following parameter(s) are"
-			" not accepted by this service: warp",
-			self.runService,
-			("dl", {"ID": 'ivo://test.inv/test1', 
-				"warp": "infinity"}))
-
-	def testCoreForgetting(self):
-		gns = testhelpers.getMemDiffer()
-		res = self.runService("dl",
-			{"ID": ['ivo://test.inv/test1'], 
-				"FORMAT": ["text/plain"], "LAMBDA_MIN": ["1.762e-7"],
-				"LAMBDA_MAX": ["1.764e-7"]})
-		del res
-
-		gc.collect()
-		ns = gns()
-		self.assertEqual(ns, [], "Spectrum cutout left garbage.")
-
 
 class CoreNullTest(_WithSSATableTest):
 # make sure empty parameters of various types are just ignored.
@@ -971,4 +853,4 @@ class MixcTableTest(testhelpers.VerboseTest):
 if __name__=="__main__":
 	from gavo.formats import texttable
 	base.DEBUG = True
-	testhelpers.main(SDMDatalinkTest)
+	testhelpers.main(SDM2TableTest)
