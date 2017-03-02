@@ -1,5 +1,5 @@
 """
-Generation of VODataService 1.1 tablesets from resources, plus 1.0 hacks.
+Generation of VODataService 1.1 tablesets from resources.
 
 Fudge note: sprinkled in below are lots of lower()s for column names and the
 like.  These were added for the convenience of TAP clients that may
@@ -64,9 +64,7 @@ def getForeignKeyForForeignKey(fk, namesInSet):
 	If the target table's name is not in nameInSet, the foreign key
 	is not created.
 	"""
-# XXX TODO: we don't need to expand any more as soon as we've done away with
-# the table attribute of foreignKey
-	targetName = fk.parent.expand(fk.destTableName).lower()
+	targetName = fk.destTableName
 	if targetName not in namesInSet:
 		return None
 

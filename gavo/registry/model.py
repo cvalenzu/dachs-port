@@ -30,8 +30,6 @@ registerPrefix("vr", "http://www.ivoa.net/xml/VOResource/v1.0",
 	schemaURL("VOResource-v1.1.xsd"))
 registerPrefix("dc", "http://purl.org/dc/elements/1.1/",
 	schemaURL("simpledc20021212.xsd"))
-registerPrefix("vs0", "http://www.ivoa.net/xml/VODataService/v1.0",
-	schemaURL("VODataService-v1.0.xsd"))
 registerPrefix("vs", "http://www.ivoa.net/xml/VODataService/v1.1",
 	schemaURL("VODataService-v1.1.xsd"))
 registerPrefix("cs", "http://www.ivoa.net/xml/ConeSearch/v1.0",
@@ -384,106 +382,8 @@ class DC:
 	class type(DCElement): pass
 
 
-def addBasicVSElements(baseNS, VSElement):
-	"""returns an element namespace containing common VODataService elements.
-	"""
-	class TNS(baseNS):
-		class facility(VSElement): pass
-		
-		class instrument(VSElement): pass
-		
-		class coverage(VSElement): pass
-	
-		class waveband(VSElement): pass
-
-		class format(VSElement): 
-			_a_isMIMEType = None
-		
-		class rights(VSElement): pass
-		
-		class accessURL(VSElement): pass
-		
-		class ParamHTTP(VOR.interface):
-			_a_xsi_type = "vs:ParamHTTP"
-			_additionalPrefixes = frozenset(["vg", "xsi"])
-
-		class resultType(VSElement): pass
-		
-		class queryType(VSElement): pass
-
-		class param(VSElement):
-			_a_std = "false"
-		
-		class name(VSElement): pass
-		
-		class description(VSElement): pass
-
-		class unit(VSElement): pass
-		
-		class ucd(VSElement): pass
-
-		class Service(RI.Resource): pass
-
-		class DataService(Service):
-			_a_xsi_type = "vs:DataService"
-			_additionalPrefixes = frozenset(["vs", "xsi"])
-
-		class TableService(Service):
-			_a_xsi_type = "vs:TableService"
-			_additionalPrefixes = frozenset(["vs", "xsi"])
-
-		class CatalogService(Service):
-			_a_xsi_type = "vs:CatalogService"
-			_additionalPrefixes = frozenset(["vs", "xsi"])
-
-		class ServiceReference(VSElement):
-			_a_ivoId = None
-			_name_a_ivoId = "ivo-id"
-
-		class column(VSElement): pass
-	
-		class dataType(VSElement):
-			# dataType is something of a mess with subtle changes from 1.0 to
-			# 1.1.  There are various type systems, and all of this is
-			# painful.  I don't try to untangle this here.
-			name_ = "dataType"
-			_additionalPrefixes = xsiPrefix
-			_a_arraysize = None
-			_a_delim = None
-			_a_extendedSchema = None
-			_a_extendedType = None
-
-		class dataType(dataType):
-			name_ = "dataType"
-
-		class voTableDataType(dataType):
-			name_ = "dataType"
-			_a_xsi_type = "vs:VOTableType"
-
-		class tapType(dataType):
-			name_ = "dataType"
-			_a_xsi_type = "vs:TAPType"
-
-	return TNS
-
-# Elements common to VODataService 1.0 and 1.1 are added by addBasicVSElements
-
-class _VS1_0Stub(object):
-	"""The stub for VODataService 1.0.
-	"""
-	class VSElement(Element):
-		_prefix = "vs0"
-		_local = True
-
-	class table(VSElement):
-		_a_role = None
-
-
-
-VS0 = addBasicVSElements(_VS1_0Stub, _VS1_0Stub.VSElement)
-
-class _VS1_1Stub:
-	"""The stub for VODataService 1.1.
+class VS:
+	"""A container for classes modelling elements from VODataService 1.1.
 	"""
 	class VSElement(Element):
 		_prefix = "vs"
@@ -523,7 +423,79 @@ class _VS1_1Stub:
 	class flag(VSElement): pass
 	class regionOfRegard(VSElement): pass
 
-VS = addBasicVSElements(_VS1_1Stub, _VS1_1Stub.VSElement)
+	class facility(VSElement): pass
+	
+	class instrument(VSElement): pass
+	
+	class coverage(VSElement): pass
+
+	class waveband(VSElement): pass
+
+	class format(VSElement): 
+		_a_isMIMEType = None
+	
+	class rights(VSElement): pass
+	
+	class accessURL(VSElement): pass
+	
+	class ParamHTTP(VOR.interface):
+		_a_xsi_type = "vs:ParamHTTP"
+		_additionalPrefixes = frozenset(["vg", "xsi"])
+
+	class resultType(VSElement): pass
+	
+	class queryType(VSElement): pass
+
+	class param(VSElement):
+		_a_std = "false"
+	
+	class name(VSElement): pass
+	
+	class description(VSElement): pass
+
+	class unit(VSElement): pass
+	
+	class ucd(VSElement): pass
+
+	class Service(RI.Resource): pass
+
+	class DataService(Service):
+		_a_xsi_type = "vs:DataService"
+		_additionalPrefixes = frozenset(["vs", "xsi"])
+
+	class TableService(Service):
+		_a_xsi_type = "vs:TableService"
+		_additionalPrefixes = frozenset(["vs", "xsi"])
+
+	class CatalogService(Service):
+		_a_xsi_type = "vs:CatalogService"
+		_additionalPrefixes = frozenset(["vs", "xsi"])
+
+	class ServiceReference(VSElement):
+		_a_ivoId = None
+		_name_a_ivoId = "ivo-id"
+
+	class column(VSElement): pass
+
+	class dataType(VSElement):
+		name_ = "dataType"
+		_additionalPrefixes = xsiPrefix
+		_a_arraysize = None
+		_a_delim = None
+		_a_extendedSchema = None
+		_a_extendedType = None
+
+	class dataType(dataType):
+		name_ = "dataType"
+
+	class voTableDataType(dataType):
+		name_ = "dataType"
+		_a_xsi_type = "vs:VOTableType"
+
+	class tapType(dataType):
+		name_ = "dataType"
+		_a_size = None
+		_a_xsi_type = "vs:TAPType"
 
 
 class SIA(object):

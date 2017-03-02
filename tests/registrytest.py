@@ -50,7 +50,6 @@ def getGetRecordResponse(resob):
 class RegistryModelTest(testhelpers.VerboseTest):
 	def testVSNamespaces(self):
 		from gavo.registry import model
-		self.assertEqual(model.VS0.ucd()._prefix, "vs0")
 		self.assertEqual(model.VS.ucd()._prefix, "vs")
 
 	def testVOTableDataType(self):

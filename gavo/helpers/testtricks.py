@@ -133,7 +133,6 @@ VO_SCHEMATA = [
 		"region-v1.20.xsd",
 		"TAPRegExt-v1.0.xsd",
 		"UWS-v1.1.xsd",
-		"VODataService-v1.0.xsd",
 		"VODataService-v1.1.xsd",
 		"VOEvent-1.0.xsd",
 		"VORegistry-v1.0.xsd",
