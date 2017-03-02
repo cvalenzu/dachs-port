@@ -607,7 +607,7 @@ class DatalinkCoreBase(svcs.Core, base.ExpansionDelegator):
 
 		if self.dataFormatter is base.NotGiven:
 			self.dataFormatter = MS(DataFormatter, 
-				procDef=base.caches.getRD("//datalink").getById("trivialFormatter"))
+				procDef=base.caches.getRD("//soda").getById("trivialFormatter"))
 		
 		self.inputKeys.append(MS(svcs.InputKey, name="ID", type="text", 
 			ucd="meta.id;meta.main",

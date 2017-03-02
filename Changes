@@ -17,6 +17,10 @@ Version 1.0 (2017-XX-XX)
 	
 	* Removed //epntap#table-2_0.  Use //epntap2#table-2_0 instead (sorry).
 
+	* Removed sdmCore (use SODA instead)
+
+	* Removed SODA procs in //datalink (use the ones from //soda instead)
+
 	* Massive sanitation of input parameter processing.  If you've been
 	  using inputTable, inputDD, or have been doing creative things with
 	  inputKeys, please check the respective services carefully.  See

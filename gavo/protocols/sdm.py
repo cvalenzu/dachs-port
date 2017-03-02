@@ -207,7 +207,7 @@ def makeSDMDataForSSARow(ssaRow, spectrumData,
 	the spectrum data from an SSA row (typically, this is going to be
 	the tablesource property of an SSA service).
 
-	You'll usually use this via //datalink#sdm_genData
+	You'll usually use this via //soda#sdm_genData
 	"""
 	with base.getTableConn() as conn:
 		resData = rsc.makeData(spectrumData, forceSource=ssaRow,
@@ -479,7 +479,7 @@ def formatSDMData(sdmData, format, queryMeta=svcs.emptyQueryMeta):
 	"""returns a pair of mime-type and payload for a rendering of the SDM
 	Data instance sdmData in format.
 
-	(you'll usually use this via //datalink#sdm_format)
+	(you'll usually use this via //soda#sdm_format)
 	"""
 
 	destMime =  str(format or base.votableType)
@@ -518,7 +518,7 @@ def formatSDMData(sdmData, format, queryMeta=svcs.emptyQueryMeta):
 ################## Manipulation of SDM compliant tables
 # The idea here is that you can push in a table, the function does some
 # magic, and it returns that table.  The getData implementation (see ssap.py)
-# and some datalink data functions (//datalink)
+# and some SODA data functions (//soda)
 # use these functions to provide some spectrum transformations.  We
 # may want to provide some plugin system so people can add their own
 # transformations, but let's first see someone request that.
