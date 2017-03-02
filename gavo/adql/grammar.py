@@ -229,7 +229,7 @@ class RegularIdentifier(Word):
 	"""
 	def __init__(self, reservedWords):
 		self.reservedWords = reservedWords
-		super(RegularIdentifier, self).__init__(alphas, alphanums+"_")
+		super(RegularIdentifier, self).__init__(alphas+"_", alphanums+"_")
 
 	def parseImpl(self, instring, loc, doActions=True):
 		locNew, match = super(RegularIdentifier, self).parseImpl(instring,

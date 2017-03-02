@@ -593,6 +593,9 @@
 			Some items are filled from product interface fields automatically.
 			You must change these if you obscore-publish tables not mixin
 			in products.
+
+			Note: you must say ``dachs imp //obscore`` before anything 
+			obscore-related will work.
 		</doc>
 
 		<LFEED source="_publishProduct"/>
@@ -644,6 +647,9 @@
 			of the parameters, but most of them should already be all right.
 			To find out what the parameters described as "preset for SIAP"
 			mean, refer to //obscore#publish.
+
+			Note: you must say ``dachs imp //obscore`` before anything 
+			obscore-related will work.
 		</doc>
 		
 		<LFEED source="_publishProduct"/>
@@ -710,6 +716,9 @@
 			has a fixed type of spoly).  The recommended solution to still
 			have s_region is to add (and index) a custom field in the ssa table 
 			and compute some sort of spolys for the coverage.
+
+			Note: you must say ``dachs imp //obscore`` before anything 
+			obscore-related will work.
 		</doc>
 
 		<LFEED source="_publishProduct"/>

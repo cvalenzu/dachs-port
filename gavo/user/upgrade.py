@@ -411,6 +411,8 @@ class To15Upgrader(Upgrader):
 					" ADD COLUMN creationTime TIMESTAMP"%tableName)
 
 
+# next upgrade: drop DM declaration for Obscore 1.0
+
 def iterStatements(startVersion, endVersion=CURRENT_SCHEMAVERSION, 
 		upgraders=None):
 	"""yields all upgraders from startVersion to endVersion in sequence.

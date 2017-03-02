@@ -54,7 +54,11 @@ class TableCollector(base.ObserverBase):
 		from gavo import adql
 		tableNameSym = adql.getSymbols()["qualifier"]
 		for tableName in self.tablesChanged:
-			tableNameSym.parseString(tableName, parseAll=True)
+			try:
+				tableNameSym.parseString(tableName, parseAll=True)
+			except base.ParseException:
+				# forget about odd table names for now.
+				pass
 			with base.getAdminConn() as conn:
 				conn.execute("VACUUM ANALYZE %s"%tableName)
 

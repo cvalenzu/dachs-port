@@ -85,6 +85,7 @@ def runTrialTests():
 
 
 def runAllTests(includeDoctests=True):
+	testhelpers.ensureResources()
 	pyunitSuite = testresources.TestLoader().loadTestsFromNames(
 		[n[:-3] for n in glob.glob("*test.py")])
 	runner = unittest.TextTestRunner(

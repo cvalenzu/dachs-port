@@ -53,6 +53,11 @@ from twisted.python.components import registerAdapter
 # env var before importing this.  That's for "out of tree test"
 # and is used by the relational registry "unit" tests (and possibly
 # others later).
+
+def ensureResources():
+	# overridden below if necessary
+	pass
+
 if "GAVO_OOTTEST" in os.environ:
 	from gavo import base
 
@@ -67,53 +72,57 @@ else:
 			" is almost certainly not what you want (or set GAVO_OOTTEST).")
 
 	from gavo import base #noflake: import above is conditional
-	dbname = "dachstest"
+
 	if not os.path.exists(base.getConfig("rootDir")):
 		from gavo.user import initdachs
-		try:
-			dsn = initdachs.DSN(dbname)
-			subprocess.call(["createdb", "--template=template0", 
-				"--encoding=UTF-8", "--locale=C", dbname])
-			initdachs.createFSHierarchy(dsn, "test")
+		dbname = "dachstest"
+		dsn = initdachs.DSN(dbname)
+		initdachs.createFSHierarchy(dsn, "test")
+		with open(os.path.join(
+				base.getConfig("configDir"), "defaultmeta.txt"), "a") as f:
+			f.write("!organization.description: Mein w\xc3\xbcster Club\n")
+			f.write("!contact.email: invalid@whereever.else\n")
+		from gavo.base import config
+		config.makeFallbackMeta(reload=True)
+		os.symlink(os.path.join(TEST_BASE, "test_data"),
+			os.path.join(base.getConfig("inputsDir"), "data"))
+		os.rmdir(os.path.join(base.getConfig("inputsDir"), "__system"))
+		os.symlink(os.path.join(TEST_BASE, "test_data", "__system"),
+			os.path.join(base.getConfig("inputsDir"), "__system"))
+		os.mkdir(os.path.join(base.getConfig("inputsDir"), "test"))
 
-			with open(os.path.join(
-					base.getConfig("configDir"), "defaultmeta.txt"), "a") as f:
-				f.write("!organization.description: Mein w\xc3\xbcster Club\n")
-				f.write("!contact.email: invalid@whereever.else\n")
-			from gavo.base import config
-			config.makeFallbackMeta(reload=True)
+		def ensureResources(): #noflake: deliberate override
+			# delay everything that needs DB connectivity until
+			# after the import; otherwise, we may create a conn pool
+			# and that, as used in DaCHS, my create a thread.  That means
+			# risking a deadlock while python is importing.
+			try:
+				subprocess.call(["createdb", "--template=template0", 
+					"--encoding=UTF-8", "--locale=C", dbname])
 
-			os.symlink(os.path.join(TEST_BASE, "test_data"),
-				os.path.join(base.getConfig("inputsDir"), "data"))
-			os.rmdir(os.path.join(base.getConfig("inputsDir"), "__system"))
-			os.symlink(os.path.join(TEST_BASE, "test_data", "__system"),
-				os.path.join(base.getConfig("inputsDir"), "__system"))
-			os.mkdir(os.path.join(base.getConfig("inputsDir"), "test"))
-			initdachs.initDB(dsn)
+				initdachs.initDB(dsn)
 
-			from gavo.registry import publication
-			from gavo import rsc
-			from gavo import rscdesc #noflake: caches registration
-			from gavo import base
-			publication.updateServiceList([base.caches.getRD("//services")])
+				from gavo.registry import publication
+				from gavo import rsc
+				from gavo import rscdesc #noflake: caches registration
+				from gavo.protocols import tap
+				publication.updateServiceList([base.caches.getRD("//services")])
 
-			# Import some resources necessary in trial tests
-			rsc.makeData(
-				base.caches.getRD("data/ssatest").getById("test_import"))
-			rsc.makeData(
-				base.caches.getRD("//obscore").getById("create"))
-			rsc.makeData(
-				base.resolveCrossId("//uws#enable_useruws"))
-		except:
-			traceback.print_exc()
-			sys.stderr.write("Creation of test environment failed.  Remove %s\n"
-				" before trying again.\n"%(base.getConfig("rootDir")))
-			sys.exit(1)
-
-
-	# the following only needs to be set correctly if you run 
-	# twisted trial-based tests
-	testsDir = TEST_BASE
+				# Import some resources necessary in trial tests
+				with base.getWritableAdminConn() as conn:
+					rsc.makeData(base.resolveCrossId("//obscore#makeSources"),
+						connection=conn)
+					rsc.makeData(base.resolveCrossId("//obscore#create"),
+						connection=conn)
+					tap.publishToTAP(base.resolveCrossId("//obscore"),
+						conn)
+					rsc.makeData(base.resolveCrossId("//uws#enable_useruws"),
+						connection=conn)
+			except:
+				traceback.print_exc()
+				sys.stderr.write("Creation of test environment failed.  Remove %s\n"
+					" before trying again.\n"%(base.getConfig("rootDir")))
+				sys.exit(1)
 
 
 class FakeSimbad(object):
@@ -716,7 +725,7 @@ def userconfigContent(content):
 
 
 def main(testClass, methodPrefix=None):
-	from gavo import base
+	ensureResources()
 	
 	if os.environ.get("GAVO_LOG")!="no":
 		base.DEBUG = True

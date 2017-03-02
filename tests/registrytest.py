@@ -172,9 +172,12 @@ class TAPCapabilityTest(testhelpers.VerboseTest):
 	resources = [("cap", _TAPCapabilityElement())]
 
 	def testObscoreDeclared(self):
-		el = self.cap[1].findall("capability/dataModel")[0]
-		self.assertEqual(el.get("ivo-id"), "ivo://ivoa.net/std/ObsCore/v1.0")
-		self.assertEqual(el.text, "Obscore-1.0")
+		for el in self.cap[1].findall("capability/dataModel"):
+			if el.get("ivo-id")=="ivo://ivoa.net/std/ObsCore#table-1.1":
+				self.assertEqual(el.text, "Obscore-1.1")
+				break
+		else:
+			raise AssertionError("Obscore 1.1 not in the declared DMs of TAP Cap")
 	
 	def testADQLAvailable(self):
 		el = self.cap[1].find("capability/language[name='ADQL']")

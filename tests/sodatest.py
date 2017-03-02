@@ -1003,8 +1003,24 @@ def _getFakeDescriptorForWCS(wcsDict):
 	return res
 
 
+class _MetaProcBase(testhelpers.TestResource):
+	procId = None
+
+	def make(self, deps):
+		proc = api.makeStruct(datalink.MetaMaker, 
+				procDef=api.resolveCrossId(self.procId)
+			).compile(parent=testhelpers.getTestRD())
+		return lambda arg: proc(None, arg)
+
+
+class _POLYGONMetaProc(_MetaProcBase):
+	procId = "//soda#fits_makePOLYGONMeta"
+
+
 class SODA_POLYGONMetaTest(testhelpers.VerboseTest):
 	__metaclass__ = testhelpers.SamplesBasedAutoTest
+
+	resources = [('proc', _POLYGONMetaProc())]
 
 	# generated through maketruth below
 	truth = {
@@ -1016,10 +1032,6 @@ class SODA_POLYGONMetaTest(testhelpers.VerboseTest):
 		(180, 90): '146.309932474 88.2014209215 33.6371465624 88.1989264651 326.309932474 88.1978189291 213.7430292544 88.2003118463',
 		}
 	
-	proc = api.makeStruct(datalink.MetaMaker, 
-			procDef=api.resolveCrossId("//soda#fits_makePOLYGONMeta")
-		).compile(parent=testhelpers.getTestRD())
-
 	def _produceKeys(self, sample):
 		pos, header = sample
 		desc = _getFakeDescriptorForWCS(header)
@@ -1043,8 +1055,14 @@ class SODA_POLYGONMetaTest(testhelpers.VerboseTest):
 	samples = list(_iterWCSSamples())
 
 
+class _CIRCLEMetaProc(_MetaProcBase):
+	procId = "//soda#fits_makeCIRCLEMeta"
+
+
 class SODA_CIRCLEMetaTest(testhelpers.VerboseTest):
 	__metaclass__ = testhelpers.SamplesBasedAutoTest
+
+	resources = [('proc', _CIRCLEMetaProc())]
 
 	# generated through maketruth below
 	truth = {
@@ -1056,10 +1074,6 @@ class SODA_CIRCLEMetaTest(testhelpers.VerboseTest):
   	(180, 90): '180.0000000000 90.0000000000 1.8021810709',
 	}
 	
-	proc = api.makeStruct(datalink.MetaMaker, 
-			procDef=api.resolveCrossId("//soda#fits_makeCIRCLEMeta")
-		).compile(parent=testhelpers.getTestRD())
-
 	def _produceKeys(self, sample):
 		pos, header = sample
 		desc = _getFakeDescriptorForWCS(header)
@@ -1086,12 +1100,19 @@ class SODA_CIRCLEMetaTest(testhelpers.VerboseTest):
 	samples = list(_iterWCSSamples())
 
 
+class _CIRCLESliceProc(_MetaProcBase):
+	procId = "//soda#fits_makeCIRCLESlice"
+
+	def make(self, deps):
+		return api.makeStruct(datalink.DataFunction, 
+				procDef=api.resolveCrossId(self.procId)
+			).compile(parent=testhelpers.getTestRD())
+
+
 class SODA_CIRCLECutoutIntervalTest(testhelpers.VerboseTest):
 	__metaclass__ = testhelpers.SamplesBasedAutoTest
 
-	proc = staticmethod(api.makeStruct(datalink.DataFunction, 
-			procDef=api.resolveCrossId("//soda#fits_makeCIRCLESlice")
-		).compile(parent=testhelpers.getTestRD()))
+	resources = [('proc', _CIRCLESliceProc())]
 
 	def _runTest(self, sample):
 		pos, header = sample

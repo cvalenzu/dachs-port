@@ -974,11 +974,6 @@ class GavoTableValTest(testhelpers.VerboseTest):
 		rd = self._getRdWithTable(columns)
 		return self._getValFuncOutput(validation.validateTables, rd)
 
-	def testBadName(self):
-		self.assertEqual(self._getMessagesForColumns(
-			"<column name='_r'/>"),
-			"[WARNING] testing/q: Column totest._r: Name is not a regular ADQL identifier.\n")
-
 	def testReservedName(self):
 		self.assertEqual(self._getMessagesForColumns(
 			"<column name='distance'/>"),
