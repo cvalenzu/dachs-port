@@ -409,19 +409,23 @@ class UWS(object):
 		if includeForgotten:
 			phasesToKill.add(PENDING)
 
-		now = datetime.datetime.utcnow()
-		for jobId in self.getJobIds():
-			job = self.getJob(jobId)
-			if (job.destructionTime<now
-					or job.phase in phasesToKill):
-				try:
-					self.destroy(jobId)
-				except base.QueryCanceledError: # job locked by something, don't hang
-					base.ui.notifyWarning("Postponing destruction of %s: Locked"%
-						jobId)
-				except JobNotFound:
-					# Someone else has cleaned up -- that's ok
-					pass
+		fragments = "destructionTime<%(now)s"
+		if phasesToKill:
+			fragments = "destructionTime<%(now)s or phase in %(ptk)s"
+
+		for row in self.jobClass.jobsTD.doSimpleQuery(
+				['jobId'], 
+				fragments,
+				{"now": datetime.datetime.utcnow(), "ptk": phasesToKill}):
+			jobId = row["jobId"]
+			try:
+				self.destroy(jobId)
+			except base.QueryCanceledError: # job locked by something, don't hang
+				base.ui.notifyWarning("Postponing destruction of %s: Locked"%
+					jobId)
+			except JobNotFound:
+				# Someone else has cleaned up -- that's ok
+				pass
 
 	def getURLForId(self, jobId):
 		"""returns the handling URL for the job with jobId.
