@@ -66,7 +66,7 @@ from gavo.utils.stanxml import (ElementTree, xmlrender,
 	escapeAttrVal, escapePCDATA, registerPrefix, getPrefixInfo)
 
 from gavo.utils.texttricks import (formatSize, 
-	makeEllipsis, makeLeftEllipsis,
+	makeEllipsis, makeLeftEllipsis, makeSourceEllipsis,
 	floatRE, dateRE, datetimeRE, identifierPattern,
 	datetimeToRFC2616, 
 	parseDefaultDatetime, parseDefaultDate, parseDefaultTime,

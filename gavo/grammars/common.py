@@ -340,26 +340,28 @@ class RowIterator(object):
 			rowSource = baseIter
 
 		try:
-			for row in rowSource:
-				# handle dispatched grammars here, too
-				if isinstance(row, tuple):
-					d = row[1]
-				else:
-					d = row
+			try:
+				for row in rowSource:
+					# handle dispatched grammars here, too
+					if isinstance(row, tuple):
+						d = row[1]
+					else:
+						d = row
 
-				if isinstance(d, dict):
-					# else it could be a sentinel like FLUSH, which we leave alone
-					if self.sourceRow:
-						d.update(self.sourceRow)
-					d["parser_"] = self
+					if isinstance(d, dict):
+						# else it could be a sentinel like FLUSH, which we leave alone
+						if self.sourceRow:
+							d.update(self.sourceRow)
+						d["parser_"] = self
 
-				yield row
-		except Exception:
-			base.ui.notifySourceError()
-			raise
+					yield row
+			except Exception:
+				base.ui.notifySourceError()
+				raise
 
-		if self.notify:
-			base.ui.notifySourceFinished()
+		finally:
+			if self.notify:
+				base.ui.notifySourceFinished()
 
 	def _filteredIter(self, baseIter):
 		for row in baseIter:

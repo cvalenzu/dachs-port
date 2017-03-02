@@ -77,6 +77,21 @@ def makeLeftEllipsis(aStr, maxLen=60):
 	return aStr
 
 
+def makeSourceEllipsis(sourceToken):
+	"""returns a string hopefully representative for a source token.
+
+	These are, in particular, passed around withing rsc.makeData.  Usually,
+	these are (potentially long) strings, but now and then they can be
+	other things with appallingly long reprs.  When DaCHS messages
+	need to refer to such sources, this function is used to come up
+	with representative strings.
+	"""
+	if isinstance(sourceToken, basestring):
+		return makeLeftEllipsis(sourceToken)
+	else:
+		return makeEllipsis(repr(sourceToken), maxLen=160)
+
+
 @codetricks.document
 def getFileStem(fPath):
 	"""returns the file stem of a file path.

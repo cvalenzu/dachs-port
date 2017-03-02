@@ -423,9 +423,11 @@ def processSource(data, source, feeder, opts, connection=None):
 		except Exception, ex:
 			feeder.reset()
 			if not isinstance(ex, base.ExecutiveAction):
-				base.ui.notifyError("Error while importing source; changes from"
+				base.ui.notifyError("Error while importing source %s; changes from"
 					" this source will be rolled back, processing will continue."
-					" (%s)"%utils.safe_str(ex))
+					" (%s)"%(
+						utils.makeSourceEllipsis(source), 
+						utils.safe_str(ex)))
 
 
 class _TableCornucopeia(object):
