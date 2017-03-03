@@ -705,6 +705,10 @@ class _ServiceVORRecord(testhelpers.TestResource):
 			<meta name="type">Simulation</meta>
 			<meta name="_example" title="ex1">No text</meta>
 			<meta name="_example" title="ex2">Even less</meta>
+			<meta name="copyright">\RSTccby{senseless data}</meta>
+			<meta name="rights">Licensed CC-BY</meta>
+			<meta name="rights.rightsURI"
+				>http://creativecommons.org/licenses/by/3.0/</meta>
 			<service id="glonk">
 				<nullCore/>
 				<outputTable>
@@ -742,6 +746,12 @@ class ServiceRecordTest(testhelpers.VerboseTest):
 			"vr:WebBrowser")
 		self.assertTrue(cap.xpath("interface/accessURL")[0].text.endswith(
 			"/funky/town/glonk/examples"))
+
+	def testRights(self):
+		node = self.rec.xpath("//Resource/rights")[0]
+		self.assertEqual(node.text, "Licensed CC-BY")
+		self.assertEqual(node.get("rightsURI"), 
+			"http://creativecommons.org/licenses/by/3.0/")
 
 
 class _UWSVORRecord(testhelpers.TestResource):

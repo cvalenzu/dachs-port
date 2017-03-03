@@ -249,7 +249,8 @@ class VOR:
 		_a_ivoId = None
 		_name_a_ivoId = "ivo-id"
 
-	class rights(VORElement): pass
+	class rights(VORElement):
+		_a_rightsURI = None
 	
 	class capability(VORElement):
 		name_ = "capability"
@@ -433,8 +434,6 @@ class VS:
 
 	class format(VSElement): 
 		_a_isMIMEType = None
-	
-	class rights(VSElement): pass
 	
 	class accessURL(VSElement): pass
 	

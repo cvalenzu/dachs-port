@@ -335,6 +335,9 @@ class RD(base.Structure, base.ComputedMetaMixin, scripting.ScriptingMixin,
 		
 		This only works in reStructured text (though it's still almost
 		readable as source).
+
+		If used within something carrying meta, this will also set
+		the appropriate rights.rightsURI.
 		"""
 		return ("%s is licensed under the `Creative Commons Attribution 3.0"
 			" License <http://creativecommons.org/licenses/by/3.0/>`_\n\n"
@@ -347,6 +350,9 @@ class RD(base.Structure, base.ComputedMetaMixin, scripting.ScriptingMixin,
 		
 		This only works in reStructured text (though it's still almost
 		readable as source).
+
+		If used within something carrying meta, this will also set
+		the appropriate rights.rightsURI.
 		"""
 		return ("To the extent possible under law, the publisher has"
 			" waived all copyright and related or neighboring rights to %s."

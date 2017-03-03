@@ -158,7 +158,7 @@ _dcBuilder = meta.ModelBasedBuilder([
 		('name', SF(DC.contributor))]),
 	('description', SF(DC.description)),
 	('language', SF(DC.language)),
-	('rights', SF(DC.rights)),
+	('rights', SF(DC.rights), ()),
 	('publisher', SF(DC.publisher)),
 	])
 
@@ -413,6 +413,11 @@ class ResourceMaker(object):
 		return self._makeResource(resob, setNames)
 
 
+_rightsBuilder = meta.ModelBasedBuilder([
+	('rights', SF(VOR.rights), (), {
+		'rightsURI': 'rightsURI'}),])
+
+
 class ServiceResourceMaker(ResourceMaker):
 	"""A ResourceMaker adding rights and capabilities.
 	"""
@@ -421,7 +426,7 @@ class ServiceResourceMaker(ResourceMaker):
 
 	def _makeResource(self, service, setNames):
 		return ResourceMaker._makeResource(self, service, setNames)[
-			VOR.rights[base.getMetaText(service, "rights")], [
+			_rightsBuilder.build(service), [
 					capabilities.getCapabilityElement(pub)
 				for pub in service.getPublicationsForSet(setNames)]]
 
