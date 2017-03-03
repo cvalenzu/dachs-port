@@ -574,8 +574,13 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 			for name, type in stcDef.iterColTypes():
 				destCol = self.getColumnByName(name)
 				if destCol.stc is not None: 
-					raise base.LiteralParseError("stc", stcDef.content_,
-						hint="Column %s is referenced twice from STC"%name)
+#	don't warn -- this kind of annotation is done for the future,
+# when we can handle it properly.
+					continue
+#					base.ui.notifyWarning("Column %s is referenced twice from STC"
+#						" in table %s is referenced twice in STC groups.  This"
+#						" is currently not supported, the second reference is"
+#						" ignored."%(name, self.getQName()))
 				destCol.stc = stcDef.compiled
 				destCol.stcUtype = type
 
