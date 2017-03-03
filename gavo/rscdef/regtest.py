@@ -600,6 +600,20 @@ class RegTest(procdef.ProcApp, unittest.TestCase):
 				foundVal = el.attrib[key]
 			assert val==foundVal, "Trouble with %s: %s (%s, %s)"%(
 				key or "content", path, repr(val), repr(foundVal))
+	
+	@utils.document
+	def getXpath(self, path, element=None):
+		"""returns the equivalent of tree.xpath(path) for an lxml etree
+		of the current document or in element, if passed in.
+
+		This uses the same namespace conventions as assertXpath.
+		"""
+		if element is None:
+			if not hasattr(self, "_parsedTree"):
+				self._parsedTree = lxtree.fromstring(self.data)
+			element = self._parsedTree
+
+		return element.xpath(path, namespaces=self.XPATH_NAMESPACE_MAP)
 
 	@utils.document
 	def assertHeader(self, key, value):
