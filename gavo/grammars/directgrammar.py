@@ -152,7 +152,7 @@ class DirectGrammar(base.Structure, base.RestrictionMixin):
 	Also note the program gavomkboost that can help you generate core for
 	the C boosters used by direct grammars.
 
-	.. separate document: http://docs.g-vo.org/DaCHS/booster.html
+	.. _separate document: :dachsdoc:booster.html
 	"""
 	name_ = "directGrammar"
 

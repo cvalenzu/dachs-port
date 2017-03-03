@@ -425,8 +425,9 @@ class ServiceResourceMaker(ResourceMaker):
 	resType = "nonTabularService"
 
 	def _makeResource(self, service, setNames):
-		return ResourceMaker._makeResource(self, service, setNames)[
-			_rightsBuilder.build(service), [
+		res = ResourceMaker._makeResource(self, service, setNames)[
+			_rightsBuilder.build(service)] 
+		return res[[
 					capabilities.getCapabilityElement(pub)
 				for pub in service.getPublicationsForSet(setNames)]]
 
@@ -511,14 +512,6 @@ class DeletedResourceMaker(ResourceMaker):
 		return []
 
 
-_dataMetaBuilder = meta.ModelBasedBuilder([
-	('rights', SF(VOR.rights)),
-	# format is a mime type if we're registering a single piece of data
-# format's not in any more due to DataCollection experiment described above.
-#	('format', SF(VS.format)),  
-])
-
-
 class DataCollectionResourceMaker(ResourceMaker):
 	"""A base class for Table- and DataResourceMaker.
 	"""
@@ -542,7 +535,6 @@ class DataCollectionResourceMaker(ResourceMaker):
 					capabilities.getCapabilityElement(pub)
 				for pub in metaCarrier.getPublicationsForSet(setNames)],
 			_orgMetaBuilder.build(metaCarrier),
-			_dataMetaBuilder.build(metaCarrier),
 			_coverageMetaBuilder.build(metaCarrier),
 			self._makeTableset(schemas)]
 		return res

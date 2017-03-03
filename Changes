@@ -15,6 +15,9 @@ Version 1.0 (2017-XX-XX)
 	* UWS support is now for version 1.1 (i.e., there's creationDate,
 	  filters in the joblist, and slow polling).
 	
+	* Added "declarative" licenses.  Please read the Licensing chapter in
+		the tutorial and slap licenses on your data.
+	
 	* Removed //epntap#table-2_0.  Use //epntap2#table-2_0 instead (sorry).
 
 	* Removed sdmCore (use SODA instead)
