@@ -199,7 +199,10 @@ class MetaParser(common.Parser):
 				raise common.StructureError("meta elements must have a"
 					" name attribute")
 			metaKey = self.attrs.pop("name")
-			self.container.addMeta(metaKey, content, **self.attrs)
+			if metaKey.startswith("!"):
+				self.container.setMeta(metaKey[1:], content, **self.attrs)
+			else:
+				self.container.addMeta(metaKey, content, **self.attrs)
 
 			# meta elements can have children; add these, properly fudging
 			# their keys
@@ -489,12 +492,12 @@ class MetaMixin(object):
 		"""
 		self._delMeta(parseKey(key))
 
-	def setMeta(self, key, value):
+	def setMeta(self, key, value, **moreAttrs):
 		"""replaces any previous meta content of key (on this container)
 		with value.
 		"""
 		self.delMeta(key)
-		self.addMeta(key, value)
+		self.addMeta(key, value, **moreAttrs)
 
 	def traverse(self, builder):
 		for key, item in self.meta_.iteritems():
