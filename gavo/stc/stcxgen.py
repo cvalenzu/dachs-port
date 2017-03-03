@@ -50,7 +50,13 @@ def isoformatOrNull(val):
 		return val
 	else:
 		return val.isoformat()
-	
+
+
+def _refOrStr(val):
+	if isinstance(val, common.ColRef) or val is None:
+		return val
+	return str(val)
+
 
 def _getFromSTC(elName, itemDesc):
 	"""returns the STC element elName or raises an STCValueError if
@@ -229,12 +235,11 @@ serialize_SpectralCoo = _make1DSerializer(STC.Spectral,
 
 _nones = (None, None, None)
 
+
 def _wrap1D(val, unit=_nones, timeUnit=_nones):
 	if not val:
 		return
-	if isinstance(val, common.ColRef):
-		return val
-	return str(val[0])
+	return _refOrStr(val[0])
 
 def _wrap2D(val, unit=_nones, timeUnit=_nones):
 	if not val:
@@ -306,7 +311,7 @@ def _makeSpatialCooSerializer(stcClasses):
 					for wiggleType in ["error", "resolution", "size", "pixSize"]],
 			]
 		if node.epoch:
-			res[STC.Epoch(yearDef=node.yearDef)[str(node.epoch)]]
+			res[STC.Epoch(yearDef=node.yearDef)[_refOrStr(node.epoch)]]
 		if not res.shouldBeSkipped():
 			return res(frame_id=node.frame.id, **clsArgs)
 	return serialize

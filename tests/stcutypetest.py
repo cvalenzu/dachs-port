@@ -148,6 +148,13 @@ class CooGenerTest(testhelpers.VerboseTest):
 			'stc:AstroCoords.Position2D.Error2.C1': CR('e_ra'), 
 			'stc:AstroCoords.Position2D.Error2.C2': CR('e_dec')})
 
+	def testEpoch(self):
+		self._assertAssmatch('Position ICRS Epoch "epum" 10 20', {
+			'stc:AstroCoords.Position2D.Epoch': CR('epum'), 
+			'stc:AstroCoords.Position2D.Epoch.yearDef': 'J',
+			'stc:AstroCoords.Position2D.Value2.C1': '10.0',
+			'stc:AstroCoords.Position2D.Value2.C2': '20.0'})
+
 	def testRedshift(self):
 		self._assertAssmatch('Redshift "z" Error "zErr"', {
 			'stc:AstroCoords.Redshift.Value': CR('z'),

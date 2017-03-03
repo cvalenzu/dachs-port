@@ -204,8 +204,11 @@ def _makeSingle(s, p, t):
 	return t[0]
 
 
-def _getSTCSGrammar(numberLiteral, timeLiteral, _exportAll=False,
-		_addGeoReferences=False):
+def _getSTCSGrammar(numberLiteral, 
+		timeLiteral, 
+		_exportAll=False,
+		_addGeoReferences=False,
+		_astroYearOverride=None):
 	"""returns a dictionary of symbols for a grammar parsing STC-S into
 	a concrete syntax tree.
 
@@ -236,7 +239,12 @@ def _getSTCSGrammar(numberLiteral, timeLiteral, _exportAll=False,
 			).addParseAction(_stringifyBlank))("unit")
 
 # basic productions common to most STC-S subphrases
-		astroYear = Regex("[BJ][0-9]+([.][0-9]*)?")
+		literalAstroYear = Regex("[BJ][0-9]+([.][0-9]*)?")
+		if _astroYearOverride:
+			astroYear = _astroYearOverride
+		else:
+			astroYear = literalAstroYear
+
 		fillfactor = (Suppress( CaselessKeyword("fillfactor") 
 			) + number("fillfactor"))
 		noEqFrame = (CaselessKeyword("J2000") 
@@ -256,7 +264,7 @@ def _getSTCSGrammar(numberLiteral, timeLiteral, _exportAll=False,
 		eqFrameName = (CaselessKeyword("FK5") 
 			| CaselessKeyword("FK4") 
 			| CaselessKeyword("ECLIPTIC"))("frame")
-		eqFrame = eqFrameName + Optional( astroYear("equinox") )
+		eqFrame = eqFrameName + Optional( literalAstroYear("equinox") )
 		frame = eqFrame | noEqFrame
 		plEphemeris = CaselessKeyword("JPL-DE200") | CaselessKeyword("JPL-DE405")
 		refpos = ((Regex(_reFromKeys(common.stcRefPositions)))("refpos")
@@ -300,7 +308,7 @@ def _getSTCSGrammar(numberLiteral, timeLiteral, _exportAll=False,
 		_regionTail = Optional( positionSpec ) + _spatialTail
 		_commonSpaceItems = ( frame + Optional( refpos ) + 
 			Optional( flavor ) + Optional( 
-				epochSpec("epoch").addParseAction(_stringify) ))
+				epochSpec("epoch").addParseAction(lambda s,p,t: t[0])))
 		_commonRegionItems = Optional( fillfactor ) + _commonSpaceItems
 
 # times and time intervals
@@ -468,13 +476,18 @@ def getSymbols(_exportAll=False, _colrefLiteral=None,
 		isoTimeLiteral = Regex(r"\d\d\d\d-?\d\d-?\d\d(T\d\d:?\d\d:?\d\d(\.\d*)?Z?)?"
 			).addParseAction(lambda s,p,toks: times.parseISODT(toks[0]))
 		timeLiteral = (isoTimeLiteral | jdLiteral | mjdLiteral)
+		astroYear = Regex("[BJ][0-9]+([.][0-9]*)?")
 
 		if _colrefLiteral:
 			numberLiteral = _colrefLiteral ^ numberLiteral
 			timeLiteral = _colrefLiteral ^ timeLiteral
+			astroYear = _colrefLiteral ^ astroYear
 
-	res = _getSTCSGrammar(numberLiteral, timeLiteral, _exportAll,
-		_addGeoReferences=_addGeoReferences)
+	res = _getSTCSGrammar(numberLiteral, 
+		timeLiteral, 
+		_exportAll,
+		_addGeoReferences=_addGeoReferences,
+		_astroYearOverride=astroYear)
 	res.update(_makeSymDict(locals(), _exportAll))
 	return res
 

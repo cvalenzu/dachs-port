@@ -302,8 +302,12 @@ def _makeBasicCooArgs(node, frame, posClass, spatial=False):
 		"frame": frame,
 	}
 	if spatial and node.get("epoch"):
-		args["epoch"] = float(node["epoch"][1:])
-		args["yearDef"] = node["epoch"][0]
+		if isinstance(node["epoch"], common.ColRef):
+			args["epoch"] = node["epoch"]
+			args["yearDef"] = "J"
+		else:
+			args["epoch"] = float(node["epoch"][1:])
+			args["yearDef"] = node["epoch"][0]
 	_unitMakers[posClass.cType](args, node, frame)
 	return args
 

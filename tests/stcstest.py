@@ -590,6 +590,11 @@ class ColrefTest(testhelpers.VerboseTest):
 		tree = stc.parseQSTCS('Position ICRS Error "p1" "p1"')
 		self.assertEqual(tree.place.error.radii[0].dest, "p1")
 
+	def testEpochReference(self):
+		tree = stc.parseQSTCS('Position ICRS Epoch "ep" [pos]')
+		self.assertEqual(tree.place.value.dest, "pos")
+		self.assertEqual(tree.place.yearDef, "J")
+		self.assertEqual(tree.place.epoch.dest, "ep")
 
 
 class SyslibTest(testhelpers.VerboseTest):
