@@ -442,4 +442,40 @@ Core phrase makers and friends -->
 	</condDesc>
 </STREAM>
 
+<STREAM id="license-cc0">
+	<doc>
+		Include this stream with a what being a short phrase saying what 
+		is licensed to make your resource licensed under Creative 
+		Commons-0 (a.k.a. public domain).  This will generate the copyright, 
+		rights and rightsURI metadata items.  It will currently need to live
+		in the RD.
+
+		Example::
+			
+			&lt;FEED source="//procs#license-cc0" what="the HSOY catalogue"/&gt;
+	</doc>
+	<meta name="copyright" format="rst">\\RSTcc0{\what}</meta>
+	<meta name="rights">Licensed under CC-0</meta>
+	<meta name="rights.rightsURI"
+		>http://creativecommons.org/publicdomain/zero/1.0/</meta>
+</STREAM>
+
+<STREAM id="license-cc-by">
+	<doc>
+		Include this stream with a what being a short phrase saying what 
+		is licensed to make your resource licensed under Creative 
+		Commons Attribution (CC-BY).  This will generate the copyright, 
+		rights and rightsURI metadata items.  It will currently need to
+		live in the RD.
+
+		Example::
+			
+			&lt;FEED source="//procs#license-cc-by" what="the HSOY catalogue"/&gt;
+	</doc>
+	<meta name="copyright" format="rst">\\RSTccby{\what}</meta>
+	<meta name="rights">Licensed under CC-BY</meta>
+	<meta name="rights.rightsURI"
+		>http://creativecommons.org/licenses/by/3.0/</meta>
+</STREAM>
+
 </resource>
