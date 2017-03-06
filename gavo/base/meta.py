@@ -170,6 +170,10 @@ class MetaParser(common.Parser):
 		# the meta value itself
 		self.children.append((key, content, kwargs))
 
+	def setMeta(self, key, content="", **kwargs):
+		# see addMeta comment on why we need to do magic here.
+		self.children.append(("!"+key, content, kwargs))
+
 	def start_(self, ctx, name, value):
 		if name=="meta":
 			return MetaParser(self, self)
@@ -207,8 +211,12 @@ class MetaParser(common.Parser):
 			# meta elements can have children; add these, properly fudging
 			# their keys
 			for key, content, kwargs in self.children:
-				fullKey = "%s.%s"%(metaKey, key)
-				self.container.addMeta(fullKey, content, **kwargs)
+				if key.startswith("!"):
+					fullKey = "%s.%s"%(metaKey, key[1:])
+					self.container.setMeta(fullKey, content, **kwargs)
+				else:
+					fullKey = "%s.%s"%(metaKey, key)
+					self.container.addMeta(fullKey, content, **kwargs)
 
 	def end_(self, ctx, name, value):
 		if name=="meta":

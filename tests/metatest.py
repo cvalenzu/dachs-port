@@ -708,6 +708,17 @@ class XMLTest(testhelpers.VerboseTest):
 		self.assertEqual(thing3.getMeta("level2").getContent("text"), 
 			"and a third thing")
 
+	def testOverwriting(self):
+		mc = parseMetaXML("""<meta name="stuff">
+				<meta name="honk">old</meta>
+				<meta name="!honk">new</meta>
+				<meta name="honk">also new</meta>
+			</meta>""")
+		self.assertEqual(
+			['new', 'also new'],
+			[v.getContent() for v in mc.iterMeta("stuff.honk")])
+
+
 class MacroExpansionText(testhelpers.VerboseTest):
 	def testUnexpanded(self):
 		self.assertEqual(
