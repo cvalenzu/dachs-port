@@ -293,7 +293,7 @@ class DataURL(base.Structure):
 	_parset = base.EnumeratedUnicodeAttribute("parSet",
 		description="Preselect a default parameter set; form gives what"
 			" our framework adds to form queries.", default=base.NotGiven,
-		validValues=["form"],
+		validValues=["form", "TAP"],
 		copyable=True)
 
 	_httpHeaders = base.DictAttribute("httpHeader", 
@@ -344,9 +344,14 @@ class DataURL(base.Structure):
 		"""returns the URL parameters as a sequence of kw, value pairs.
 		"""
 		params = getattr(self, "freeAttrs", [])
+
 		if self.parSet=="form":
 			params.extend([("__nevow_form__", "genForm"), ("submit", "Go"),
 				("_charset_", "UTF-8")])
+
+		elif self.parSet=='TAP':
+			params.extend([("LANG", "ADQL"), ("REQUEST", "doQuery")])
+
 		return params
 
 
