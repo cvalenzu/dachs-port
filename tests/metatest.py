@@ -24,6 +24,7 @@ from gavo.base import metavalidation
 from gavo.registry import builders
 from gavo.utils import stanxml
 from gavo.web import common as webcommon
+from gavo.web import metarender
 
 
 class KeyTest(testhelpers.VerboseTest):
@@ -916,6 +917,58 @@ class ComputedMetaTest(testhelpers.VerboseTest):
 		copy = _MetaCarrier(None)
 		copy.copyMetaFrom(original)
 		self.assertEqual(copy.getMeta("computed").getContent(), "abcx")
+
+
+class BibTeXTest(testhelpers.VerboseTest):
+	def testBasic(self):
+		mc = parseMetaXML("<meta>creator.name: Thor, A.U.\n"
+			"creator:\ncreator.name: Bohr, N.\ntitle:On GAVO's role"
+			" in Writing DaCHS\ncreationDate: 1984-08-05\n"
+			"referenceURL:http://purl.org/pub/thor+bohr\n"
+			"shortName:testres\n"
+			"doi:10.542/testing</meta>")
+		self.assertEqual(metarender.makeBibTeXForMetaCarrier(mc),
+			"""@MISC{vo:testres,
+  year=1984,
+  title={On {GAVO}'s role in Writing {DaCHS}},
+  author={Thor, A.U. and Bohr, N.},
+  url={http://purl.org/pub/thor+bohr},
+  howpublished={{VO} resource provided by the Unittest Suite},
+  doi = {10.542/testing}
+}
+""")
+
+	def testIncompleteMetaErrors(self):
+		mc = parseMetaXML("<meta>creator.name: Thor, A.U.</meta>")
+		self.assertRaisesWithMsg(base.MetaError,
+			"No meta item creationDate",
+			metarender.makeBibTeXForMetaCarrier,
+			(mc,))
+	
+	def testIdFallback1(self):
+		mc = parseMetaXML("<meta>creator.name: Thor, A.U.\n"
+			"creationDate: 1984-08-05T13:45:23\ntitle: Ulysses\n"
+			"referenceURL:http://purl.org/pub/thor\n</meta>")
+		self.assertTrue(metarender.makeBibTeXForMetaCarrier(mc
+			).startswith("@MISC{vo:bbamuiltbaie,"))
+
+	def testTableNameMangling(self):
+		mc = parseMetaXML("<meta>creator.name: Thor, A.U.\n"
+			"creationDate: 1984-08-05T13:45:23\ntitle: ToC\n"
+			"referenceURL:http://purl.org/pub/thor\n</meta>")
+		mc.getQName = lambda: "mySchema.someTable"
+		self.assertTrue(metarender.makeBibTeXForMetaCarrier(mc
+			).startswith("@MISC{vo:mySchema_someTable,"))
+
+	def testNoAuthor(self):
+		mc = parseMetaXML("<meta>creationDate: 1984-08-05T13:45:23\n"
+			"title: Der hessische Landbote\n"
+			"referenceURL:http://purl.org/pub/thor\n</meta>")
+		# The fallback to the DC creator is probably a bad idea here.
+		# Well, any other behaviour is going to be still more painful.
+		self.assertTrue(
+			"author={Could be same as contact.name},"
+			in metarender.makeBibTeXForMetaCarrier(mc))
 
 
 if __name__=="__main__":

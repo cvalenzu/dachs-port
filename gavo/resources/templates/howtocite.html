@@ -11,6 +11,7 @@
     <h1>How to cite <n:invisible n:data="meta identifier" n:render="string"/></h1>
 
 		<div id="biblio" n:render="ifmeta source">
+			<h2>Reference an underlying Publication</h2>
 			<p>This service has an associated publication.  If you use its data,
 			it may be appropriate to reference
 				<span class="bibsource" n:render="metahtml">source</span>
@@ -23,11 +24,21 @@
 				in addition to or instead of the service reference.</p>
 		</div>
 
-		<div id="serviceref">
+		<div id="serviceref" n:data="bibtexentry">
 			<h2>Reference the Service</h2>
-			<p>To cite the service as such, we suggest the following
-			BibTeX entry:</p>
-			<pre class="bibtex" n:data="bibtexentry" n:render="unicode"/>
+			<n:invisible n:render="ifdata">
+				<p>To cite the service as such, we suggest the following
+				BibTeX entry:</p>
+				<pre class="bibtex" n:render="unicode"/>
+			</n:invisible>
+
+			<n:invisible n:render="ifnodata">
+				<p>The creators of this services did not provide essential
+				metadata (creationDate, title, creatorName) to make a reference
+				to this service; this probably means that this service is
+				not intended to be referenced.  If this seems not right
+				to you, please contact the data center operators.</p>
+			</n:invisible>
 		</div>
 
 

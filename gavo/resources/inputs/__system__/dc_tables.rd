@@ -1,13 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- meta tables containing field descriptions of all fields of data center
-tables and the RDs the tables come from. -->
-
-<!-- note that much of the stuff in here is reflected in code in
-* rsc.dbtable
-* rsc.metatable
-* rscdef.column
--->
-
 <resource resdir="__system" schema="dc">
 	<meta name="description">Table-related metadata for
 		the tables within this data center.</meta>

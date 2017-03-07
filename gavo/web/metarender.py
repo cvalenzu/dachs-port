@@ -45,6 +45,53 @@ def _protectForBibTeX(tx):
 	return re.sub(r"(\w*[A-Z]\w+[A-Z]\w*)", r"{\1}", tx)
 
 
+def makeBibTeXForMetaCarrier(mc):
+	"""returns a (unicode) best-effort BibTeX record for something mixing in
+	mc.
+
+	This needs, at least, a creationDate, a creator, a referenceURL,
+	and a title to work; if these aren't there, you'll get a MetaError.
+	"""
+	creationDate = utils.parseISODT(
+		base.getMetaText(mc,
+			"creationDate", 
+			raiseOnFail=True))
+	year = creationDate.year
+			
+	# for the BibTeX tag, prefer the short name if given...
+	label = base.getMetaText(mc, "shortName", None)
+	if label is None:
+		# ... else hope it's a table...
+		try:
+			label = mc.getQName()
+		except AttributeError:
+			# fall back to something made from the creation date
+			# (which at least won't change between invocations)
+			label = utils.intToFunnyWord(
+				int(re.sub("[^\d]+", "", creationDate.isoformat())))
+	label = "vo:"+re.sub("[^\w]", "_", label)
+
+	authors = " and ".join(m.getContent() 
+				for m in mc.iterMeta("creator.name", 
+						propagate=True))
+
+	res = [
+		"@MISC{%s"%label,
+		"  year=%s"%year,
+		"  title={%s}"%_protectForBibTeX(
+			base.getMetaText(mc, "title", "Untitled Resource")),
+		"  author={%s}"%_protectForBibTeX(authors),
+		"  url={%s}"%base.getMetaText(mc, "referenceURL", raiseOnFail=True),
+		"  howpublished={{VO} resource provided by the %s}"%
+			_protectForBibTeX(base.getConfig("web", "sitename")),
+		]
+	doi = base.getMetaText(mc, "doi", None)
+	if doi:
+		res.append(
+			"  doi = {%s}"%doi)
+	return u",\n".join(res)+"\n}\n"
+
+
 class MetaRenderer(grend.CustomTemplateMixin, grend.ServiceBasedPage):
 	"""Renderers that are allowed on all services.
 	"""
@@ -103,39 +150,13 @@ class MetaRenderer(grend.CustomTemplateMixin, grend.ServiceBasedPage):
 
 	def data_bibtexentry(self, ctx, data):
 		"""returns BibTeX for the current record.
+
+		This will return None if no BibTeX can be made.
 		"""
-		year = utils.parseISODT(
-			base.getMetaText(self.metaCarrier, "creationDate")).year
-		
-		# for the BibTeX tag, prefer the short name if given...
-		label = base.getMetaText(self.metaCarrier, "shortName", None)
-		if label is None:
-			# ... else hope it's a table...
-			try:
-				label = self.metaCarrier.getQName()
-			except AttributeError:
-				# else use the id (which probably stinks)
-				label = self.metaCarrier.id
-		label = "vo:"+re.sub("[^\w]", "_", label)
-
-		res = [
-			"@MISC{%s"%label,
-			"  year=%s"%year,
-			"  title={%s}"%_protectForBibTeX(
-				base.getMetaText(self.metaCarrier, "title", "Untitled Resource")),
-			"  author={%s}"%_protectForBibTeX(
-				" and ".join(m.getContent() 
-					for m in self.metaCarrier.iterMeta("creator.name", propagate=True))),
-			"  url={%s}"%base.getMetaText(self.metaCarrier, "referenceURL"),
-			"  howpublished={{VO} resource provided by the %s}"%
-				_protectForBibTeX(base.getConfig("web", "sitename")),
-			]
-		doi = base.getMetaText(self.metaCarrier, "doi", None)
-		if doi:
-			res.append(
-				"  doi = {%s}"%doi)
-		return u",\n".join(res)+"\n}\n"
-
+		try:
+			return makeBibTeXForMetaCarrier(self.metaCarrier)
+		except base.MetaError:
+			return None
 
 class RendExplainer(object):
 	"""is a container for various functions having to do with explaining
