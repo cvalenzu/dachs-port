@@ -256,8 +256,7 @@ class SSAPCore(svcs.DBCore):
 				V.GROUP(name="inputParams")[
 					V.PARAM(name="ID", datatype="char", arraysize="*", 
 						ref=pubDIDId,
-						ucd="meta.id;meta.main")[
-						V.LINK(content_role="ddl:id-source", value="#"+pubDIDId)]]]]
+						ucd="meta.id;meta.main")]]]
 
 		return "application/x-votable+xml", votable.asString(vot)
 
