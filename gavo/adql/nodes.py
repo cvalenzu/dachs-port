@@ -1638,6 +1638,9 @@ def registerRegionMaker(fun):
 	an identifier (like simbad, siapBbox, etc, basically [A-Za-z]+).
 	The rest is up to the region maker, but whitespace should separate
 	this rest from the identifier.
+
+	The entire region functionality will probably disappear with TAP 1.1.
+	Don't do anything with it any more.  Use ufuncs instead.
 	"""
 	_regionMakers.append(fun)
 

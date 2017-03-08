@@ -17,7 +17,7 @@ from gavo import adql
 from gavo import rscdesc
 from gavo import utils
 from gavo.protocols import adqlglue
-from gavo.protocols import simbadinterface # for getSesame registration
+from gavo.protocols import simbadinterface # for ufunc registration
 from gavo.adql import nodes 
 from gavo.adql import ufunctions 
 
@@ -186,20 +186,6 @@ class RegionTest(unittest.TestCase):
 			"SELECT x FROM y WHERE 1=CONTAINS(REGION(dbColumn || otherColumn),"
 			" CIRCLE('ICRS', 10, 10 ,2))")
 
-	def testSimbad(self):
-		"""tests for the simbad region.
-		"""
-		t = adql.parseToTree("SELECT x FROM y WHERE 1=CONTAINS("
-			"REGION('simbad Aldebaran'), CIRCLE('ICRS', 10, 10, 1))")
-		# Positions of Aldebaran in the test bed are constant, as we're
-		# not actually asking simbad.  Also, they have exact binary representations
-		# -- so, don't do this test with the actual sesame.
-		self.assertEqual('SELECT x FROM y WHERE 1 = CONTAINS('
-			'POINT(68.9375, 16.46875), CIRCLE(10, 10, 1))', adql.flatten(t))
-		self.assertRaises(adql.RegionError, adql.parseToTree,
-			"SELECT x FROM y WHERE 1=CONTAINS("
-			"REGION('simbad Wozzlfoo7xx'), CIRCLE('ICRS', 10, 10, 1))")
-
 
 def getMorphed(query):
 	return nodes.flatten(adql.morphPG(adql.parseToTree(query))[1])
@@ -270,7 +256,6 @@ class HealpixFunctionsTest(testhelpers.VerboseTest):
 	]
 
 
-
 class HealpixExecTest(testhelpers.VerboseTest):
 	resources = [
 		("querier", adqltest.adqlQuerier),
@@ -289,6 +274,62 @@ class HealpixExecTest(testhelpers.VerboseTest):
 		self.assertAlmostEqual(res.rows[0]["pt"].y, -12.25362992*utils.DEG)
 		self.assertAlmostEqual(res.rows[0]["pt"].x, 23.51074219*utils.DEG)
 		self.assertEqual(res.tableDef.columns[0].type, "spoint")
+
+
+class SimbadpointTest(testhelpers.VerboseTest):
+	resources = [
+		("test_ufunc", _ufuncTestbed)]
+
+	def testBadArgcount(self):
+		self.assertRaisesWithMsg(adql.UfuncError,
+			"gavo_simbadpoint takes exactly one string literal as argument",
+			getMorphed,
+			("SELECT * from test.ufuncex WHERE 1=CONTAINS("
+				"gavo_simbadpoint('aldebaran', 23), CIRCLE('ICRS', ra, dec, 1))",))
+
+	def testBadArgtype(self):
+		self.assertRaisesWithMsg(adql.UfuncError,
+			"gavo_simbadpoint takes exactly one string literal as argument",
+			getMorphed,
+			("SELECT * from test.ufuncex WHERE 1=CONTAINS("
+				"gavo_simbadpoint(testgroup), CIRCLE('ICRS', ra, dec, 1))",))
+
+	def testBadName(self):
+		self.assertRaisesWithMsg(adql.UfuncError,
+			"No simbad position for 'Henker'",
+			getMorphed,
+			("SELECT * from test.ufuncex WHERE 1=CONTAINS("
+				"gavo_simbadpoint('Henker'), CIRCLE('ICRS', ra, dec, 1))",))
+
+	def testResolution(self):
+		self.assertEqual(getMorphed("SELECT * from test.ufuncex WHERE 1=CONTAINS("
+				"gavo_simbadpoint('M1'),"
+				" CIRCLE('ICRS', ra, dec, 1))"),
+			"SELECT * FROM test.ufuncex WHERE ((spoint(RADIANS(83.633083),"
+			" RADIANS(22.014500))) @ (scircle(spoint(RADIANS(ra), RADIANS(dec)),"
+			" RADIANS(1))))")
+
+
+class MotionTest(testhelpers.VerboseTest):
+	resources = [
+		("test_ufunc", _ufuncTestbed),
+		("querier", adqltest.adqlQuerier),]
+
+	def testQueryPMSelect(self):
+		res = adqlglue.query(self.querier,
+			"SELECT ivo_apply_pm(ra, dec, 0.01, -0.01, 23)"
+			" as newpos from test.ufuncex")
+		self.assertEqual(res.rows[0]["newpos"].asSTCS('ICRS'),
+			"Position ICRS 23.5491058437 -12.48")
+
+	def testQueryConstraint(self):
+		res = adqlglue.query(self.querier,
+			"SELECT testgroup from test.ufuncex"
+			" where 1=Contains("
+			"ivo_apply_pm(ra, dec, 0.01, -0.01, 23),"
+			"CIRCLE('ICRS', 23.5491058437, -12.48, 0.01))")
+		self.assertEqual(len(res.rows), 1)
+		self.assertEqual(res.rows[0]["testgroup"], "jd")
 
 
 if __name__=="__main__":

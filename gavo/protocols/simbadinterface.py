@@ -132,6 +132,37 @@ def getSimbadPositions(identifier):
 base.caches.makeCache("getSesame", lambda key: Sesame(key, saveNew=True))
 
 
+############## ADQL ufunc
+
+from gavo import adql
+
+@adql.userFunction("gavo_simbadpoint",
+	"(identifier TEXT) -> POINT",
+	"""
+	gavo_simbadpoint queries simbad for an identifier and returns the 
+	corresponding point.  Note that identifier can only be a literal,
+	i.e., as simple string rather than a column name. This is because
+	our database cannot query simbad, and we probably wouldn't want
+	to fire off millions of simbad queries anyway; use simbad's own
+	TAP service for this kind of applications.
+	""",
+	"point", ucd="pos.eq;src")
+def _simbadpoint(args):
+	if len(args)!=1 or args[0].type!="characterStringLiteral":
+		raise adql.UfuncError(
+			"gavo_simbadpoint takes exactly one string literal as argument")
+
+	object = args[0].value
+
+	resolver = base.caches.getSesame("web")
+	try:
+		alpha, delta = resolver.getPositionFor(object)
+	except KeyError:
+		raise adql.UfuncError("No simbad position for '%s'"%object)
+
+	return "spoint(RADIANS(%f), RADIANS(%f))"%(alpha, delta)
+	
+
 if __name__=="__main__":
 	s = Sesame(debug=True)
 	print s.query("M 33")

@@ -390,31 +390,10 @@ class ADQLCore(svcs.Core, base.RestrictionMixin):
 
 import re
 
-from gavo.adql import nodes
-
 def _getRegionId(regionSpec, pat=re.compile("[A-Za-z_]+")):
 	mat = pat.match(regionSpec)
 	if mat:
 		return mat.group()
-
-from gavo.protocols import simbadinterface #noflake: cache registration
-
-
-def _makeSimbadRegion(regionSpec):
-	if not _getRegionId(regionSpec)=="simbad":
-		return
-	object = "".join(regionSpec.split()[1:])
-	resolver = base.caches.getSesame("web")
-	try:
-		alpha, delta = resolver.getPositionFor(object)
-	except KeyError:
-		raise base.ui.logOldExc(
-			adql.RegionError("No simbad position for '%s'"%object))
-	pt = nodes.Point(x=nodes.NumericValueExpression([repr(alpha)]), 
-		y=nodes.NumericValueExpression([repr(delta)]), 
-		cooSys="ICRS")
-	return pt
-adql.registerRegionMaker(_makeSimbadRegion)
 
 
 ################### local query interface #########################

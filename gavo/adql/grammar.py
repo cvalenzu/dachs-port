@@ -397,6 +397,7 @@ def getADQLGrammarCopy():
 		numericValueExpression << (term + ZeroOrMore( addOperator + term ))
 
 # geometry types and expressions
+		userDefinedFunction = Forward()
 		tapCoordLiteral = Regex("(?i)'(?P<sys>%s)'"%"|".join(stc.TAP_SYSTEMS)
 				).addParseAction(lambda s,p,t: t["sys"].upper())
 		tapCoordLiteral.setName("coordinate system literal (ICRS, GALACTIC,...)")
@@ -429,10 +430,12 @@ def getADQLGrammarCopy():
 		geometryValueExpression = Forward()
 		centroid = (CaselessKeyword("CENTROID")("fName") 
 			+ '(' + Args(geometryValueExpression) + ')')
-		geometryValueExpression << (geometryExpression | geometryValue | centroid)
+		geometryValueExpression << (geometryExpression 
+			| userDefinedFunction
+			| geometryValue 
+			| centroid)
 
 # geometry functions
-		userDefinedFunction = Forward()
 		distanceFunction = (CaselessKeyword("DISTANCE")("fName") 
 			+ '(' + Args(coordValue) + ',' + Args(coordValue) + ')')
 		pointFunction = (Regex("(?i)COORD[12]|COORDSYS")("fName") + '(' +
@@ -442,14 +445,13 @@ def getADQLGrammarCopy():
 		nonPredicateGeometryFunction = (
 			distanceFunction 
 			| pointFunction 
-			| area
-			| userDefinedFunction)
+			| area )
 		predicateGeoFunctionName = Regex("(?i)CONTAINS|INTERSECTS")
 		predicateGeometryFunction = (predicateGeoFunctionName("fName") 
 			+ '(' + Args(geometryValueExpression) 
 			+ ',' + Args(geometryValueExpression) + ')')
-		numericGeometryFunction = (predicateGeometryFunction | 
-			nonPredicateGeometryFunction)
+		numericGeometryFunction = (predicateGeometryFunction 
+			| nonPredicateGeometryFunction)
 
 # miscellaneous function-like things
 		misc5ArgFunctionName = CaselessKeyword("CROSSMATCH")
@@ -724,13 +726,7 @@ if __name__=="__main__":
 	syms, grammar = getADQLGrammar()
 	enableTree(syms)
 	res = syms["querySpecification"].parseString(
-		"""
-		select ivo_string_agg(name, '/') as columns, table_name
-from rr.res_table
-natural join rr.table_column
-where ucd in ('time.age', 'pos.eq.ra;meta.main', 'pos.eq.dec;meta.main')
-and 1=ivo_hasword(table_description, 'star')
-group by table_name
-having ivo_string_agg(ucd, '/') like '%time.age%'"""
+		"""SELECT * from test.ufuncex WHERE 1=CONTAINS(gavo_simbadpoint('aldebaran', 23), CIRCLE('ICRS', ra, dec, 1))
+"""
 		, parseAll=True)
 	pprint.pprint(res.asList(), stream=sys.stderr)

@@ -2030,12 +2030,6 @@ class QueryTest(testhelpers.VerboseTest):
 			" from %s"%self.tableName)
 		self.assertAlmostEqual(res.rows[0]["d"], 2.27447426920956)
 
-	def testWithUDF(self):
-		res = self.runQuery(
-			"SELECT mag FROM %s WHERE 1=CONTAINS(REGION('simbad M1'),"
-			" CIRCLE('ICRS', alpha, delta, 68))"%self.tableName)
-		self.assertEqual(res.rows, [{u'mag': 1.25}])
-
 	def testApplyPM(self):
 		res = self.runQuery(
 			"SELECT ivo_apply_pm(alpha, delta, 0.002, -0.001, -55) as moved"

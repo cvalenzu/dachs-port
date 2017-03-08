@@ -18,7 +18,7 @@ from gavo.adql.common import *
 from gavo.adql.tree import (
 	getTreeBuildingGrammar, registerNode)
 
-from gavo.adql.nodes import (flatten, registerRegionMaker)
+from gavo.adql.nodes import flatten
 
 from gavo.adql.grammar import (
 	getADQLGrammar as getRawGrammar, 
