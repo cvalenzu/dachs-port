@@ -552,6 +552,15 @@ class TableInfoRenderer(MetaRenderer):
 		else:
 			return lambda ctx, data: ""
 
+	def render_iftapinfo(self, ctx, data):
+		"""renders the content if there was a tapinfo key somewhere in
+		the query string.
+		"""
+		if "tapinfo" in inevow.IRequest(ctx).args:
+			return ctx.tag
+		else:
+			return ""
+
 	def data_tableDef(self, ctx, data):
 		return self.table
 

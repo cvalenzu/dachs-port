@@ -569,12 +569,18 @@ class DataPublicationMetaTest(testhelpers.VerboseTest):
 			<table id="ronk"><register sets="ivo_managed,local"/>
 			</table></resource>"""%self._minimalMeta)
 		recs = list(publication._rdRscRecGrammar.parse(rd))
-		self.assertEquals(len(recs), 5)
+		self.assertEquals(len(recs), 6)
 		self.assertEquals(recs[0][0], "resources")
 		self.assertEquals(recs[0][1]["resId"], "ronk")
 		self.assertEquals(recs[1][1]["setName"], "ivo_managed")
 		self.assertEquals(recs[2][1]["setName"], "local")
-		self.assertEquals(recs[3][0], "subjects")
+		self.assertEquals(recs[3][0], "interfaces")
+		self.assertEquals(recs[3][1]["referenceURL"], 
+			'http://localhost:8080/tableinfo/data.ronk')
+		self.assertEquals(recs[3][1]["accessURL"], 
+			'http://localhost:8080/tableinfo/data.ronk?tapinfo=True')
+		self.assertEquals(recs[4][0], "subjects")
+		self.assertEquals(recs[5][0], "authors")
 
 	def testIterDataData(self):
 		rd = base.parseFromString(rscdesc.RD, """<resource schema="data">
@@ -584,14 +590,14 @@ class DataPublicationMetaTest(testhelpers.VerboseTest):
 			<make table="ronk"/><make table="funk"/>
 			</data></resource>"""%self._minimalMeta)
 		recs = list(publication._rdRscRecGrammar.parse(rd))
-		self.assertEquals(len(recs), 5)
+		self.assertEquals(len(recs), 6)
 		self.assertEquals(recs[0][0], "resources")
 		self.assertEquals(recs[0][1]["resId"], "ronkcoll")
 		self.assertEquals(recs[1][1]["setName"], "ivo_managed")
 		self.assertEquals(recs[2][1]["setName"], "local")
-		self.assertEquals(recs[3][0], "subjects")
-		self.assertEquals(recs[4][0], "authors")
-		self.assertEquals(recs[4][1]["author"], "Could be same as contact.name")
+		self.assertEquals(recs[4][0], "subjects")
+		self.assertEquals(recs[5][0], "authors")
+		self.assertEquals(recs[5][1]["author"], "Could be same as contact.name")
 
 	def testRejectedWithoutId(self):
 		self.assertRaisesWithMsg(base.StructureError,

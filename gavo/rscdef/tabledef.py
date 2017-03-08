@@ -938,6 +938,13 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 				self.getURL(None, True),
 				title="Advice on citing this resource")
 
+	def _meta_referenceURL(self):
+		"""returns a link to the table-info page.
+		"""
+		return base.META_CLASSES_FOR_KEYS["_related"](
+			self.getURL(None, True),
+			title="Table information")
+
 
 class FieldRef(base.Structure):
 	"""A reference to a table column for building simple views.

@@ -6,9 +6,41 @@
     <title n:render="title"/>
 		<meta name="robots" content="nofollow"/>
 		<n:invisible n:render="commonhead"/>
+		<style type="text/css">
+			div#tapinfo {
+				margin-left: auto;
+				margin-right: auto;
+				padding-left: 0.5em;
+				padding-right: 0.5em;
+				border-left: 0.7em solid green;
+				border-right: 0.7em solid green;
+				max-width: 30em;
+			}
+		</style>
   </head>
 	<body n:render="withsidebar">
 		<h1 n:render="title"/>
+
+		<div id="tapinfo" n:render="iftapinfo">
+			<p>This resource is only available through this site's TAP service
+			(access url: <strong><n:invisible 
+				n:render="getconfig">[web]serverURL</n:invisible>/tap</strong>).</p>
+
+			<p>You will want to use some sort of client to query TAP services;
+			examples for those include:</p>
+
+			<ul>
+			<li><a href="http://www.star.bris.ac.uk/~mbt/topcat/">TOPCAT</a> 
+			(see in the "VO" menu)</li>
+			<li><a href="http://saada.unistra.fr/taphandle/">TAPHandle</a> (runs
+			in your browser)</li>
+			<li><a href="https://github.com/pyvirtobs/pyvo">PyVO</a> (from within
+			python programs)</li>
+			</ul>
+
+			See <a href="/tap">TAP info on this site</a> for details.
+		</div>
+
 		<h2 class="section">General</h2>
 		<p n:render="ifownmeta description"><strong>Table Description:</strong>
 			<n:invisible n:render="metahtml">description</n:invisible></p>

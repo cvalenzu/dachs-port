@@ -521,10 +521,7 @@
 		* `TAPHandle`_ (following this link should bring you to a page 
 		  that lets you query this server) works completely within your
 		  browser,
-		* the `TAP shell`_, giving you a command line and powerful job chaining
-		  facilities,
-		* the `GAVO VOTable library`_, letting you embed TAP queries in
-		  python programs
+		* pyVO_ (for VO support in python programs)
 		
 		You can, in a pinch, use our service in an XML-enabled browser, too.
 		Under `Overview <#overview>`_, look for the bullet point on tap and
@@ -545,6 +542,7 @@
 		.. _TOPCAT: http://www.star.bris.ac.uk/~mbt/topcat/
 		.. _GAVO VOTable library: http://soft.g-vo.org/subpkgs
 		.. _TAP shell: http://soft.g-vo.org/tapsh
+		.. _pyVO: https://github.com/pyvirtobs/pyvo
 		.. _table metadata: \internallink{__system__/tap/run/tableMetadata}
 		.. _ADQL form service: \internallink{__system__/adql/query/form}
 		.. _service doc of our ADQL form service: \internallink{__system__/adql/query/info}

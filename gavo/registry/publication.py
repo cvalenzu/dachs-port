@@ -164,6 +164,18 @@ def iterDataRecs(res, keepTimestamp=False):
 		rec["setName"] = setName
 		rec["renderer"] = "rcdisplay"
 		yield ("sets", rec.copy())
+		# if we have a local publication, add a fake interface with
+		# an accessURL pointing towards TAP
+		if setName=="local":
+			refURL = base.getMetaText(res, "referenceURL")
+			yield ("interfaces", {
+				"sourceRD": rec["sourceRD"],
+				"resId": rec["resId"],
+				"renderer": "rcdisplay",
+				"accessURL": refURL+"?tapinfo=True" if refURL else None,
+				"referenceURL": refURL,
+				"browseable": False,
+				"deleted": False})
 
 	for pair in iterAuthorsAndSubjects(res, 
 			rec["sourceRD"], rec["resId"]):
