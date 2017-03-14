@@ -762,7 +762,7 @@ def document(origFun):
 
 
 def iterConsecutivePairs(sequence):
-	"""returns pairs of consecutive items from sequence.
+	"""yields pairs of consecutive items from sequence.
 
 	If the last item cannot be paired, it is dropped.
 
@@ -776,6 +776,19 @@ def iterConsecutivePairs(sequence):
 	return itertools.izip(
 		itertools.islice(iter1, None, None, 2),
 		itertools.islice(iter2, None, None, 2))
+
+
+def iterRanges(separators):
+	"""yields (left, right) pairs for a sequence of separators.
+
+	>>> list(iterRanges(range(6)))
+	[(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+	"""
+	i = iter(separators)
+	left = i.next()
+	for right in i:
+		yield left, right
+		left = right
 
 
 def getKeyNoCase(dict, key):

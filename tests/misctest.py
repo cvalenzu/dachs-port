@@ -700,6 +700,30 @@ class TapquerySyncTest(testhelpers.VerboseTest):
 			self.assertEqual(cgi.parse_qs(fakeInfo.lastData)["MAXREC"], ["0"])
 
 
+# this is http://alasky.u-strasbg.fr/footprints/cats/vizier/I/206?product=MOC&nside=64
+_SAMPLE_FITS_MOC = """
+eJztl2tMW2Ucxh810WhijNH4QY05iRq2qEOI2eYFI20PUGxPO9rKZbqtQGFFKKNQKAiJTjeNt206
+3eYE4m2aZYOp87YpxGxeolHHFplm4gSdGjM1Xpbsg7dfwUQyKQRcjInnSX4f+p7zPu//9ianAbfX
+7zENI8eYQEEj0yiOR5uaIjGjvNXw+pxGTbg5bOT63cYs/5y8SDwWbUhEZo/b4nAH/e6SNH7zJ1qc
+XFZuiTtgpPG7fPp+Bf6SVBoT+80l3wIz1+OPJg1vorYp6otXRuKGs745Eg9XR4y68DJjVl04adSn
+1kfTNkuCpuVKW79pa9TMli1btmzZsmXL1n9Wqc+/gNtn5RgZDrcVzHV4zIxxj//6nqwY/xGZXv/q
+93P2DP2y0vhdMUO/7An9sudlTd/P7/SFrODx+7+QP5nfDOIL5rlNjytwHP18Rd7RfmRkFY4tZUy+
+Ywq/YKnfHPNjDk3PMX6ZBrMcqU1NdWqoQ5Z7gRFL1JXzL2li+RyBxRZOafqbaVhju+urjGUp58Yp
+4vMVucwit5VPfNbo6cfG543Eq6OxaoNb6TKNcKzSsMxA0HSN3qq/y+nDMVAawM/559I/qp/9/82W
+LVu2bNmaWlJuBwzAIPwmOR6B/TAE30rO+bAe+mEXsO76QDJdcAdsga+kvCfhRSm/EX6XCrzwPnwv
+uQUnAD7ul6VC3ilcAc/ATnhNuv5CuAzmQjWsgSdgk+Q5BRZIXt717pGs86AQFkE3DEv+TGnBfVIR
+eQROhbNhHXwIn0vB06UQMYTYFyLn0CvwnnTDlbAcboeH4Cep+CQgxuJ7pRLyKr0HOqUy8ijDu2wO
+cF7ZVXBYWpgNxHzjbGnRPGnx+dKSr6Xy76QK8qngWcXbUuVZEIYH4CUgtsoRKXIBmFJVBuBdRR+q
+24C6LvVDMfwgRa8B6h7leQ0x1bwj1Z4LO6RYr1S/AX6UGsivgXfi10mNUdgI9KbxVdgLv0hN1C5x
+GjADCeJPXA0LgbonHgN6k3gW3gTmI0GszXfBC4BXC/taOK/lGylJLZKclaRASTySz0utF8GlwLNW
+4m7NAfrQRg/azgBybcuDh+Fx6ZZrYbfUTq/byam9DlYDzzroXQe97eB3x7vws3RrjbT8JqAuK1qk
+lazfH5NWOeCotPp1aQ3xPJgAZnftiXCOtH67tIFzNxLLoyGpk3p3srdrJTBvXcxPNz3rrgBmq5s+
+dRPXJuJ7ulXazH3YTF+39Ehb6dHW26QeatBDTXsZ9F7mddsb0nPksJ0a7Vgi7WSe+si5j/vS96vU
+T136iau/S9pFb3bfLb3FndpzRBpYCsztAHM3QP33OqV95L8vDvR2EN9Bct9fKX3E748vAeb0AHfr
+AOd+Qq5D9HyImf70YlgL1PAg+R3kLn7GO8PlgMcwMz28TRo5GejTSBAiwF0YuROIa+Qp6YtVcEg6
+dLN0+EzpyJfSUWK3ZcuWLVu2/p/6A9x9I/E=""".decode("base64").decode("zlib")
+
+
 class PgSphereDryTest(testhelpers.VerboseTest):
 # Tests for pgsphere interface that don't need DB connectivity
 # (others are in dbtest)
@@ -745,6 +769,33 @@ class PgSphereDryTest(testhelpers.VerboseTest):
 		self.assertEqual(b.asPoly(),
 			pgsphere.SPoly([pgsphere.SPoint(*p) for p in
 			((-0.1, -0.5), (-0.1, 0.1), (2, 0.1), (2, -0.5))]))
+
+	def testBadMOCRandom(self):
+		self.assertRaisesWithMsg(ValueError,
+			"No order separator visible in MOC literal 'Habe nun Philosophie"
+				"/Juristerei/Medic...'",
+			pgsphere.SMoc.fromASCII,
+			("Habe nun Philosophie/Juristerei/Medicin und leider ach Theologie",))
+
+	def testBadMOCJunkAtStart(self):
+		self.assertRaisesWithMsg(ValueError,
+			"MOC literal 'Habe 1/3,4 3/45,9' does not start with order spec",
+			pgsphere.SMoc.fromASCII,
+			("Habe 1/3,4 3/45,9",))
+	
+	def testJunkInCenter(self):
+		self.assertRaisesWithMsg(ValueError,
+			"MOC literal syntax error at char 4",
+			pgsphere.SMoc.fromASCII,
+			("1/3, Habe, 4 3/45,9",))
+
+	def testMOCConstruction(self):
+		m = pgsphere.SMoc.fromASCII("1/1,3,4 2/4,25,12-14,21")
+		self.assertEqual(m.moc[2], frozenset([4, 12, 13, 14, 21, 25]))
+
+	def testFITSConstructor(self):
+		m = pgsphere.SMoc.fromFITS(_SAMPLE_FITS_MOC)
+		self.assertTrue(14400 in m.moc[6])
 
 
 class KVLParseTest(testhelpers.VerboseTest):

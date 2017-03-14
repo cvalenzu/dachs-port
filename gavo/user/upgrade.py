@@ -87,7 +87,7 @@ def updateExtensions(conn):
 				conn.execute("CREATE EXTENSION %s FROM unpackaged"%extName)
 				conn.commit()
 			elif ins_version!=def_version:
-				conn.execute("ALTER EXTENSION %s UPDATE TO %(ver)s",
+				conn.execute("ALTER EXTENSION %s UPDATE TO %%(ver)s"%extName,
 					{"ver": def_version})
 				conn.commit()
 		# else fall through (either the extension is not installed
@@ -462,8 +462,9 @@ def upgrade(forceDBVersion=None, dryRun=False):
 	"""runs all updates necessary to bring a database to the
 	CURRENT_SCHEMAVERSION.
 
-	Everything is run in one transaction.  Errors lead to the rollback of
-	the whole thing.
+	Unless catastrophic things go on, each upgrade is a transaction
+	of its own; the first failed transaction stops the upgrade at the
+	version last successfully upgraded to.
 	"""
 	if forceDBVersion is None:
 		startVersion = getDBSchemaVersion()
@@ -489,11 +490,14 @@ def upgrade(forceDBVersion=None, dryRun=False):
 					"executing %s"%utils.makeEllipsis(statement, 60))+"... ")
 				conn.execute(statement)
 			showProgress(" ok\n")
-		
-		showProgress("> Ensuring installed extensions' declarations"
-			" are up to date...")
-		updateExtensions(conn)
-		showProgress(" done.\n")
+	
+		if False:
+			# Uh, I forgot that gavoadmin is no superuser, so this
+			# won't really work.  Think about how this can perhaps be automated.
+			showProgress("> Ensuring installed extensions' declarations"
+				" are up to date...")
+			updateExtensions(conn)
+			showProgress(" done.\n")
 
 
 def parseCommandLine():

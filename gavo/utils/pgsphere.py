@@ -15,12 +15,16 @@ All native representation is in rad.
 
 import math
 import re
+from cStringIO import StringIO
 
 from gavo.utils import codetricks
 from gavo.utils import excs
 from gavo.utils import mathtricks
 from gavo.utils import misctricks
+from gavo.utils import texttricks
+from gavo.utils.fitstools import pyfits
 from gavo.utils.mathtricks import DEG
+
 
 _TRAILING_ZEROES = re.compile("0+(\s|$)")
 def removeTrailingZeroes(s):
@@ -342,6 +346,87 @@ class SBox(PgSAdapter):
 			SPoint(maxX, maxY),
 			SPoint(maxX, minY)))
 
+
+try:
+	import pymoc
+	from pymoc.io.fits import read_moc_fits_hdu
+
+	class SMoc(PgSAdapter):
+		"""a MOC with a pgsphere interface.
+
+		The default constructor accepts a pymoc.MOC instance, which is 
+		accessible as the moc attribute.  The database interface uses
+		the ASCII serialisation, for which there's the fromASCII constructor.
+		"""
+		def __init__(self, moc):
+			self.moc = moc
+
+		_orderHeadRE = re.compile(r"(\d+)/")
+		_rangeRE = re.compile(r"\s*(\d+)(?:-(\d+))?\s*$")
+
+		@classmethod
+		def _parseCells(cls, cellLiteral, firstPos):
+			"""returns a sequence of cells from a MOC cell literal.
+
+			firstPos is the string position of the beginning of cellLiteral
+			for error messages.
+			"""
+			curPos = 0
+			cells = []
+
+			for item in cellLiteral.split(","):
+				mat = cls._rangeRE.match(item)
+				if not mat:
+					raise ValueError("MOC literal syntax error at char %s"%
+						(firstPos+curPos))
+
+				if mat.group(2) is None:
+					cells.append(int(mat.group(1)))
+				else:
+					cells.extend(range(int(mat.group(1)), int(mat.group(2))+1))
+
+				curPos += len(item)+1
+
+			return cells
+
+		@classmethod
+		def fromASCII(cls, literal):
+			"""returns an SMoc from a quasi-standard ASCII serialisation.
+			"""
+			# we do the parsing ourselves -- the pymoc interface is too clumsy,
+			# and the rigidity of the parser doesn't look good.
+			seps = list(cls._orderHeadRE.finditer(literal))+[re.search("$", literal)]
+			if len(seps)==1:
+				raise ValueError("No order separator visible in MOC literal '%s'"%
+					texttricks.makeEllipsis(literal, 40))
+			if not re.match(r"\s*$", literal[:seps[0].start()]):
+				raise ValueError("MOC literal '%s' does not start with order spec"%
+					texttricks.makeEllipsis(literal, 40))
+
+			moc = pymoc.MOC()
+
+			for openMat, closeMat in codetricks.iterRanges(seps):
+				order = int(openMat.group(1))
+				cells = cls._parseCells(literal[openMat.end():closeMat.start()],
+					openMat.end())
+				moc.add(order, cells)
+
+			return cls(moc)
+
+		@classmethod
+		def fromFITS(cls, literal):
+			"""returns an SMoc from a string containing a FITS-serialised MOC.
+			"""
+			moc = pymoc.MOC()
+			read_moc_fits_hdu(moc,
+				pyfits.open(StringIO(literal))[1])
+			return cls(moc)
+
+except ImportError:
+	# for now, don't hard-depend on pymoc
+	pass
+
+
 try:
 	import psycopg2
 	from psycopg2.extensions import (register_adapter, AsIs, register_type,
@@ -358,7 +443,8 @@ try:
 			oidmap = _query(conn, 
 				"SELECT typname, oid"
 				" FROM pg_type"
-				" WHERE typname ~ '^s(point|trans|circle|line|ellipse|poly|path|box)'")
+				" WHERE typname ~ "
+				" '^s(point|trans|circle|line|ellipse|poly|path|box|moc)'")
 			for typeName, oid in oidmap:
 				cls = _getPgSClass(typeName)
 				if cls is not PgSAdapter:  # base class is null value
@@ -373,7 +459,7 @@ try:
 
 except ImportError:
 	# psycopg2 not installed.  Since preparsePgSphere can only be
-	# called from code depending on psycopg2, there's not harm if
+	# called from code depending on psycopg2, there's no harm if
 	# we don't define it.
 	pass
 
