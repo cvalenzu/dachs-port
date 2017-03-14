@@ -35,6 +35,12 @@ class _COMMIT(object):
 CURRENT_SCHEMAVERSION = 15
 
 
+# this is a list of names of postgres extensions we'd like to see
+# in DaCHS databases.  We will, in particular, upgrade them as new
+# versions come around.
+RELEVANT_EXTENSIONS = ["pg_sphere", "q3c", "pg_trgm"]
+
+
 class AnnotatedString(str):
 	"""a string with an annotation.
 	
@@ -63,6 +69,29 @@ def getDBSchemaVersion():
 		return int(base.getDBMeta("schemaversion"))
 	except (KeyError, base.DBError):
 		return -1
+
+
+def updateExtensions(conn):
+	"""ensures that RELEVANT_EXTENSIONS are installed and on the latest
+	version.
+	"""
+	for extName in RELEVANT_EXTENSIONS:
+		res = list(conn.query(
+			"SELECT default_version, installed_version"
+			" FROM pg_available_extensions"
+			" WHERE name=%(extName)s", locals()))
+
+		if res:
+			def_version, ins_version = res[0]
+			if ins_version is None:
+				conn.execute("CREATE EXTENSION %s FROM unpackaged"%extName)
+				conn.commit()
+			elif ins_version!=def_version:
+				conn.execute("ALTER EXTENSION %s UPDATE TO %(ver)s",
+					{"ver": def_version})
+				conn.commit()
+		# else fall through (either the extension is not installed
+		# or it's up to date)
 
 
 class Upgrader(object):
@@ -400,6 +429,7 @@ class To14Upgrader(Upgrader):
 				continue
 			rsc.makeData(dd, forceSource=rd, connection=connection)
 
+
 class To15Upgrader(Upgrader):
 	version = 14
 
@@ -409,7 +439,6 @@ class To15Upgrader(Upgrader):
 				"dc.datalinkjobs", "uws.userjobs", "tap_schema.tapjobs"]:
 			connection.execute("ALTER TABLE IF EXISTS %s"
 					" ADD COLUMN creationTime TIMESTAMP"%tableName)
-
 
 # next upgrade: drop DM declaration for Obscore 1.0
 
@@ -441,9 +470,6 @@ def upgrade(forceDBVersion=None, dryRun=False):
 	else:
 		startVersion = forceDBVersion
 
-	if startVersion==CURRENT_SCHEMAVERSION:
-		return
-
 	with base.getWritableAdminConn() as conn:
 		for statement in iterStatements(startVersion, CURRENT_SCHEMAVERSION):
 			if statement is _COMMIT:
@@ -463,6 +489,11 @@ def upgrade(forceDBVersion=None, dryRun=False):
 					"executing %s"%utils.makeEllipsis(statement, 60))+"... ")
 				conn.execute(statement)
 			showProgress(" ok\n")
+		
+		showProgress("> Ensuring installed extensions' declarations"
+			" are up to date...")
+		updateExtensions(conn)
+		showProgress(" done.\n")
 
 
 def parseCommandLine():
