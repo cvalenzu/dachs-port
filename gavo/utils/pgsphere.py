@@ -470,6 +470,11 @@ try:
 		def asPoly(self):
 			raise TypeError("MOCs cannot be represented as polygons")
 
+		def asSTCS(self, frame):
+			# no STCS for MOCs, but this is really just for VOTable serialisation,
+			# so let's cheat
+			return self.asASCII()
+
 except ImportError:
 	# for now, don't hard-depend on pymoc
 	pass

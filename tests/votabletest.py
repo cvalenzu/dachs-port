@@ -464,16 +464,13 @@ class VOTableRenderTest(testhelpers.VerboseTest):
 
 	def _getAsETree(self, colDef, **contextArgs):
 		vot = self._getAsVOTable(colDef, **contextArgs)
-		return ElementTree.fromstring(vot)
-
-	def _getEls(self, tree, elementName):
-		return tree.findall(".//%s"%votable.voTag(elementName))
+		return testhelpers.getXMLTree(vot, debug=False)
 
 
 class ParamNullValueTest(VOTableRenderTest):
 	def _getParamsFor(self, colDef):
 		tree = self._getAsETree(colDef)
-		return self._getEls(tree, "PARAM")
+		return tree.xpath("//PARAM")
 
 	def _getParamFor(self, colDef):
 		pars = self._getParamsFor(colDef)
@@ -506,15 +503,14 @@ class ParamNullValueTest(VOTableRenderTest):
 		par = self._getParamFor(
 			'<param name="x" type="integer"><values nullLiteral="-1"/>-1</param>')
 		self.assertEqual(par.get("value"), "")
-		self.assertEqual(par[0].tag, votable.voTag("VALUES"))
+		self.assertEqual(par[0].tag, "VALUES")
 		self.assertEqual(par[0].get("null"), "-1")
 
 	def testIntDefault(self):
 		table = self._getTable('<param name="x" type="integer"/>')
 		table.setParam("x", None)
-		par = self._getEls(
-			ElementTree.fromstring(
-				votablewrite.getAsVOTable(table)), "PARAM")[0]
+		par = testhelpers.getXMLTree(votablewrite.getAsVOTable(table)
+			).xpath("//PARAM")[0]
 		self.assertEqual(par.get("value"), '')
 
 	def testFloatNaN(self):
@@ -525,10 +521,9 @@ class ParamNullValueTest(VOTableRenderTest):
 		par = self._getParamFor('<param name="x"/>')
 		self.assertEqual(par.get("value"), "")
 
-
 	def testNonNullNotDeclared(self):
 		par = self._getParamsFor('<param name="z" type="text">abc</param>')[0]
-		self.assertEqual(self._getEls(par, "VALUES"), [])
+		self.assertEqual(len(par.xpath("VALUES")), 0)
 
 
 class TabledataNullValueTest(VOTableRenderTest):
@@ -577,21 +572,32 @@ class BinaryNullValueTest(VOTableRenderTest):
 		tree = self._getAsETree('<column name="x" type="real[]"/>',
 			tablecoding="binary")
 		self.assertEqual(
-			self._getEls(tree, "STREAM")[0].text.decode("base64"),
+			tree.xpath("//STREAM")[0].text.decode("base64"),
 			'\x00\x00\x00\x00')
+
+
+class GeometryTest(VOTableRenderTest):
+	def testMOC(self):
+		tree = self._getAsETree('<column name="x" type="smoc"/>',
+			rows=[{'x': pgsphere.SMoc.fromASCII("5/10,11,12,4 6/564-579,580,581")}])
+		self.assertEqual(tree.xpath("RESOURCE/TABLE/FIELD[@name='x']")[
+			0].get("xtype"), "adql:REGION")
+		self.assertEqual(
+			tree.xpath("RESOURCE/TABLE/DATA/TABLEDATA/TR/TD")[0].text,
+			"5/4,10-12 6/564-581")
 
 
 class GeoXtypeTest(VOTableRenderTest):
 	def testRegionXtype(self):
 		tree = self._getAsETree('<column name="x" type="spoly"/>')
 		self.assertEqual(
-			self._getEls(tree, "FIELD")[0].get("xtype"), 
+			tree.xpath("//FIELD")[0].get("xtype"), 
 			"adql:REGION")
 
 	def testPointXtype(self):
 		tree = self._getAsETree('<column name="x" type="spoint"/>')
 		self.assertEqual(
-			self._getEls(tree, "FIELD")[0].get("xtype"), 
+			tree.xpath("//FIELD")[0].get("xtype"), 
 			"adql:POINT")
 
 

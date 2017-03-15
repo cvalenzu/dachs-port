@@ -107,6 +107,7 @@ class ToVOTableConverter(FromSQLConverter):
 		"scircle": ("char", "*", "adql:REGION"),
 		"sbox": ("char", "*", "adql:REGION"),
 		"spoly": ("char", "*", "adql:REGION"),
+		"smoc": ("char", "*", "adql:REGION"),
 		"unicode": ("unicodeChar", "*", None),
 	}
 
