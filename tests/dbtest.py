@@ -409,14 +409,16 @@ class TestPgSphere(testhelpers.VerboseTest):
 		testhelpers.VerboseTest.setUp(self)
 		pgsphere.preparePgSphere(self.conn)
 
-	def assertTripsRound(self, testedType, testValue):
-		cursor = self.conn.cursor()
-		cursor.execute("CREATE TABLE pgstest (col %s)"%testedType)
-		cursor.execute("INSERT INTO pgstest (col) VALUES (%(val)s)",
+	def makeTable(self, testedType, testValue):
+		self.conn.execute("CREATE TABLE pgstest (col %s)"%testedType)
+		self.conn.execute("INSERT INTO pgstest (col) VALUES (%(val)s)",
 			{"val": testValue})
-		cursor.execute("SELECT * from pgstest")
-		self.assertEqual(list(cursor)[0][0], testValue)
-		cursor.execute("DROP TABLE pgstest")
+
+	def assertTripsRound(self, testedType, testValue):
+		self.makeTable(testedType, testValue)
+		res = list(self.conn.query("SELECT * from pgstest"))
+		self.assertEqual(res[0][0], testValue)
+		self.conn.rollback()
 
 	def testSPoints(self):
 		self.assertTripsRound("spoint", pgsphere.SPoint(2,0.5))
@@ -436,6 +438,10 @@ class TestPgSphere(testhelpers.VerboseTest):
 			pgsphere.SBox(pgsphere.SPoint(2.5,-0.5),
 				pgsphere.SPoint(2.0,0.5)))
 
+	def testSMocRoundTrip(self):
+		self.assertTripsRound("smoc",
+			pgsphere.SMoc.fromASCII('29/2-5,20-29,123,444,17-21,33-39,332-339,0-1'))
+	
 
 class TestWithDataImport(testhelpers.VerboseTest):
 	"""base class for tests importing data up front.

@@ -358,6 +358,9 @@ try:
 		accessible as the moc attribute.  The database interface uses
 		the ASCII serialisation, for which there's the fromASCII constructor.
 		"""
+		pgType = "smoc"
+		checkedAttributes = ["moc"]
+
 		def __init__(self, moc):
 			self.moc = moc
 
@@ -413,6 +416,39 @@ try:
 
 			return cls(moc)
 
+		@staticmethod
+		def _formatASCIIRange(minCell, maxCell):
+			"""returns a cell literal for a MOC.
+			"""
+			if minCell==maxCell:
+				return str(minCell)
+			else:
+				return "%d-%d"%(minCell, maxCell)
+
+		def asASCII(self):
+			"""returns an ascii serialisation of this MOC.
+			"""
+			# this is essentially the pymoc code, but again saving the file 
+			# interface that we don't want here.
+			parts = []
+			for order, cells in self.moc:
+				ranges = []
+				rmin = rmax = None
+
+				for cell in sorted(cells):
+					if rmin is None:
+						rmin = rmax = cell
+					elif rmax==cell-1:
+						rmax = cell
+					else:
+						ranges.append(self._formatASCIIRange(rmin, rmax))
+						rmin = rmax = cell
+
+				ranges.append(self._formatASCIIRange(rmin, rmax))
+				parts.append("%d/%s"%(order, ",".join(ranges)))
+
+			return " ".join(parts)
+
 		@classmethod
 		def fromFITS(cls, literal):
 			"""returns an SMoc from a string containing a FITS-serialised MOC.
@@ -421,6 +457,18 @@ try:
 			read_moc_fits_hdu(moc,
 				pyfits.open(StringIO(literal))[1])
 			return cls(moc)
+
+		@staticmethod
+		def _adaptToPgSphere(smoc):
+			return AsIs("smoc '%s'"%(smoc.asASCII()))
+
+		@classmethod
+		def _castFromPgSphere(cls, value, cursor):
+			if value is not None:
+				return cls.fromASCII(value)
+
+		def asPoly(self):
+			raise TypeError("MOCs cannot be represented as polygons")
 
 except ImportError:
 	# for now, don't hard-depend on pymoc

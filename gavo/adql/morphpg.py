@@ -180,7 +180,7 @@ def _booleanizeGeoPredsPGS(node, operator, operand):
 	they are arguments to a suitable comparison.
 	"""
 	if node.funName=="CONTAINS":
-		geoOp = "@"
+		geoOp = "<@"
 	elif node.funName=="INTERSECTS":
 		geoOp = "&&"
 	else:

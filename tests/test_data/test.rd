@@ -180,6 +180,11 @@
 	<table original="adql" id="csdata" onDisk="True">
 	</table>
 
+	<table onDisk="True" id="adqlgeo" adql="True">
+		<column name="row_id" type="text"/>
+		<column name="a_moc" type="smoc"/>
+	</table>
+
 	<data id="ADQLTest">
 		<sources pattern="data/adqlin.txt"/>
 		<rowmaker id="AT_adql" idmaps="alpha,delta,mag,rV">
@@ -187,6 +192,11 @@
 		</rowmaker>
 		<reGrammar names="alpha, delta, mag, rV, tinyflag"/>
 		<make table="adql" rowmaker="AT_adql"/>
+	</data>
+
+	<data id="import_adqlgeo">
+		<dictlistGrammar/>
+		<make table="adqlgeo"/>
 	</data>
 
 	<data id="csTestTable">

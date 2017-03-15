@@ -797,6 +797,11 @@ class PgSphereDryTest(testhelpers.VerboseTest):
 		m = pgsphere.SMoc.fromFITS(_SAMPLE_FITS_MOC)
 		self.assertTrue(14400 in m.moc[6])
 
+	def testToASCII(self):
+		m = pgsphere.SMoc.fromASCII("1/1,3,4 2/4,25,12-14,21")
+		self.assertEqual(m.asASCII(),
+			"1/1,3-4 2/4,12-14,21,25")
+
 
 class KVLParseTest(testhelpers.VerboseTest):
 # Tests for our key-value line format (as in postgres)

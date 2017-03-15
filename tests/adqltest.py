@@ -29,6 +29,7 @@ from gavo.imp import pyparsing
 from gavo.protocols import adqlglue
 from gavo.protocols import tap
 from gavo.stc import tapstc
+from gavo.utils import pgsphere
 
 import tresc
 
@@ -66,6 +67,35 @@ class _ADQLTestTable(testhelpers.TestResource):
 		ds.dropTables(rsc.parseNonValidating)
 		ds.commitAll().closeAll()
 adqlTestTable = _ADQLTestTable()
+
+
+class _GeometryTable(testhelpers.TestResource):
+	resources = [("conn", tresc.dbConnection)]
+
+	def _makeRow(self, row_id=None, a_moc=None):
+		return locals()
+
+	def _iterRows(self):
+		yield self._makeRow("moc-6-1", 
+			a_moc = pgsphere.SMoc.fromASCII("6/450"),)
+		yield self._makeRow("moc-4-1", 
+			a_moc = pgsphere.SMoc.fromASCII("4/28"),)
+
+	def make(self, deps):
+		self.rd = testhelpers.getTestRD()
+		ds = rsc.makeData(self.rd.getById("import_adqlgeo"),
+			connection=deps["conn"],
+			forceSource=self._iterRows())
+		tap.publishToTAP(self.rd, deps["conn"])
+		return ds
+	
+	def clean(self, ds):
+		ds.tables.values()[0].connection.rollback()
+		ds.dropTables(rsc.parseNonValidating)
+		ds.commitAll().closeAll()
+geomTestTable = _GeometryTable()
+
+
 
 
 class SymbolsParseTest(testhelpers.VerboseTest):
@@ -1888,7 +1918,8 @@ class GlueTest(testhelpers.VerboseTest):
 class QueryTest(testhelpers.VerboseTest):
 	"""performs some actual queries to test the whole thing.
 	"""
-	resources = [("ds",  adqlTestTable), ("querier", adqlQuerier)]
+	resources = [("ds",  adqlTestTable), ("querier", adqlQuerier),
+		("geomds", geomTestTable)]
 
 	def setUp(self):
 		testhelpers.VerboseTest.setUp(self)
@@ -2049,6 +2080,16 @@ class QueryTest(testhelpers.VerboseTest):
 		self.assertEqual(ann["feature"]["geometry"]["type"], "sepcoo")
 		self.assertEqual(ann["feature"]["geometry"]["latitude"].value, 
 			res.tableDef.getByName("delta"))
+
+	def testMOCVsPoint(self):
+		res = self.runQuery("SELECT row_id FROM test.adqlgeo"
+			" WHERE 1=CONTAINS(POINT('ICRS', 55.5, 20.7), a_moc)")
+		self.assertEqual([r["row_id"] for r in res.rows],
+			['moc-6-1', 'moc-4-1'])
+		res = self.runQuery("SELECT row_id FROM test.adqlgeo"
+			" WHERE 1=CONTAINS(POINT('ICRS', 56, 21), a_moc)")
+		self.assertEqual([r["row_id"] for r in res.rows],
+			['moc-4-1'])
 
 
 class SimpleSTCSTest(testhelpers.VerboseTest):

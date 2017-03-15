@@ -149,6 +149,7 @@ class ToADQLConverter(FromSQLConverter):
 		"scircle": ("REGION", 1),
 		"spoly": ("REGION", 1),
 		"sbox": ("REGION", 1),
+		"smoc": ("REGION", 1),
 		"bytea": ("BLOB", None),
 	}
 
@@ -191,6 +192,7 @@ class ToPythonBase(FromSQLConverter):
 		"scircle": "parseSimpleSTCS", 
 		"spoly": "parseSimpleSTCS",
 		"sbox": "identity",  # hmha, there's no STC-S for this kind of box...
+		"smoc": "identity",  # use pgsphere.SMoc.fromASCII
 		"bytea": "identity",
 		"raw": "identity",
 		"file": "identity",
@@ -274,6 +276,7 @@ class ToLiteralConverter(object):
 #		"scircle": str,
 #		"spoly": str,
 #		"sbox": str,
+#		"smoc": str,
 	}
 
 	def convert(self, type):
@@ -342,6 +345,7 @@ class ToPgTypeValidatorConverter(FromSQLConverter):
 		"scircle": dontCheck, # for now
 		"sbox": dontCheck, # for now
 		"spoly": dontCheck, # for now
+		"smap": dontCheck, # for now
 		"unicode": makeChecker("text"),
 	}
 
