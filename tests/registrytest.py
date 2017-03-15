@@ -892,7 +892,7 @@ class TablePublicationRecordTest(testhelpers.VerboseTest):
 		self.assertEqual(self.tree.xpath(
 			"capability[@standardID='ivo://ivoa.net/std/TAP#aux']"
 			"/interface[@role='std']/accessURL")[0].text,
-			"http://localhost:8080/__system__/tap/run/tap")
+			"http://localhost:8080/tap")
 
 	def _testWebCapabilityPresent(self):
 		# that's currently not happening, as we don't create anonymous
@@ -952,7 +952,7 @@ class DataGetRecordTest(testhelpers.VerboseTest, testtricks.XSDTestMixin):
 		self.assertEqual(self.srcAndTree[1].xpath(
 			"//capability[@standardID='ivo://ivoa.net/std/TAP#aux']"
 			"/interface[@role='std']/accessURL")[0].text,
-			"http://localhost:8080/__system__/tap/run/tap")
+			"http://localhost:8080/tap")
 
 	def testReducedCapabilityElement(self):
 		capChildren = self.srcAndTree[1].xpath("//capability/*")
@@ -1345,7 +1345,7 @@ class OtherServiceTest(testhelpers.VerboseTest):
 		self.assertEqual(self.treeAndRecs[0].xpath(
 				"//capability[@standardID='ivo://ivoa.net/std/TAP#aux']"
 					"/interface/accessURL")[0].text,
-			"http://localhost:8080/__system__/tap/run/tap")
+			"http://localhost:8080/tap")
 
 	def testDBFormLink(self):
 		webIntf = [r for r in self.treeAndRecs[1] if r["browseable"]]

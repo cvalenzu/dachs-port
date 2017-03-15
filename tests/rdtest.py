@@ -214,7 +214,7 @@ class TAP_SchemaTest(testhelpers.VerboseTest):
 			(q.query("select table_name from TAP_SCHEMA.tables where sourcerd"
 			" = %(rdid)s", {"rdid": self.rd.sourceId})))
 		self.assertEqual(tables, set([
-			'test.adqltable', 'test.adql', 'test.pgs_siaptable']))
+			'test.adqltable', 'test.adql', 'test.pgs_siaptable', 'test.adqlgeo']))
 		columns = set(r[0] for r in
 			(q.query("select column_name from TAP_SCHEMA.columns where sourcerd"
 			" = %(rdid)s", {"rdid": self.rd.sourceId})))

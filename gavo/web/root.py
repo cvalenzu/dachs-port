@@ -11,7 +11,6 @@ The root resource of the data center.
 import os
 import re
 import time
-from cStringIO import StringIO
 
 from twisted.python import threadable
 threadable.init()
@@ -34,40 +33,10 @@ from gavo.web import jsonquery
 from gavo.web import metarender
 from gavo.web import weberrors
 
-from gavo.svcs import (Error, UnknownURI, WebRedirect)
+from gavo.svcs import (UnknownURI, WebRedirect)
 
 
 MEM_DEBUG = False
-
-class VanityLineError(Error):
-	"""parse error in vanity file.
-	"""
-	def __init__(self, msg, lineNo, src):
-		Error.__init__(msg)
-		self.msg, self.lineNo, self.src = msg, lineNo, src
-
-	def __str__(self):
-		return "Mapping file %s, line %d: %s"%(
-			repr(self.src), self.msg, self.lineNo)
-
-
-builtinVanity = """
-	__system__/products/p/get getproduct
-	__system__/products/p/dlasync datalinkuws
-	__system__/services/registry/pubreg.xml oai.xml
-	__system__/services/overview/external odoc
-	__system__/dc_tables/show/tablenote tablenote
-	__system__/dc_tables/show/tableinfo tableinfo
-	__system__/services/overview/admin seffe
-	__system__/services/overview/rdinfo browse
-	__system__/tap/run/tap tap
-	__system__/adql/query/form adql !redirect
-"""
-
-
-def loadUserVanity(siteClass):
-	siteClass.parseVanityMap(os.path.join(base.getConfig("configDir"), 
-		"vanitynames.txt"))
 
 
 def makeDynamicPage(pageClass):
@@ -153,29 +122,6 @@ class ArchiveService(rend.Page):
 	def addMapping(cls, key, segments):
 		cls.mappings[key] = segments
 
-	knownVanityOptions = set(["!redirect"])
-
-	@classmethod
-	def _parseVanityLines(cls, src):
-		"""a helper for parseVanityMap.
-		"""
-		lineNo = 0
-		for ln in src:
-			lineNo += 1
-			ln = ln.strip()
-			if not ln or ln.startswith("#"):
-				continue
-			parts = ln.split()
-			if not 1<len(parts)<4:
-				raise VanityLineError("Wrong number of words in '%s'"%ln, lineNo, src)
-			options = []
-			if len(parts)>2:
-				options.append(parts.pop())
-				if options[-1] not in cls.knownVanityOptions:
-					raise VanityLineError("Bad option '%s'"%options[-1], lineNo, src)
-			dest, src = parts
-			yield src, dest, options
-	
 	@classmethod
 	def _addVanityRedirect(cls, src, dest, options):
 		"""a helper for parseVanityMap.
@@ -189,22 +135,11 @@ class ArchiveService(rend.Page):
 			cls.addMapping(src, dest.split("/"))
 
 	@classmethod
-	def parseVanityMap(cls, inFile):
-		"""adds mappings from inFile (which can be a file object or a name).
-
-		The input file format is documented in tutorial.txt, The Vanity Map.
-
-		If inFile is a file object, it will be closed as a side effect.
+	def installVanityMap(cls):
+		"""builds the redirects prescribed by the system-wide vanity map.
 		"""
-		if isinstance(inFile, basestring):
-			if not os.path.isfile(inFile):
-				return
-			inFile = open(inFile)
-		try:
-			for src, dest, options in cls._parseVanityLines(inFile):
-				cls._addVanityRedirect(src, dest, options)
-		finally:
-			inFile.close()
+		for src, (dest, options) in svcs.getVanityMap().shortToLong.iteritems():
+			cls._addVanityRedirect(src, dest, options)
 	
 	def renderHTTP(self, ctx):
 		# this is only ever executed on the root URL.  For consistency
@@ -376,8 +311,7 @@ if (base.getConfig("web", "favicon")
 	ArchiveService.addStatic("favicon.ico",
 		static.File(base.getConfig("web", "favicon")))
 
-ArchiveService.parseVanityMap(StringIO(builtinVanity))
-loadUserVanity(ArchiveService)
+ArchiveService.installVanityMap()
 
 root = ArchiveService()
 

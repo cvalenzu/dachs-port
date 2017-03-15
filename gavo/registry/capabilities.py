@@ -12,6 +12,7 @@ need the service object, use publication.parent.
 #c This program is free software, covered by the GNU GPL.  See the
 #c COPYING file in the source distribution.
 
+import urlparse
 
 from gavo import base
 from gavo import svcs
@@ -70,10 +71,19 @@ class InterfaceMaker(object):
 	interfaceClass = VOR.interface
 
 	def _makeInterface(self, publication):
+		accessURL = base.getMetaText(publication, "accessURL",
+					macroPackage=publication.parent)
+
+		parts = urlparse.urlparse(accessURL)
+		map = svcs.getVanityMap().longToShort
+		localpart = parts.path[1:]
+		if localpart in map:
+			accessURL = urlparse.urlunsplit(parts[:2]+
+				(map[localpart],)+parts[3:5])
+
 		return self.interfaceClass[
 			VOR.accessURL(use=base.getMetaText(publication, "urlUse"))[
-				base.getMetaText(publication, "accessURL",
-					macroPackage=publication.parent)],
+				accessURL],
 			VOR.securityMethod(
 				standardId=base.getMetaText(publication, "securityId")),
 		]

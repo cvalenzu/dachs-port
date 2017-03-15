@@ -50,3 +50,5 @@ from gavo.svcs.standardcores import (DBCore, CondDesc,
 from gavo.svcs.computedcore import ComputedCore
 
 from gavo.svcs.uploadcores import UploadCore
+
+from gavo.svcs.vanity import getVanityMap
