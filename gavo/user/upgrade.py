@@ -37,12 +37,6 @@ class _COMMIT(object):
 CURRENT_SCHEMAVERSION = 15
 
 
-# this is a list of names of postgres extensions we'd like to see
-# in DaCHS databases.  We will, in particular, upgrade them as new
-# versions come around.
-RELEVANT_EXTENSIONS = ["pg_sphere", "q3c", "pg_trgm"]
-
-
 class AnnotatedString(str):
 	"""a string with an annotation.
 	
@@ -473,7 +467,7 @@ def iterStatements(startVersion, endVersion=CURRENT_SCHEMAVERSION,
 		yield _COMMIT
 
 
-def upgrade(forceDBVersion=None, dryRun=False):
+def upgrade(forceDBVersion=None):
 	"""runs all updates necessary to bring a database to the
 	CURRENT_SCHEMAVERSION.
 
@@ -489,8 +483,6 @@ def upgrade(forceDBVersion=None, dryRun=False):
 	with base.getWritableAdminConn() as conn:
 		for statement in iterStatements(startVersion, CURRENT_SCHEMAVERSION):
 			if statement is _COMMIT:
-				if dryRun:
-					conn.rollback()
 				conn.commit()
 
 			elif callable(statement):
@@ -506,14 +498,6 @@ def upgrade(forceDBVersion=None, dryRun=False):
 				conn.execute(statement)
 			showProgress(" ok\n")
 	
-		if False:
-			# Uh, I forgot that gavoadmin is no superuser, so this
-			# won't really work.  Think about how this can perhaps be automated.
-			showProgress("> Ensuring installed extensions' declarations"
-				" are up to date...")
-			updateExtensions(conn)
-			showProgress(" done.\n")
-
 
 def parseCommandLine():
 	from gavo.imp import argparse
@@ -522,9 +506,6 @@ def parseCommandLine():
 		" database's schema version.  If you don't develop DaCHS, you"
 		" almost certainly should stay clear of this flag", type=int,
 		dest="forceDBVersion", default=None)
-	parser.add_argument("--dry-run", help="do not commit at the end of"
-		" the upgrade; this will not change anything in the database",
-		dest="dryRun", action="store_true")
 	parser.add_argument("-e", "--get-extension-script",
 		help="Dump a script to update DaCHS-managed extensions (will"
 		" print nothing if no extensions need updating).  This will return"
