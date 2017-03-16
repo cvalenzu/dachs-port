@@ -21,6 +21,8 @@ with the code (or so I hope).
 
 import sys
 
+from psycopg2 import extensions
+
 from gavo import base
 from gavo import rsc
 from gavo import rscdesc  #noflake: for cache registration
@@ -71,11 +73,12 @@ def getDBSchemaVersion():
 		return -1
 
 
-def updateExtensions(conn):
-	"""ensures that RELEVANT_EXTENSIONS are installed and on the latest
-	version.
+def dumpExtensionUpdater(conn):
+	"""prints SQL to bring [db]managedExtensions up to date.
 	"""
-	for extName in RELEVANT_EXTENSIONS:
+	statements = []
+
+	for extName in base.getConfig("db", "managedextensions"):
 		res = list(conn.query(
 			"SELECT default_version, installed_version"
 			" FROM pg_available_extensions"
@@ -84,14 +87,26 @@ def updateExtensions(conn):
 		if res:
 			def_version, ins_version = res[0]
 			if ins_version is None:
-				conn.execute("CREATE EXTENSION %s FROM unpackaged"%extName)
-				conn.commit()
+				# extra treatment for some magic extensions that may have been
+				# present from before postgres' proper extension mechanism.
+				if extName in ['q3c', 'pg_sphere']:
+					statements.append("CREATE EXTENSION %s FROM unpackaged;"%extName)
+				else:
+					statements.append("CREATE EXTENSION %s;"%extName)
+
 			elif ins_version!=def_version:
-				conn.execute("ALTER EXTENSION %s UPDATE TO %%(ver)s"%extName,
-					{"ver": def_version})
-				conn.commit()
-		# else fall through (either the extension is not installed
-		# or it's up to date)
+				statements.append("ALTER EXTENSION %s UPDATE TO %s;"%(
+					extName,
+					extensions.adapt(def_version).getquoted()))
+			# else fall through (either the extension is not installed
+			# or it's up to date)
+	
+	if statements:
+		print("\n".join(statements)+"\n")
+		return 0
+
+	else:
+		return 1
 
 
 class Upgrader(object):
@@ -510,9 +525,18 @@ def parseCommandLine():
 	parser.add_argument("--dry-run", help="do not commit at the end of"
 		" the upgrade; this will not change anything in the database",
 		dest="dryRun", action="store_true")
+	parser.add_argument("-e", "--get-extension-script",
+		help="Dump a script to update DaCHS-managed extensions (will"
+		" print nothing if no extensions need updating).  This will return"
+		" 0 if material was written, 1 otherwise.",
+		dest="dumpExtScript", action="store_true")
 	return parser.parse_args()
 
 
 def main():
 	args = parseCommandLine()
-	upgrade(args.forceDBVersion, args.dryRun)
+	if args.dumpExtScript:
+		with base.getTableConn() as conn:
+			sys.exit(dumpExtensionUpdater(conn))
+	else:
+		upgrade(args.forceDBVersion, args.dryRun)

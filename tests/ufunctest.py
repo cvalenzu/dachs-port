@@ -278,7 +278,8 @@ class HealpixExecTest(testhelpers.VerboseTest):
 
 class SimbadpointTest(testhelpers.VerboseTest):
 	resources = [
-		("test_ufunc", _ufuncTestbed)]
+		("test_ufunc", _ufuncTestbed),
+		("fs", tresc.fakedSimbad)]
 
 	def testBadArgcount(self):
 		self.assertRaisesWithMsg(adql.UfuncError,
@@ -305,7 +306,7 @@ class SimbadpointTest(testhelpers.VerboseTest):
 		self.assertEqual(getMorphed("SELECT * from test.ufuncex WHERE 1=CONTAINS("
 				"gavo_simbadpoint('M1'),"
 				" CIRCLE('ICRS', ra, dec, 1))"),
-			"SELECT * FROM test.ufuncex WHERE ((spoint(RADIANS(83.633083),"
+			"SELECT * FROM test.ufuncex WHERE ((spoint(RADIANS(83.656250),"
 			" RADIANS(22.014500))) @ (scircle(spoint(RADIANS(ra), RADIANS(dec)),"
 			" RADIANS(1))))")
 

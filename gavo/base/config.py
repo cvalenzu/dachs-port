@@ -478,7 +478,7 @@ _config = Configuration(
 		IntConfigItem("maxSlowPollWait", "300", "Maximal time a UWS 1.1-WAIT"
 			" request will delay the response.  This should be smaller than"
 			" what you have as timeout on outgoing connections."),
-),
+	),
 
 	Section('ui', "Settings concerning the local user interface",
 		StringConfigItem("outputEncoding", "iso-8859-1",
@@ -499,6 +499,9 @@ _config = Configuration(
 		SetConfigItem("adqlProfiles", "untrustedquery", "Name(s) of profiles that"
 			" get access to tables opened for ADQL"),
 		IntConfigItem("defaultLimit", "100", "Default match limit for DB queries"),
+		ListConfigItem("managedExtensions", 
+			"pg_sphere",
+			"Name(s) of postgres extensions gavo upgrade -e should watch"),
 	),
 	
 	MagicSection('profiles', 'Ignored and deprecated, only here for backward'
