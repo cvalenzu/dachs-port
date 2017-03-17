@@ -25,7 +25,7 @@ from gavo.base import (getConfig, setConfig, getBinaryName,
 	getDBConnection, DBError,
 	UnmanagedQuerier, AdhocQuerier, 
 	getTableConn, getAdminConn, getUntrustedConn,
-	getWritableAdminConn,
+	getWritableTableConn, getWritableAdminConn,
 	NoMetaKey, Error, StructureError, ValidationError, LiteralParseError, 
 	ReportableError, NotFoundError, RDNotFound, SourceParseError, DataError,
 	MetaValidationError, BadUnit, BadCode,
@@ -57,5 +57,6 @@ from gavo.svcs import (UnknownURI, ForbiddenURI, Authenticate,
 	WebRedirect, SeeOther, Core, OutputTableDef)
 
 from gavo.user.logui import LoggingUI
+from gavo.user.plainui import StingyPlainUI, PlainUI
 
 from gavo.votable import VOTableError, ADQLTAPJob
