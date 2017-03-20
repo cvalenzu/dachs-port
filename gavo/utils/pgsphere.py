@@ -194,7 +194,7 @@ class SCircle(PgSAdapter):
 
 		points = []
 		for i in range(nSegments):
-			angle = i/16.*math.pi
+			angle = 2.*i*math.pi/nSegments
 			dx, dy = r*math.sin(angle), r*math.cos(angle)
 			points.append(SPoint(
 				*mathtricks.cartToSpher(rotationMatrix.vecMul((dx, dy, innerOffset)))))

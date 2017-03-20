@@ -700,7 +700,9 @@
 
 	<mixinDef id="publishSSAPHCD">
 		<doc>
-			Publish a table mixing in //ssap#hcd to ObsTAP.
+			Publish a table mixing in //ssap#hcd to ObsTAP.  Since //ssap#hcd
+			is deprecated, this should not be used in new RDs, either.  For
+			//ssap#mixc tables, use publishSSAPMIXC.
 
 			This works like //obscore#publish except some defaults apply
 			that copy fields that work analoguously in SSAP and in ObsTAP.
@@ -746,7 +748,62 @@
 		<mixinPar name="targetName">ssa_targname</mixinPar>
 		<mixinPar name="targetClass">ssa_targclass</mixinPar>
 		<mixinPar name="title">ssa_dstitle</mixinPar>
-		<mixinPar name="emUCD">\sqlquote{\getParam{ssa_fluxucd}}</mixinPar> 
+		<mixinPar name="emUCD">\sqlquote{\getParam{ssa_spectralucd}}</mixinPar> 
+	</mixinDef>
+
+	<mixinDef id="publishSSAPMIXC">
+		<doc>
+			Publish a table mixing in //ssap#mixc to ObsTAP.
+
+			This works like //obscore#publish except some defaults apply
+			that copy fields that work analoguously in SSAP and in ObsTAP.
+
+			For special situations, you can, of course, override any
+			of the parameters, but most of them should already be all right.
+			To find out what the parameters described as "preset for SSAP"
+			mean, refer to //obscore#publish.  You'll usually want to fix
+			calibLevel, though (typically to 2).
+
+			Note that this mixin does *not* set coverage (obscore: s_region).
+			This is because although we could make a circle from ssa_location
+			and ssa_aperture, circles are not allowed in DaCHS' s_region (which
+			has a fixed type of spoly).  The recommended solution to still
+			have s_region is to add (and index) a custom field; the
+			//ssap#simpleCoverage will do this.
+
+			Note: you must say ``dachs imp //obscore`` before anything 
+			obscore-related will work.
+		</doc>
+
+		<LFEED source="_publishProduct"/>
+		<LFEED source="_publishCommon"/>
+
+		<mixinPar name="coverage"
+			>NULL</mixinPar>
+		<mixinPar name="collectionName">ssa_collection</mixinPar>
+		<mixinPar name="creatorDID">ssa_creatorDID</mixinPar>
+		<mixinPar name="dec">degrees(lat(ssa_location))</mixinPar>
+		<mixinPar name="ra">degrees(long(ssa_location))</mixinPar>
+		<mixinPar name="emMax">ssa_specend</mixinPar>
+		<mixinPar name="emMin">ssa_specstart</mixinPar>
+		<mixinPar name="emXel">ssa_length</mixinPar>
+		<mixinPar name="expTime">ssa_timeExt</mixinPar>
+		<mixinPar name="fov">ssa_aperture</mixinPar>
+		<mixinPar name="instrumentName">ssa_instrument</mixinPar>
+		<mixinPar name="facilityName"
+			>\sqlquote{\metaString{facility}}</mixinPar>
+		<mixinPar name="oUCD"
+			>\sqlquote{\getParam{ssa_fluxucd}}</mixinPar>
+		<mixinPar name="productType">'spectrum'</mixinPar>
+		<mixinPar name="sResolution">\getParam{ssa_spaceRes}{NULL}/3600.</mixinPar>
+		<mixinPar name="tMax">ssa_dateObs+ssa_timeExt/2</mixinPar>
+		<mixinPar name="tMin">ssa_dateObs-ssa_timeExt/2</mixinPar>
+		<mixinPar name="targetName">ssa_targname</mixinPar>
+		<mixinPar name="targetClass">ssa_targclass</mixinPar>
+		<mixinPar name="title">ssa_dstitle</mixinPar>
+		<mixinPar name="emUCD">\sqlquote{\getParam{ssa_spectralucd}}</mixinPar> 
+		<mixinPar name="oUCD">\sqlquote{\getParam{ssa_fluxucd}}</mixinPar> 
+		<mixinPar name="emResPower">ssa_specstart/ssa_specres</mixinPar> 
 	</mixinDef>
 
 	<table id="emptyobscore" onDisk="True"

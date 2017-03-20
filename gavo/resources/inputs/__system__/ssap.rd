@@ -467,12 +467,12 @@
 				the latter two being told apart by comparing against 1e6)">None</par>
 			<par key="timeExt" late="True" description="exposure time
 				(in seconds); ssa:Char.TimeAxis.Coverage.Bounds.Extent">None</par>
-			<par key="specmid" late="True" description="central wavelength
-				(in meters of wavelength); 
-				ssa:Char.SpectralAxis.Coverage.Location.Value">None</par>
-			<par key="specext" late="True" description="width of bandpass
-				(in meters of wavelength); 
-				ssa:Char.SpectralAxis.Coverage.Bounds.Extent">None</par>
+			<par key="specmid" late="True" description="(ignored; only present
+				for compatiblity, computed from specstart and specend)"
+				>None</par>
+			<par key="specext" late="True" description="(ignored; only present
+				for compatiblity, computed from specstart and specend)"
+				>None</par>
 			<par key="specstart" late="True" description="lower bound of
 				wavelength interval (in meters);
 				ssa:Char.SpectralAxis.Coverage.Bounds.Start">None</par>
@@ -485,7 +485,7 @@
 				copiedKWs = ['dstitle', 'creatorDID', 'pubDID', 'cdate', 
 					'pdate', 'bandpass', 'cversion', 'targname', 'targclass', 
 					'redshift', 'snr', 'aperture', 'timeExt', 
-					'specmid', 'specext', 'specstart', 'specend', 'length']
+					'specstart', 'specend', 'length']
 			</code>
 		</setup>
 		<code>
@@ -495,6 +495,12 @@
 				vars["ssa_"+kw] = userPars[kw]
 			alpha = parseFloat(alpha)
 			delta = parseFloat(delta)
+			specstart = parseFloat(specstart)
+			specend = parseFloat(specend)
+			
+			if specstart is not None and specend is not None:
+				vars["ssa_specext"] = specend-specstart
+				vars["ssa_specmid"] = (specend-specstart)/2
 
 			vars["ssa_region"] = vars["ssa_location"] = None
 			if alpha is not None and delta is not None:
@@ -558,25 +564,27 @@
 				ssa:Char.SpectralAxis.Calibration">None</par>
 			<par key="specres" late="True" description="Resolution on the 
 				spectral axis; you must give this as FWHM wavelength in meters 
-				here. Approximate as necessary; 
+				here. This will default to binSize if not given;
 				ssa:Char.SpectralAxis.Resolution">None</par>
 		</setup>
 		<code>
 			inVars = locals()
 			for parName, metaName in [
-				("publisher", "publisherID"),
-				("creator", "creator.name"),
-				("reference", "source"),
-				("instrument", "instrument")]:
+					("publisher", "publisherID"),
+					("creator", "creator.name"),
+					("reference", "source"),
+					("instrument", "instrument")]:
 				if inVars[parName]=="Take from RD":
-					vars["ssa_"+parName] = base.getMetaText(
-						targetTable.tableDef.rd, metaName)
+					vars["ssa_"+parName] = base.getMetaText(rd, metaName)
 				else:
 					vars["ssa_"+parName] = inVars[parName]
 			
 			for copiedName in ["dstype", "collection", "dataSource", 
-				"creationType", "fluxCalib", "specCalib", "specres"]:
+				"creationType", "fluxCalib", "specCalib", "specres", "binSize"]:
 				vars["ssa_"+copiedName.lower()] = inVars[copiedName]
+
+			if vars["ssa_specres"] is None:
+				vars["ssa_specres"] = vars["ssa_binsize"]
 		</code>
 	</procDef>
 
@@ -611,6 +619,8 @@
 
 	<mixinDef id="hcd">
 		<doc><![CDATA[
+			Do not use this in new RDs.  Use mixc instead.
+
 			This mixin is for "homogeneous" data collections, where homogeneous
 			means that all values in hcd_outpars are constant for all datasets
 			in the collection.  This is usually the case if they all come
@@ -689,8 +699,7 @@
 
 	<mixinDef id="mixc">
 		<doc><![CDATA[
-			This mixin is for spectral data collections mixing products
-			from various sources.
+			This mixin provides the columns and params for a common SSA service.
 
 			Rowmakers for tables using this mixin should use the `//ssap#setMeta`_
 			and the `//ssap#setMixcMeta`_ proc applications.
@@ -699,15 +708,14 @@
 			spectra must have the same types of axes (i.e., frequency, wavelength,
 			or energy) with identical units.  If you don't have that,
 			either leave the respective metadata empty or homogenize it
-			in the rowmaker.  Anything else cannot be sensibly declared,
-			not to mention searched.
+			before ingestion.
 
 			Do not forget to call the `//products#define`_ row filter in grammars
 			feeding tables mixing this in.  At the very least, you need to
 			say::
 
 				<rowfilter procDef="//products#define">
-					<bind name="table">"mySchema.myTableName"</bind>
+					<bind name="table">"schema.table"</bind>
 				</rowfilter>
 		]]></doc>
 		
@@ -722,7 +730,6 @@
 			<LFEED source="//ssap#mixc_morefields"/>
 		</events>
 	</mixinDef>
-
 
 	<procDef id="parablePQLPar" type="phraseMaker">
 		<doc>A procDef for condDescs that may match against table
@@ -756,7 +763,9 @@
 
 	<STREAM id="hcd_condDescs">
 		<doc>
-			The full condDescs for matching HCD SSA services.
+			This stream defines the condDescs for an SSA service.  It
+			is designed to work with both the mixc and the (deprecated) hcd
+			mixins.
 		</doc>
 		<condDesc id="coneCond" combining="True" joiner="AND">
 			<!-- condCond is combining to let the client specify SIZE but
@@ -1130,7 +1139,8 @@
 			recommended).
 
 			The column will be filled with a hexagon approximating the aperture
-			by //ssap#setMeta, so usually you're set with this mixin.
+			by //ssap#setMeta, so usually you're set with this mixin.  We also
+			create an index for the ssa_region field.
 
 			To make it visible in obscore, however, you must bind the
 			``coverage`` mixin par of //obscore#publishSSAPHCD to ``ssa_region``.
@@ -1140,6 +1150,7 @@
 				tablehead="Coverage"
 				description="Rough coverage based on location and aperture."
 				verbLevel="30"/>
+			<index columns="ssa_region" method="GIST"/>
 		</events>
 	</mixinDef>
 
