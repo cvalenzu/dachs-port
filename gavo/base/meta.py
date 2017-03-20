@@ -55,8 +55,8 @@ class MetaError(utils.Error):
 	def __init__(self, msg, carrier=None, hint=None, key=None):
 		self.carrier = carrier
 		self.key = key
-		utils.Error.__init__(self, msg, hint)
-
+		utils.Error.__init__(self, msg, hint=hint)
+		
 
 class MetaSyntaxError(MetaError):
 	"""is raised when a meta key is invalid.
@@ -72,6 +72,9 @@ class MetaCardError(MetaError):
 	"""is raised when a meta value somehow has the wrong cardinality (e.g.,
 	on attempting to stringify a sequence meta).
 	"""
+	def __init__(self, msg, carrier=None, hint=None, key=None):
+		self.origMsg = msg
+		MetaError.__init__(self, "%s (key %s)"%(msg, key), hint=hint)
 
 
 class MetaValueError(MetaError):
@@ -348,26 +351,36 @@ class MetaMixin(object):
 		else:
 			return None
 
-	def _getMeta(self, atoms, propagate):
+	def _getMeta(self, atoms, propagate, acceptSequence=False):
 		try:
-			return self._getFromAtom(atoms[0])._getMeta(atoms[1:])
+			return self._getFromAtom(atoms[0])._getMeta(atoms[1:],
+				acceptSequence=acceptSequence)
 		except NoMetaKey:
 			pass   # See if parent has the key
+
 		if propagate:
 			if self.__hasMetaParent():
-				return self.__metaParent._getMeta(atoms, propagate)
+				return self.__metaParent._getMeta(atoms, propagate, 
+					acceptSequence=acceptSequence)
 			else:
-				return configMeta._getMeta(atoms, propagate=False)
+				return configMeta._getMeta(atoms, propagate=False, 
+					acceptSequence=acceptSequence)
+
 		raise NoMetaKey("No meta item %s"%".".join(atoms), carrier=self)
 
-	def getMeta(self, key, propagate=True, raiseOnFail=False, default=None):
+	def getMeta(self, key, propagate=True, 
+			raiseOnFail=False, default=None, acceptSequence=False):
 		try:
 			try:
-				return self._getMeta(parseKey(key), propagate)
+				return self._getMeta(
+					parseKey(key), propagate, acceptSequence=acceptSequence)
 			except NoMetaKey, ex:
 				if raiseOnFail:
 					ex.key = key
 					raise
+			except MetaCardError, ex:
+				raise utils.logOldExc(
+					MetaCardError(ex.origMsg, hint=ex.hint, key=key))
 		except MetaError, ex:
 			ex.carrier = self
 			raise
@@ -668,13 +681,13 @@ class MetaItem(object):
 		assert isinstance(metaValue, MetaValue)
 		self.children.append(metaValue)
 
-	def _getMeta(self, atoms):
+	def _getMeta(self, atoms, acceptSequence=False):
 		if atoms:
-			if len(self.children)!=1:
-				raise MetaCardError("getMeta cannot be used on"
-					" sequence meta items", carrier=self, key=".".join(atoms))
+			if len(self.children)!=1 and not acceptSequence:
+				raise MetaCardError("Meta sequence in branch for getMeta")
 			else:
-				return self.children[0]._getMeta(atoms)
+				return self.children[0]._getMeta(
+					atoms, acceptSequence=acceptSequence)
 		return self
 	
 	def _addMeta(self, atoms, metaValue):
@@ -691,11 +704,12 @@ class MetaItem(object):
 		if len(self.children)==1:
 			return self.children[0].getMeta(key, *args, **kwargs)
 		else:
-			return MetaCardError("No getMeta for meta value sequences",
-				carrier=self)
+			raise MetaCardError("No getMeta for meta value sequences",
+				carrier=self, key=key)
 
-	def getContent(self, targetFormat="text", macroPackage=None):
-		if len(self.children)==1:
+	def getContent(self, 
+			targetFormat="text", macroPackage=None, acceptSequence=False):
+		if len(self.children)==1 or acceptSequence:
 			return self.children[0].getContent(targetFormat, macroPackage)
 		raise MetaCardError("getContent not allowed for sequence meta items",
 			carrier=self)
@@ -817,8 +831,9 @@ class MetaValue(MetaMixin):
 	def encode(self, enc):
 		return unicode(self).encode(enc)
 
-	def _getMeta(self, atoms, propagate=False):
-		return self._getFromAtom(atoms[0])._getMeta(atoms[1:])
+	def _getMeta(self, atoms, propagate=False, acceptSequence=False):
+		return self._getFromAtom(atoms[0])._getMeta(atoms[1:],
+			acceptSequence=acceptSequence)
 
 	def _addMeta(self, atoms, metaValue):
 # Cases continued from MetaItem._addMeta
@@ -1254,22 +1269,28 @@ def getMetaText(ob, key, default=None, **kwargs):
 
 	You can pass getMeta keyword arguments (except default).
 
+	Additionally, there's acceptSequence; if set to true, this will 
+	return the first item of a sequence-valued meta item rather than
+	raising an error.
+
 	ob will be used as a macro package if it has an expand method; to
 	use something else as the macro package, pass a macroPackage keyword
 	argument.
 	"""
+	macroPackage = ob
 	if "macroPackage" in kwargs:
 		macroPackage = kwargs.pop("macroPackage")
-	else:
-		macroPackage = ob
+	acceptSequence = kwargs.get("acceptSequence", False)
 
 	m = ob.getMeta(key, default=None, **kwargs)
 	if m is None:
 		return default
 	try:
-		return m.getContent(macroPackage=macroPackage)
-	except MetaCardError:
-		raise
+		return m.getContent(
+			macroPackage=macroPackage, acceptSequence=acceptSequence)
+	except MetaCardError, ex:
+		raise MetaCardError(ex.origMsg, carrier=ex.carrier, hint=ex.hint,
+			key=key)
 
 
 class MetaBuilder(object):

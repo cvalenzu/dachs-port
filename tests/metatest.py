@@ -151,8 +151,6 @@ class SequenceTest(testhelpers.VerboseTest):
 		self.assertEqual(m.getMeta("subject").children[2].content, "pain")
 	
 	def testCompoundTextSequence(self):
-		"""tests for correct buildup of sequences of compound meta items.
-		"""
 		m = base.MetaMixin()
 		m.addMeta("coverage.spatial.ra", "10-20")
 		m.addMeta("coverage.spatial.dec", "10-20")
@@ -167,8 +165,6 @@ class SequenceTest(testhelpers.VerboseTest):
 		self.assertRaises(base.MetaCardError, m.getMeta, "coverage.spatial.dec")
 
 	def testCompoundObjectSequence(self):
-		"""tests for correct buildup of meta information through object embedding
-		"""
 		m = base.MetaMixin()
 		alc = meta.MetaValue("50%")
 		org = meta.MetaValue("grape")
@@ -190,6 +186,42 @@ class SequenceTest(testhelpers.VerboseTest):
 		# cannot be decided because stuff.alc has multiple values
 		self.assertRaises(base.MetaCardError, m.getMeta,
 			"stuff.alc")
+
+	def testCardErrorLeaf(self):
+		m = base.MetaMixin()
+		m.addMeta("creator.name", "grub")
+		m.addMeta("creator.name", "grob")
+		self.assertRaisesWithMsg(meta.MetaCardError,
+			"getContent not allowed for sequence meta items (key creator.name)",
+			meta.getMetaText,
+			(m, "creator.name"))
+
+	def testCardErrorStem(self):
+		m = base.MetaMixin()
+		m.addMeta("creator.name", "grub")
+		m.addMeta("creator", "grub")
+		m.addMeta("creator.name", "grob")
+		self.assertRaisesWithMsg(meta.MetaCardError,
+			"Meta sequence in branch for getMeta (key creator.name)",
+			meta.getMetaText,
+			(m, "creator.name"))
+
+	def testCardForceLeaf(self):
+		m = base.MetaMixin()
+		m.addMeta("creator.name", "grub")
+		m.addMeta("creator.name", "grob")
+		self.assertEqual(
+			meta.getMetaText(m, "creator.name", acceptSequence=True),
+			"grub")
+
+	def testCardForceStem(self):
+		m = base.MetaMixin()
+		m.addMeta("creator.name", "grub")
+		m.addMeta("creator", "grub")
+		m.addMeta("creator.name", "grob")
+		self.assertEqual(
+			meta.getMetaText(m, "creator.name", acceptSequence=True),
+			"grub")
 
 
 class IterMetaTest(testhelpers.VerboseTest):

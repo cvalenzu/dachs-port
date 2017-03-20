@@ -571,11 +571,11 @@
 			inVars = locals()
 			for parName, metaName in [
 					("publisher", "publisherID"),
-					("creator", "creator.name"),
 					("reference", "source"),
 					("instrument", "instrument")]:
 				if inVars[parName]=="Take from RD":
-					vars["ssa_"+parName] = base.getMetaText(rd, metaName)
+					vars["ssa_"+parName] = base.getMetaText(
+						rd, metaName, acceptSequence=False)
 				else:
 					vars["ssa_"+parName] = inVars[parName]
 			

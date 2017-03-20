@@ -348,6 +348,10 @@ class SBox(PgSAdapter):
 
 
 try:
+	# temporary measure to shut up astropy's configuration parser.
+	import __builtin__
+	__builtin__._ASTROPY_SETUP_ = True
+
 	import pymoc
 	from pymoc.io.fits import read_moc_fits_hdu
 
