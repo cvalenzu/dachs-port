@@ -541,6 +541,11 @@ def loadConfig():
 		# This is usually not be protected by top-level exception catcher
 		sys.exit("Bad configuration item in %s.  %s"%(
 			ex.fileName, unicode(ex).encode("utf-8")))
+	
+	# also set XDG directories so astropy and friends look for their 
+	# configuration in DaCHS' directories
+	os.environ["XDG_CONFIG_HOME"] = _config.get("configDir")
+	os.environ["XDG_CACHE_HOME"] = _config.get("cacheDir")
 
 loadConfig()
 
