@@ -520,4 +520,4 @@ def main():
 		with base.getTableConn() as conn:
 			sys.exit(dumpExtensionUpdater(conn))
 	else:
-		upgrade(args.forceDBVersion, args.dryRun)
+		upgrade(args.forceDBVersion)
