@@ -110,6 +110,8 @@ defaults = {
 		("equinox", getEquinox),
 		("unit", getSpaceUnit)],
 	"time": [
+		# For time, the default is the unit of errors and such.
+		# The values are either in days or they're MJD.
 		("unit", "s")],
 	"spectral": [
 		("unit", "Hz")],

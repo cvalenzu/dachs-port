@@ -449,6 +449,14 @@ class RedshiftCoo(_Coordinate, _RedshiftMixin): pass
 class TimeCoo(_Coordinate, _OneDMixin):
 	cType = TimeType
 
+	def iterTransformed(self, converter):
+		# here, we never transform the value (since it can be a datetime
+		# or whatever).
+		for attName in self._dimensionedAttrs:
+			wiggle = getattr(self, attName)
+			if wiggle:
+				yield attName, wiggle.adaptValuesWith(converter)
+
 class SpectralCoo(_Coordinate, _OneDMixin):
 	cType = SpectralType
 

@@ -8,6 +8,7 @@ Tests for STC-X parsing and generation.
 #c COPYING file in the source distribution.
 
 
+import datetime
 import os
 import re
 
@@ -91,6 +92,22 @@ class OtherCoordTest(STCMappingTest):
 		self.assertMapsto("Spectral NEPTUNE 12 unit Angstrom Error 4 3"
 			" Redshift TOPOCENTER VELOCITY RELATIVISTIC 0.1", 
 			'<V ><AstroCoordSystem ><SpectralFrame ><NEPTUNE /></SpectralFrame><RedshiftFrame value_type="VELOCITY"><DopplerDefinition>RELATIVISTIC</DopplerDefinition><TOPOCENTER /></RedshiftFrame></AstroCoordSystem><AstroCoords ><Spectral unit="Angstrom"><Value>12.0</Value><Error>4.0</Error><Error>3.0</Error></Spectral><Redshift unit="km" vel_time_unit="s"><Value>0.1</Value></Redshift></AstroCoords></V>')
+
+	def testTimeParse(self):
+		ast = stc.parseSTCX("""
+			<STCSpec xmlns="http://www.ivoa.net/xml/STC/stc-v1.30.xsd">
+				<AstroCoordSystem id="x">
+					<TimeFrame id="xt"><TimeScale>TT</TimeScale></TimeFrame>
+				</AstroCoordSystem>
+				<AstroCoords coord_system_id="x">
+					<Time><TimeInstant>
+						<ISOTime>2000-01-01T00:00:00</ISOTime>
+					</TimeInstant></Time>
+				</AstroCoords>
+			</STCSpec>""")[0][1]
+		self.assertEqual(ast.time.frame.timeScale, "TT")
+		self.assertEqual(ast.time.value, datetime.datetime(2000, 1, 1, 0, 0))
+		self.assertEqual(ast.time.unit, None)
 
 
 class SpaceCoordTest(STCMappingTest):

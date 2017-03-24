@@ -108,6 +108,8 @@ def conformUnits(baseSTC, sysSTC):
 	"""
 	changes = []
 	for attName, dependentName in _conformedAttributes:
+		# TODO: For time, we'd probably have to turn JD, MJD, ISO into
+		# each other.  Let's wait for sane STC.
 		changes.extend(units.iterUnitAdapted(baseSTC, sysSTC,
 			attName, dependentName))
 	return baseSTC.change(**dict(changes))
