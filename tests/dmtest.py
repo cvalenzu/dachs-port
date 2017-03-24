@@ -110,6 +110,12 @@ class ModelTest(testhelpers.VerboseTest):
 	def testCrossFileResolutionRecursive(self):
 		res = dm.resolveVODMLId("localinline:Polar.rule.tempLimit.value")
 
+	def testUnknownPrefix(self):
+		# this standin DM behaviour should change to an exception as this matures
+		model = dm.getModelForPrefix("notexisting")
+		self.assertEqual(model.title, "DaCHS standin model")
+		self.assertEqual(model.url, "urn:dachsjunk:not-model:notexisting")
+
 
 class TestSILGrammar(testhelpers.VerboseTest):
 	def testPlainObject(self):
@@ -297,62 +303,63 @@ class DirectSerTest(testhelpers.VerboseTest):
 
 	def testVODMLModelDefined(self):
 		dmgroup = self.tree.xpath(
-			"//GROUP[VODML/TYPE='vo-dml:Model']"
-			"[PARAM[VODML/ROLE='name']/@value='vo-dml']")[0]
+			"//GROUP[@vodml-type='vo-dml:Model']"
+			"[PARAM[@vodml-role='name']/@value='vo-dml']")[0]
 		self.assertEqual(
-			dmgroup.xpath("PARAM[VODML/ROLE='name']")[0].get("value"),
+			dmgroup.xpath("PARAM[@vodml-role='name']")[0].get("value"),
 			"vo-dml")
 		self.assertEqual(
-			dmgroup.xpath("PARAM[VODML/ROLE='url']")[0].get("value"),
+			dmgroup.xpath("PARAM[@vodml-role='url']")[0].get("value"),
 			"http://www.ivoa.net/dm/VO-DML.vo-dml.xml")
 		self.assertEqual(
-			dmgroup.xpath("PARAM[VODML/ROLE='version']")[0].get("value"),
+			dmgroup.xpath("PARAM[@vodml-role='version']")[0].get("value"),
 			"0.x")
 
 	def testTestModelDefined(self):
 		dmgroup = self.tree.xpath(
-			"//GROUP[VODML/TYPE='vo-dml:Model']"
-			"[PARAM[VODML/ROLE='name']/@value='dachstoy']")[0]
+			"//GROUP[@vodml-type='vo-dml:Model']"
+			"[PARAM[@vodml-role='name']/@value='dachstoy']")[0]
 
 		self.assertEqual(
-			dmgroup.xpath("PARAM[VODML/ROLE='url']")[0].get("value"),
+			dmgroup.xpath("PARAM[@vodml-role='url']")[0].get("value"),
 			"http://docs.g-vo.org/dachstoy")
 		self.assertEqual(
-			dmgroup.xpath("PARAM[VODML/ROLE='version']")[0].get("value"),
+			dmgroup.xpath("PARAM[@vodml-role='version']")[0].get("value"),
 			"1.0a-pl23.44c")
 
 	def testNoExtraModels(self):
 		self.assertEqual(2,
-			len(self.tree.xpath("//GROUP[VODML/TYPE='vo-dml:Model']")))
+			len(self.tree.xpath("//GROUP[@vodml-type='vo-dml:Model']")))
 
 	def testTestclassInstancePresent(self):
-		res = self.tree.xpath("RESOURCE/TABLE/GROUP[VODML/TYPE='dachstoy:Ruler']")
+		res = self.tree.xpath(
+			"RESOURCE/TABLE/GROUP[@vodml-type='dachstoy:Ruler']")
 		self.assertEqual(len(res), 1)
 	
 	def testLiteralSerialized(self):
 		par = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[VODML/TYPE='dachstoy:Location']"
-			"/PARAM[VODML/ROLE='dachstoy:Location.x']")[0]
+			"RESOURCE/TABLE/GROUP/GROUP[@vodml-type='dachstoy:Location']"
+			"/PARAM[@vodml-role='x']")[0]
 		self.assertEqual(par.get("value"), "0.1")
 		self.assertEqual(par.get("datatype"), "unicodeChar")
 
 	def testChildColumnAnnotated(self):
 		fr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP[VODML/TYPE='dachstoy:Ruler']"
-			"/FIELDref[VODML/ROLE='dachstoy:Ruler.width']")[0]
+			"RESOURCE/TABLE/GROUP[@vodml-type='dachstoy:Ruler']"
+			"/FIELDref[@vodml-role='width']")[0]
 		col = getByID(self.tree, fr.get("ref"))
 		self.assertEqual(col.get("name"), "col1")
 
 	def testNestedColumnAnnotated(self):
 		fr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[VODML/TYPE='dachstoy:Location']"
-			"/FIELDref[VODML/ROLE='dachstoy:Location.y']")[0]
+			"RESOURCE/TABLE/GROUP/GROUP[@vodml-type='dachstoy:Location']"
+			"/FIELDref[@vodml-role='y']")[0]
 		col = getByID(self.tree, fr.get("ref"))
 		self.assertEqual(col.get("name"), "raj2000")
 
 	def testCollection(self):
 		gr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[VODML/ROLE='maker']")
+			"RESOURCE/TABLE/GROUP/GROUP[@vodml-role='maker']")
 		self.assertEqual(len(gr), 1)
 		params = gr[0].xpath("PARAM")
 		self.assertEqual(len(params), 2)
@@ -361,43 +368,11 @@ class DirectSerTest(testhelpers.VerboseTest):
 
 	def testParamReferenced(self):
 		gr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[VODML/ROLE='maker']")[0]
+			"RESOURCE/TABLE/GROUP/GROUP[@vodml-role='maker']")[0]
 		paramref = gr.xpath("PARAMref")[0]
-		self.assertEqual(paramref.xpath("VODML/ROLE")[0].text,
-			"dachstoy:Ruler.maker")
+		self.assertEqual(paramref.get("vodml-role"), "maker")
 		par = getByID(self.tree, paramref.get("ref"))
 		self.assertEqual(par.get("value"), "Onkel Fritz")
-
-
-class _QuantityVOT(testhelpers.TestResource):
-	def make(self, deps):
-		td = base.parseFromString(rscdef.TableDef,
-			"""<table id="foo">
-				<dm>
-					(dachstoy:Cooler) {
-						tempLimit.value: 0 
-					}
-				</dm>
-				<dm>
-					(dachstoy:Cooler) {
-						tempLimit.value: @col1
-					}
-				</dm>
-					<column name="col1"/>
-				</table>""")
-		
-		t = rsc.TableForDef(td, rows=[
-			{"col1": "-30"}])
-		
-		return testhelpers.getXMLTree(votablewrite.getAsVOTable(t, 
-			ctx=votablewrite.VOTableContext(version=(1,4))), debug=False)
-
-
-class QuantityTest(testhelpers.VerboseTest):
-	resources = [("tree", _DirectVOT())]
-
-	def testParamAnnotated(self):
-		pass # Asked upstream how this is supposed to work.
 
 
 class CopyTest(testhelpers.VerboseTest):

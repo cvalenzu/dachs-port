@@ -34,6 +34,14 @@ class VOTable(object):
 		_prefix = "vot"
 		_local = True
 
+	class _Annotatable(object):
+		"""a mixin for elements that can have VO-DML annotation.
+		"""
+		_a_vodml_type = None
+		_a_vodml_role = None
+		_name_a_vodml_type = "vodml-type"
+		_name_a_vodml_role = "vodml-role"
+
 	class _DescribedElement(_VOTElement):
 		_a_ID = None
 		_a_ref = None
@@ -60,7 +68,6 @@ class VOTable(object):
 				return self.iterChildrenOfType(VOTable.DESCRIPTION).next().text_
 			except StopIteration:
 				return ""
-
 
 	class _ValuedElement(_DescribedElement):
 		_a_unit = None
@@ -129,7 +136,7 @@ class VOTable(object):
 			else:
 				self[VOTable.VALUES(null=val)]
 
-	class _RefElement(_ValuedElement):
+	class _RefElement(_ValuedElement, _Annotatable):
 		_a_ref = None
 		_a_ucd = None
 		_a_utype = None
@@ -186,9 +193,6 @@ class VOTable(object):
 		_a_equinox = None
 		_a_system = None
 
-	class VODML(_VOTElement):
-		pass
-	
 	class TYPE(_VOTElement):
 		pass
 
@@ -212,10 +216,10 @@ class VOTable(object):
 	class FITS(_VOTElement):
 		_childSequence = ["STREAM"]
 	
-	class GROUP(_DescribedElement):
+	class GROUP(_DescribedElement, _Annotatable):
 		_mayBeEmpty = True
 		_a_ref = None
-		_childSequence = ["DESCRIPTION", "VODML", "PARAM", "FIELDref", 
+		_childSequence = ["DESCRIPTION", "PARAM", "FIELDref", 
 			"PARAMref", "GROUP"]
 
 
@@ -273,11 +277,11 @@ class VOTable(object):
 		_mayBeEmpty = True
 
 
-	class PARAM(_TypedElement):
+	class PARAM(_TypedElement, _Annotatable):
 		_mayBeEmpty = True
 		_a_value = ""  # supposed to mean "ah, somewhat null"
 		               # Needs to be cared for in client code.
-		_childSequence = ["VODML", "DESCRIPTION", "VALUES", "LINK"]
+		_childSequence = ["DESCRIPTION", "VALUES", "LINK"]
 
 
 	class PARAMref(_RefElement): pass

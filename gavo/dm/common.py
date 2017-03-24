@@ -44,6 +44,9 @@ def completeVODMLId(ctx, roleName):
 	This is based on what the containerTypeSet context manager leaves
 	in the VOTable serialisation context ctx.
 	"""
+	return roleName
+
+# current spec wants hierarchical strings here.  Let's not.
 	if ":" in roleName:
 		# we allow the use of fully qualified role names and don't touch them
 		return roleName
@@ -142,8 +145,9 @@ class AtomicAnnotation(AnnotationBase):
 			"ucd": self.ucd})
 
 		param = V.PARAM(name=self.name,
-			id=ctx.getOrMakeIdFor(self.value), **attrs)[
-				V.VODML[V.ROLE[completeVODMLId(ctx, self.name)]]]
+			id=ctx.getOrMakeIdFor(self.value), 
+				vodml_role=completeVODMLId(ctx, self.name),
+				**attrs)
 		votable.serializeToParam(param, self.value)
 		return param
 
@@ -255,8 +259,8 @@ class _AttributeGroupAnnotation(AnnotationBase, _WithMapCopyMixin):
 	def _makeVOTGroup(self, ctx, instance):
 		"""helps getVOT.
 		"""
-		return V.GROUP[
-			V.VODML[V.TYPE[self.type]], [ann.getVOT(ctx, instance)
+		return V.GROUP(vodml_type=self.type)[
+			[ann.getVOT(ctx, instance)
 				for ann in self.childRoles.values()]]
 
 	def getVOT(self, ctx, instance):
@@ -346,9 +350,7 @@ class CollectionAnnotation(AnnotationBase, _WithMapCopyMixin):
 # and see how we can tell when there's actually tables out there.
 		if self.type:
 			ctx.addVODMLPrefix(self.modelPrefix)
-		return V.GROUP[
-			V.VODML[
-				V.ROLE[self.name]],
+		return V.GROUP(vodml_role=self.name)[
 			[c.getVOT(ctx, instance) for c in self.children]]
 
 	

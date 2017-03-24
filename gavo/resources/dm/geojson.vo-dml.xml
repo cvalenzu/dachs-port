@@ -61,6 +61,7 @@
   		<multiplicity><minOccurs>1</minOccurs>
   			<maxOccurs>1</maxOccurs></multiplicity>
 		</attribute>
+	</objectType>
 
 	
   <dataType>

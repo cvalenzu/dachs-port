@@ -84,10 +84,15 @@ class Model(object):
 
 		inF = openModelFile(prefix)
 		try:
-			res = cls(prefix, ElementTree.parse(inF))
-			# as long as we can't get the URL from the XML, patch it in here
-			res.url = KNOWN_MODELS[prefix][1]
-			return res
+			try:
+				res = cls(prefix, ElementTree.parse(inF))
+				# as long as we can't get the URL from the XML, patch it in here
+				res.url = KNOWN_MODELS[prefix][1]
+				return res
+			except Exception, ex:
+				raise base.ui.logOldExc(
+					base.StructureError("Failure to parse VO-DML for prefix %s: %s"%(
+						prefix, repr(ex))))
 		finally:
 			inF.close()
 
@@ -221,14 +226,13 @@ class Model(object):
 	def getVOT(self, ctx, instance):
 		"""returns xmlstan for a VOTable declaration of this DM.
 		"""
-		return V.GROUP[
-			V.VODML[V.TYPE["vo-dml:Model"]],
-			V.PARAM(datatype="char", arraysize="*",name="name", value=self.prefix)[
-				V.VODML[V.ROLE["name"]]],
-			V.PARAM(datatype="char", arraysize="*", name="name", value=self.version)[
-				V.VODML[V.ROLE["version"]]],
-			V.PARAM(datatype="char", arraysize="*", name="name", value=self.url)[
-				V.VODML[V.ROLE["url"]]]]
+		return V.GROUP(vodml_type="vo-dml:Model")[
+			V.PARAM(datatype="char", arraysize="*",name="prefix", value=self.prefix,
+				vodml_role="name"),
+			V.PARAM(datatype="char", arraysize="*", name="version", 
+				value=self.version, vodml_role="version"),
+			V.PARAM(datatype="char", arraysize="*", name="url", value=self.url,
+				vodml_role="url")]
 
 
 @utils.memoized
@@ -237,9 +241,22 @@ def getModelForPrefix(prefix):
 
 	This caches models for prefixes and thus should usually be used
 	from user code.
-	"""
-	return Model.fromPrefix(prefix)
 
+	Note that this currently will currently return some stand-in shim
+	for unknown prefixes.  That behaviour will change to become a
+	NotFoundError exception when there's actually useful data models.
+	"""
+	try:
+		return Model.fromPrefix(prefix)
+	except base.NotFoundError:
+		res = Model(prefix, ElementTree.fromstring(
+			"""<junk><title>DaCHS standin model</title>
+				<description>This is used by DaCHS during the old west
+				days of VO DM development.  Any annotation using this will
+				not be interoperable.</description>
+				<version>invalid</version></junk>"""))
+		res.url = "urn:dachsjunk:not-model:"+prefix
+		return res
 
 def getAttributeDefinition(typeDef, attName):
 	"""returns the attribute definition for attName in typeDef as an etree.
