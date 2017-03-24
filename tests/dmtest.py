@@ -251,6 +251,8 @@ class AnnotationTest(testhelpers.VerboseTest):
 		self.assertEqual(col.ucd, "stuff")
 
 
+# Use this table (rather than _RealDMTable) to build tests against
+# DMs we can control for testing purposes.
 class _AnnotationTable(testhelpers.TestResource):
 	def make(self, deps):
 		td = base.parseFromString(rscdef.TableDef,
@@ -440,6 +442,111 @@ class CopyTest(testhelpers.VerboseTest):
 		self.assertEqual(ann["feature"]["geometry"], "sepcoo")
 		self.assertEqual(ann["feature"]["long"].value,
 			newTD.getByName("raj2000"))
+
+
+# When you're looking for a table to pollute with custom 
+# constructs, use _AnnotationTable.
+class _RealDMTable(testhelpers.TestResource):
+	# well, of course, these are not the real DMs at this point.
+	# as the come out, they should go in here, and this should
+	# be used to test validation.
+	def make(self, deps):
+		rd = base.parseFromString(rscdesc.RD,
+# this needs a resource container since we need id resolution
+			"""
+<resource schema="test">
+<table id="foo">
+	<dm>
+		(ds:DataSet) {
+			ProductType: timeseries
+			calibLevel: 1
+			dataId: @pubDID
+			creator: [ 
+				"Joe Cool"
+				"Charlie Brown"
+			]
+			observationID: @pubDID 
+			target: {
+				name: @targetName
+				position: @targetPos
+			}
+		}
+	</dm>
+
+	<dm id="targetPos">
+		(stc2:Coordinates) {
+			spatial: {
+				frame: {
+					referenceSystem: ICRS
+				}
+				c1: @raj2000
+				c2: @dej2000
+			}
+			temporal: {
+				frame: {
+					timeScale: TT
+					referencePosition: HELIOCENTER
+				}
+				value: @HJD
+			}
+		}
+	</dm>
+
+	<param name="raj2000" type="double precision"
+		ucd="pos.eq.ra" unit="deg"/>
+	<param name="dej2000" type="double precision"
+		ucd="pos.eq.dec" unit="deg"/>
+	<param name="targetName" type="text"/>
+	<param name="pubDID" type="text"/>
+
+	<column name="HJD" type="double precision"/>
+
+</table>
+</resource>""")
+		
+		t = rsc.TableForDef(rd.tables[0], rows=[
+			{"HJD": 2000000.125}])
+		t.setParam("raj2000", 230)
+		t.setParam("dej2000", -45)
+		return t
+
+_REAL_DM_TABLE = _RealDMTable()
+
+
+class _RealDMVOT(testhelpers.TestResource):
+	resources = [("table", _REAL_DM_TABLE)]
+
+	def make(self, deps):
+		return testhelpers.getXMLTree(votablewrite.getAsVOTable(	
+			deps["table"],
+			ctx=votablewrite.VOTableContext(version=(1,4))), debug=False)
+
+_REAL_DM_VOT = _RealDMVOT()
+
+
+class ObjReftest(testhelpers.VerboseTest):
+	resources = [("table", _REAL_DM_TABLE),
+		("serialized", _REAL_DM_VOT)]
+
+	def testInterInstanceAnnotation(self):
+		ds = self.table.tableDef.getAnnotationOfType("ds:DataSet")
+		pos = ds["target"]["position"].objectReferenced
+		self.assertEqual(pos["spatial"]["frame"]["referenceSystem"],
+			"ICRS")
+		self.assertEqual(pos["spatial"]["c1"].value.name, "raj2000")
+
+	def testInstanceRefSerialisation(self):
+		grouprefs = self.serialized.xpath(
+			"//GROUP[@vodml-type='ds:DataSet']/GROUP[@vodml-role='target']"
+			"/GROUP[@vodml-role='position']")
+		self.assertEqual(len(grouprefs), 1)
+		pos = self.serialized.xpath(
+			"//GROUP[@ID='%s']"%grouprefs[0].get("ref"))[0]
+		self.assertEqual(pos.get("vodml-type"), "stc2:Coordinates")
+		self.assertEqual(pos.xpath("GROUP[@vodml-role='temporal']"
+			"/GROUP[@vodml-role='frame']"
+			"/PARAM[@vodml-role='referencePosition']")[0].get("value"),
+			"HELIOCENTER")
 
 
 if __name__=="__main__":

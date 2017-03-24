@@ -982,7 +982,7 @@ class BibTeXTest(testhelpers.VerboseTest):
 			"creationDate: 1984-08-05T13:45:23\ntitle: Ulysses\n"
 			"referenceURL:http://purl.org/pub/thor\n</meta>")
 		self.assertTrue(metarender.makeBibTeXForMetaCarrier(mc
-			).startswith("@MISC{vo:bbamuiltbaie,"))
+			).startswith("@MISC{vo:eiabtliumabb,"))
 
 	def testTableNameMangling(self):
 		mc = parseMetaXML("<meta>creator.name: Thor, A.U.\n"

@@ -814,7 +814,7 @@ def intToFunnyWord(anInt, translation=string.maketrans(
 		"zaeiousmnthwblpgd")):
 	"""returns a sometimes funny (but unique) word from an arbitrary integer.
 	"""
-	return "".join(reversed(("%x"%anInt).translate(translation)))
+	return "".join(("%x"%anInt).translate(translation))
 
 
 def addDefaults(dataDict, defaultDict):

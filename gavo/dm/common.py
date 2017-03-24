@@ -259,7 +259,11 @@ class _AttributeGroupAnnotation(AnnotationBase, _WithMapCopyMixin):
 	def _makeVOTGroup(self, ctx, instance):
 		"""helps getVOT.
 		"""
-		return V.GROUP(vodml_type=self.type)[
+		ctx.groupIdsInTree.add(id(self))
+		return V.GROUP(
+				vodml_type=self.type,
+				vodml_role=completeVODMLId(ctx, self.name),
+				ID=ctx.getOrMakeIdFor(self))[
 			[ann.getVOT(ctx, instance)
 				for ann in self.childRoles.values()]]
 

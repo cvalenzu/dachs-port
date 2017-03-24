@@ -17,6 +17,7 @@ import functools
 import itertools
 
 from gavo import base
+from gavo.dm import annotations
 from gavo.dm import common
 from gavo.dm import sil
 
@@ -98,6 +99,9 @@ class DataModelRoles(base.Structure):
 
 	_sil = base.DataContent(description="SIL (simple instance language)"
 		" annotation.", copyable=True)
+
+	def getAnnotation(self, roleName, container, instance):
+		return annotations.GroupRefAnnotation(roleName, self.parse(), instance)
 
 	def completeElement(self, ctx):
 		def _buildAnnotation():

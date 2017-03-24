@@ -101,11 +101,11 @@ class GroupRefAnnotation(common.TableRelativeAnnotation):
 		return self.__class__(self.name, self.objectReferenced, newInstance)
 
 	def getVOT(self, ctx, instance):
-		if id(self.objectReferenced) not in ctx.alreadyInTree:
+		if id(self.objectReferenced) not in ctx.groupIdsInTree:
 			ctx.getEnclosingContainer()[
 				_the(# fix this: dmvot.getSubtrees(ctx, self.objectReferenced))(
 					ID=ctx.getOrMakeIdFor(self.objectReferenced))]
-			ctx.alreadyInTree.add(id(self.objectReferenced))
+			ctx.groupIdsInTree.add(id(self.objectReferenced))
 
 		return V.GROUP(ref=ctx.getIdFor(self.objectReferenced),
 			vodml_type="vo-dml:GROUPref",

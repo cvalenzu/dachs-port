@@ -56,7 +56,7 @@ class VOTableContext(utils.IdManagerMixin):
 		- a value mapper registry (by default, valuemappers.defaultMFRegistry)
 		- the tablecoding (currently, td, binary, or binary2)
 		- version=(1,1) to order a 1.1-version VOTable, (1,2) for 1.2.
-		  (default is now 1.3.
+		  (default is now 1.3).
 		- acquireSamples=False to suppress reading some rows to get
 		  samples for each column
 		- suppressNamespace=False to leave out a namespace declaration
@@ -82,7 +82,12 @@ class VOTableContext(utils.IdManagerMixin):
 		self._containerStack = []
 		self._tableStack = []
 
+		# state for VO-DML serialisation
 		self.produceVODML = self.version[0]>1 or self.version[1]>3
+		# group-serialsing annotations must enter their python ids when they
+		# end up in the tree so they get only included once when
+		# referenced by multiple other annotations.
+		self.groupIdsInTree = set()
 		self.modelsUsed = {}
 
 	def addVODMLPrefix(self, prefix):
@@ -174,7 +179,6 @@ class VOTableContext(utils.IdManagerMixin):
 			# the param is not referenced and thus needs no ID
 			pass
 		return votEl
-
 
 
 ################# Turning simple metadata into VOTable elements.
