@@ -221,7 +221,7 @@ class _AttributeGroupAnnotation(AnnotationBase, _WithMapCopyMixin):
 		self.type = type
 		if self.type is None:
 			# TODO: infer from parent?  from DM?
-			self.modelPrefix = "undefined"
+			self.modelPrefix = getattr(instance, "modelPrefix", "undefined")
 		else:
 			self.modelPrefix, _, _ = parseTypeName(self.type)
 

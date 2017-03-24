@@ -328,7 +328,7 @@ class DirectSerTest(testhelpers.VerboseTest):
 			"1.0a-pl23.44c")
 
 	def testNoExtraModels(self):
-		self.assertEqual(2,
+		self.assertEqual(3,
 			len(self.tree.xpath("//GROUP[@vodml-type='vo-dml:Model']")))
 
 	def testTestclassInstancePresent(self):
