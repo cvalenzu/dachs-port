@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Twisted trial-based tests for TAP and UWS.
 
@@ -50,6 +51,22 @@ base.DEBUG = True
 
 
 votWithGeom = 'eJxdUctugzAQvOcrVj72YAfUEwIkClRCigIiNNdqC26DRDCxHUj69bVDUKNcPLPa2dmH/X1eRW+b\nFEYuVSv6gDjUJSu4HLteBeSg9eAxNk0TbUeBtOeamRQzVfjVcTZadbjyy3SXf5RxaujNzuB7lm4S\nyJKAKIWfnahRG38CKCVeVfvLA/JCoEGN+jqYoD6gJNDjkT9XnOsmIINQlJ9M0Lc6IA3/MXQuVLr2\nIqWliIWQjaKFUK0tdBO6x+7MXQKXWYnNqfOKPNtWduYk3cVlVlRZvg2zuNzB0hHEN+DApT5LDjXv\nNZc+e1SvfHbbzppEVbQsPXMAvyotWJKEyzRwa+HS9doB59WCz0zaypnVm/ffw7S743JN9nBhdv+z\n8A+9NIXB\n'
+
+
+atexit.register(trialhelpers.withUserconfig("""
+	<STREAM id="tapexamples">
+		<meta name="_example" title="tap_schema example">
+			To locate columns "by physics", as it were, use UCD in
+			:taptable:`tap_schema.columns`.  For instance,
+			to find everything talking about the mid-infrared about 10µm, you
+			could write:
+
+			.. tapquery::
+				
+				SELECT * FROM tap_schema.columns 
+				  WHERE description LIKE '%em.IR.8-15um%'
+		</meta>
+	</STREAM>"""))
 
 
 class TAPRenderTest(trialhelpers.RenderTest):
@@ -418,6 +435,7 @@ class SimpleAsyncTest(TAPRenderTest):
 		return trialhelpers.runQuery(self.renderer, "GET", "/async", {
 			"PHASE": 'ABORTED'}
 			).addCallback(assertMaxOneResult)
+
 
 
 atexit.register(trialhelpers.provideRDData("test", "ADQLTest"))

@@ -14,4 +14,5 @@
 					<column name="pluto_long" tablehead="lambda_Pluto"/>
 					<column name="pluto_lat"/>
 				</STREAM>
-			</resource>
+
+</resource>

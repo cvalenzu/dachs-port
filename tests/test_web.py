@@ -433,16 +433,6 @@ class MetaRenderTest(trialhelpers.ArchiveTest):
 			['<div class="rddesc"><span class="plainmeta"> Unittest'
 				" Suite's Table Access"])
 	
-	def testPublicationSelection(self):
-		def checkRenderers(result):
-			tree = trialhelpers.testhelpers.getXMLTree(result[0])
-			rends = set(e.text for e in tree.xpath("//em[@class='renderer']"))
-			self.assertEqual(rends, set(["tap", "examples"]))
-
-		return trialhelpers.runQuery(self.renderer, "GET", 
-			"/__system__/tap/run/info", {}
-		).addCallback(checkRenderers)
-
 
 class MetaPagesTest(trialhelpers.ArchiveTest):
 	def testGetRR404(self):
@@ -610,6 +600,19 @@ class TestExamples(trialhelpers.ArchiveTest):
 			'ivo://org.gavo.dc/~?bla/foo/qua</em>',
 			'resource="#Example2"',
 			'<p>This is another example for examples.</p>'])
+
+	def testPublicationSelection(self):
+		def checkRenderers(result):
+			tree = trialhelpers.testhelpers.getXMLTree(result[0])
+			rends = set(e.get("standardID").split("#")[-1] 
+				for e in tree.xpath("//capability[@standardID]"))
+			self.assertEqual(rends, set(
+				['availability', 'capabilities', 'examples-1.0', 
+					'links-1.0', 'tables']))
+
+		return trialhelpers.runQuery(self.renderer, "GET", 
+			"/getRR/data/cores/dl", {}
+		).addCallback(checkRenderers)
 
 
 def _nukeHostPart(uri):

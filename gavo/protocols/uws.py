@@ -372,7 +372,7 @@ class UWS(object):
 			fragments.append("phase=%(phase)s")
 
 		if last is not None:
-			postfix = "ORDER BY creationTime DESC LIMIT %(limit)s"
+			limits = "ORDER BY creationTime DESC LIMIT %(limit)s"
 			pars['limit'] = last
 
 		if after is not None:

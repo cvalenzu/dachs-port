@@ -158,6 +158,7 @@ class MetaRenderer(grend.CustomTemplateMixin, grend.ServiceBasedPage):
 		except base.MetaError:
 			return None
 
+
 class RendExplainer(object):
 	"""is a container for various functions having to do with explaining
 	renderers on services.

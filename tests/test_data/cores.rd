@@ -139,6 +139,7 @@
 
 	<service id="dl" allowed="dlget,dlmeta,dlasync">
 		<meta name="title">Hollow Datalink</meta>
+		<publish render="dlmeta" sets="ivo_managed"/>
 		<datalinkCore>
 			<descriptorGenerator procDef="//soda#fits_genDesc">
 				<setup>
