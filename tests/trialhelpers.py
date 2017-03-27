@@ -272,20 +272,6 @@ def provideRDData(rdName, ddId, _imported=set()):
 	return cleanup
 
 
-def withUserconfig(userconfigMaterial):
-	"""temporarily installs configMaterial as user config, and returns
-	a function to clean up stuff.
-
-	Actually, this can only be used once in all our trial tests right now
-	since the "controlled block" is the entire process and you can't predict
-	what trial tests will eventually run together.  We should probably
-	make this controlled by a test group.  Hm.
-	"""
-	cm = testhelpers.userconfigContent(userconfigMaterial)
-	cm.__enter__()
-	return lambda: cm.__exit__(None, None, None)
-
-
 if os.environ.get("GAVO_LOG")!="no":
 	from gavo.user import logui
 	logui.LoggingUI(base.ui)

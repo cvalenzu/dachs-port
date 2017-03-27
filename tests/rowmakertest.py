@@ -295,17 +295,6 @@ class ApplyTest(testhelpers.VerboseTest):
 			 <code>result["d"] = @foo</code>
 			</apply>""",))
 
-	def testNotGivenNotEscaping(self):
-		dd, _ = makeDD('<column name="d" type="text"/>',
-			"""<apply name="buildfoo">
-				<setup>
-					<par name="foo" late="True"/>
-				</setup>
-			 <code>result["d"] = @foo</code>
-			</apply>""",)
-		res = rsc.makeData(dd, forceSource=[{}])
-
-
 
 class VarTest(testhelpers.VerboseTest):
 	"""tests for rowmaker variables.

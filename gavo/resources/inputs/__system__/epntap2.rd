@@ -616,7 +616,10 @@
 				<codeItems>
 					# overridden is a set of column names for which the parameters
 					# are manually defined above
-					overridden = set()
+					overridden = set(["index_", "dataset_id",
+						"target_name", "time_scale", "spatial_frame_type",
+						"instrument_host_name", "instrument_name",
+						"access_format", "target_region", "target_class"])
 
 					mixin = context.getById("table-2_0")
 					colDict = {}
