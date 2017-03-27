@@ -110,7 +110,7 @@
 	<STREAM id="tapexamples">
 		<doc>Examples for TAP querying</doc>
 		
-		<meta name="_example" title="tap_schema example">
+<!--		<meta name="_example" title="tap_schema example">
 			To locate columns "by physics", as it were, use UCD in
 			:taptable:`tap_schema.columns`.  For instance,
 			to find everything talking about the mid-infrared about 10µm, you
@@ -120,7 +120,7 @@
 				
 				SELECT * FROM tap_schema.columns 
 				  WHERE description LIKE '%em.IR.8-15um%'
-		</meta>
+		</meta>  -->
 	</STREAM>
 
 	
