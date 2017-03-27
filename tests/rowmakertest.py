@@ -282,6 +282,30 @@ class ApplyTest(testhelpers.VerboseTest):
 		rmk = rmkdef.compileForTableDef(tab.tableDef)
 		self.assertEqual(rmk({"xzzx": "u"}, None)["norks"], "uh")
 
+	def testMissingRequiredPar(self):
+		self.assertRaisesWithMsg(base.StructureError,
+			'At [<data><table id="foo"><colu...], (6, 3): Parameter'
+			' foo is not defaulted in foo and thus must be bound.',
+			makeDD,
+			('<column name="d" type="text"/>',
+			"""<apply name="foo">
+				<setup>
+					<par name="foo" late="True"/>
+				</setup>
+			 <code>result["d"] = @foo</code>
+			</apply>""",))
+
+	def testNotGivenNotEscaping(self):
+		dd, _ = makeDD('<column name="d" type="text"/>',
+			"""<apply name="buildfoo">
+				<setup>
+					<par name="foo" late="True"/>
+				</setup>
+			 <code>result["d"] = @foo</code>
+			</apply>""",)
+		res = rsc.makeData(dd, forceSource=[{}])
+
+
 
 class VarTest(testhelpers.VerboseTest):
 	"""tests for rowmaker variables.

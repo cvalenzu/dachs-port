@@ -74,7 +74,7 @@
 		<column name="thumbnail" type="text" 
 			ucd="meta.ref.url;meta.file"
 			description="URL of a thumbnail image with predefined size (png ~200 
-							pix, for use in a client only)."
+			pix, for use in a client only)."
 			displayHint="type=url">
 			<property key="std">1</property>
 		</column>
@@ -136,15 +136,22 @@
 					<bind name="table">"\schema.epn_core"</bind>
 				</rowfilter>
 
-			Use the `//epntap#populate`_ apply in rowmakers
+			If you absolutely cannot use //products#define, you will hve 
+			to manually provide the prodtblFsize (file size in *bytes*),
+			prodtblAccref (product URL), and prodtblPreview (thumbnail image
+			or None) keys in what's coming from your grammar.
+
+			Use the `//epntap2#populate-2.0`_ apply in rowmakers
 			feeding tables mixing this in.
 		]]></doc>
 
 		<mixinPar key="spatial_frame_type" description="Flavour of the 
 			coordinate system, should be the same as for ProcDef" />
 		<mixinPar key="optional_columns" description="Space-separated list
-			of names of optional columns to include (e.g. access_url, 
-			collection_id, etc; check the spec)">__EMPTY__</mixinPar>
+			of names of optional columns to include.  Column names available
+			include publisher, collection_id, access_url, access_format,
+			access_estsize, thumbnail, file_name, species, alt_target_name,
+			target_region, time_scale, bib_reference">__EMPTY__</mixinPar>
 
 		<processEarly>
 			<setup>
@@ -619,12 +626,16 @@
 						elif type=="end":
 							if name=="column":
 								if colDict.get("name") not in overridden:
+									if colDict.get("required", False):
+										colDict["default"] = ''
+									else:
+										colDict["default"] = 'None'
 									yield colDict
 								colDict = {}
 				</codeItems>
 				<events>
 					<par key="\name" description="\description"
-						late="True">None</par>
+						late="True">\default</par>
 				</events>
 			</LOOP>
 			<code>
@@ -650,7 +661,7 @@
 			vars["access_estsize"] = vars["prodtblFsize"]/1024
 			vars["access_url"] = makeProductLink(vars["prodtblAccref"])
 			if @prodtblPreview:
-				vars["preview_url"] = @prodtblPreview
+				vars["thumbnail"] = @prodtblPreview
 			vars["accref"] = vars["prodtblAccref"]
 		</code>
 	</procDef>

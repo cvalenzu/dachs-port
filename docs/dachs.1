@@ -90,7 +90,7 @@ suppress logging of exceptions to the dachs\-specific log files
 .B \-\-version
 shows the versions of the software, of the database schema
 expected by the software and of the database schema actually
-on disk (if the latter two disagree, run \fBdachs upgrade\fR).
+on disk (if the latter two disagree, run dachs upgrade).
 .UNINDENT
 .SH THE ADMIN SUBCOMMAND
 .sp
@@ -640,9 +640,9 @@ dachs upgrade
 Each DaCHS version has an associated database schema version, encoding
 the structure of DaCHS\(aq (and the impemented protocol versions\(aq) ideas of
 how system and user tables should look like.  \fBdachs upgrade\fP attempts
-to work out how to change the database to match expectations of the
+to work out how to change the database to match the expectations of the
 current version and executes the respective code.  It will not touch
-anything if it decrees that the installation is up to date.
+its data structures if it decrees that the installation is up to date.
 .sp
 Operating system packages will usually try to run \fBdachs upgrade\fP as
 part of their management operation.  In case \fBdachs upgrade\fP requires
@@ -651,6 +651,32 @@ call \fBdachs upgrade\fP manually.
 .sp
 Operators keeping a manually installed DaCHS should run \fBdachs upgrade\fP
 after each \fBsvn update\fP or update from tar.
+.sp
+\fBdachs upgrade\fP cannot perform actions requiring superuser privileges,
+since none of its roles have those.  Currently, this is mainly updating
+postgres extensions DaCHS uses (if you use extra ones, you can configure
+DaCHS\(aq watch list in [db]managedExtensions).  \fBdachs upgrade \-e\fP will
+attempt to figure out the instructions necessary to update extensions
+and write them to stdout.  Hence, operators should execute something
+like \fBdachs upgrade \-e | psql gavo\fP from a database superuser account
+after upgrading postgres extensions.
+.SS Options
+.INDENT 0.0
+.INDENT 3.5
+.INDENT 0.0
+.TP
+.BI \-\-force\-dbversion \ FORCEDBVERSION
+assume this as the database\(aqs schema version. If you
+don\(aqt develop DaCHS, you almost certainly should stay
+clear of this flag
+.TP
+.B \-e\fP,\fB  \-\-get\-extension\-script
+Dump a script to update DaCHS\-managed extensions (will
+print nothing if no extensions need updating). This
+will return 0 if material was written, 1 otherwise.
+.UNINDENT
+.UNINDENT
+.UNINDENT
 .SH THE ADQL SUBCOMMAND
 .sp
 Synopsis:
@@ -680,11 +706,6 @@ in several documents available at \fI\%http://docs.g\-vo.org/DaCHS/\fP
 (upstream site with PDF downloads and the formatted reference
 documentation) and \fI\%http://dachs\-doc.readthedocs.io/en/latest/index.html\fP
 (with facilities for updating the documents).
-.sp
-Until-2017 a previous name of the the command was \fBgavo [...]\fR
-instead of \fBdachs [...]\fR, and this form may still be found in
-older documentation.  These examples can be safely updated using
-a one-to-one mapping, and corrections/patches are welcomed.
 .SH COPYRIGHT
 .sp
 Copyright  ©  2017  The GAVO project.  License GPLv3+: GNU
