@@ -83,13 +83,20 @@ class _GeometryTable(testhelpers.TestResource):
 
 	def make(self, deps):
 		self.rd = testhelpers.getTestRD()
-		ds = rsc.makeData(self.rd.getById("import_adqlgeo"),
-			connection=deps["conn"],
-			forceSource=self._iterRows())
-		tap.publishToTAP(self.rd, deps["conn"])
+		try:
+			ds = rsc.makeData(self.rd.getById("import_adqlgeo"),
+				connection=deps["conn"],
+				forceSource=self._iterRows())
+			tap.publishToTAP(self.rd, deps["conn"])
+		except base.SourceParseError:
+			ds = "SMoc is not available, tests will fail"
 		return ds
 	
 	def clean(self, ds):
+		if isinstance(ds, basestring):
+			# it's a fake thing because we didn't have SMoc available
+			return
+
 		ds.tables.values()[0].connection.rollback()
 		ds.dropTables(rsc.parseNonValidating)
 		ds.commitAll().closeAll()
