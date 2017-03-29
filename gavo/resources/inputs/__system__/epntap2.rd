@@ -37,31 +37,23 @@
 	</STREAM>
 
 	<table id="optional_columns">
-		<column name="publisher"	type="text" 
-			ucd="meta.ref" 
-			description="A short string identifying the entity running
-				the data service used.">
-			<property key="std">1</property>
-		</column>
-
-		<column name="collection_id" type="text"
-			ucd="meta.id"
-			description="Identifier of the collection this piece of data
-				belongs to">
-			<property key="std">1</property>
-		</column>
-
+		<!-- to get this list (for optional columns mixin docs), run in vi:
+			!/<.table grep "<column" | sed -e 's/.*name="\([^"]*\)".*/\1/'
+		-->
 		<column name="access_url"	type="text" 
 			ucd="meta.ref.url;meta.file" utype="Obs.Access.Reference"
-			description="URL of the data file, case sensitive. Can point to a script." 
+			description="URL of the data file, case sensitive. Can point 
+			to a script." 
 			displayHint="type=url">
 			<property key="std">1</property>
 		</column>
+
 		<column name="access_format"	type="text"
 			ucd="meta.code.mime" utype="Obs.Access.Format"
-			description="File format type">
+			description="File format type (RFC 6838 Media Type a.k.a MIME type)">
 			<property key="std">1</property>
 		</column>
+
 		<column name="access_estsize"	type="integer"
 			ucd="phys.size;meta.file" unit="kbyte"
 			utype="Obs.Access.Size"
@@ -69,37 +61,90 @@
 			<property key="std">1</property>
 			<values nullLiteral="-1"/>
 		</column>
-		<column name="thumbnail" type="text" 
+
+		<column name="access_md5" type="text"
+			ucd="meta.checksum;meta.file" 
+			description="MD5 Hash for the file">
+			<property key="std">1</property>
+		</column>
+
+		<column name="thumbnail_url" type="text" 
 			ucd="meta.ref.url;meta.file"
 			description="URL of a thumbnail image with predefined size (png ~200 
 			pix, for use in a client only)."
 			displayHint="type=url">
 			<property key="std">1</property>
 		</column>
+
 		<column name="file_name" type="text" 
 			ucd="meta.id;meta.file"
 			description="Name of the data file only, case sensitive."
 			displayHint="type=url">
 			<property key="std">1</property>
 		</column>
+
 		<column name="species" type="text" 
 			ucd="meta.id;phys.atmol"
 			description="Identifies a chemical species, case sensitive">
 			<property key="std">1</property>
 		</column>
+
 		<column name="filter" type="text" 
 			ucd="inst.filter.id"
 			description="Identifies a filter in use (e.g. imaging)">
 			<property key="std">1</property>
 		</column>
+
 		<column name="alt_target_name" type="text" 
 			ucd="meta.id;src"
-			description="Provides alternative target name if more common (e.g. comets)">
+			description="Provides alternative target name if more 
+			common (e.g. comets)">
 			<property key="std">1</property>
 		</column>
+
 		<column name="target_region"	type="text" 
 			ucd="meta.id;class" 
 			description="Type of region of interest">
+			<property key="std">1</property>
+		</column>
+
+		<column name="feature_name" type="text"
+			ucd="meta.id;pos"
+			description="Secondary name (can be standard name of region of
+				interest).">
+			<property key="std">1</property>
+		</column>
+
+		<column name="bib_reference"	type="text" 
+			ucd="meta.bib" 
+			description="Bibcode preferred if available (does that include link?), 
+							doi, or other biblio id, URL">
+			<property key="std">1</property>
+		</column>
+
+		<column name="publisher"	type="text" 
+			ucd="meta.ref" 
+			description="A short string identifying the entity running
+				the data service used.">
+			<property key="std">1</property>
+		</column>
+
+		<column name="spatial_coordinate_description" type="text"
+			ucd="meta.code.class;pos.frame"
+			description="ID of specific coordinate system and version.">
+			<property key="std">1</property>
+		</column>
+
+		<column name="spatial_origin" type="text"
+			ucd="meta.ref;pos.frame"
+			description="Defines the frame origin.">
+			<property key="std">1</property>
+		</column>
+
+		<column name="time_origin" type="text"
+			ucd="meta.ref;time.scale"
+			description="Defines wehere the time is measured (e.g., ground vs.
+				spacecraft).">
 			<property key="std">1</property>
 		</column>
 
@@ -107,12 +152,6 @@
 			ucd="time.scale" 
 			description="Always UTC in data services (may be relaxed in computational 
 							services such as ephemeris) - from enumerated list">
-			<property key="std">1</property>
-		</column>
-		<column name="bib_reference"	type="text" 
-			ucd="meta.bib" 
-			description="Bibcode preferred if available (does that include link?), 
-							doi, or other biblio id, URL">
 			<property key="std">1</property>
 		</column>
 	</table>
@@ -151,9 +190,11 @@
 			spherical, healpix." />
 		<mixinPar key="optional_columns" description="Space-separated list
 			of names of optional columns to include.  Column names available
-			include publisher, collection_id, access_url, access_format,
-			access_estsize, thumbnail, file_name, species, alt_target_name,
-			target_region, time_scale, bib_reference">__EMPTY__</mixinPar>
+			include 
+			access_url access_format access_estsize access_md5 thumbnail_url
+			file_name species filter alt_target_name target_region feature_name
+			bib_reference publisher spatial_coordinate_description spatial_origin
+			time_origin time_scale">__EMPTY__</mixinPar>
 
 		<processEarly>
 			<setup>
@@ -560,8 +601,8 @@
 			entered into the products table, and it will automatically
 			compute file size, etc.
 
-			This wants a `\\products#define`_ rowfilter in your grammar
-			and a `\\epntap2#populate-localfile-2_0`_ apply in your rowmaker.
+			This wants a `//products#define`_ rowfilter in your grammar
+			and a `//epntap2#populate-localfile-2_0`_ apply in your rowmaker.
 		</doc>
 		<events>
 			<index columns="accref"/>
@@ -686,7 +727,7 @@
 
 	<procDef id="populate-localfile-2_0" type="apply">
 		<doc>
-			Use this apply when you use the `//epntap2#local-files`_ mixin.
+			Use this apply when you use the `//epntap2#localfile-2_0`_ mixin.
 			This will only (properly) work when you use a `//products#define`_
 			rowfilter; if you have that, this will work without further 
 			configuration.
