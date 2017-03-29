@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <resource schema="__system">
 	<STREAM id="_minmax">
 		<doc>
@@ -128,7 +126,7 @@
 			should be called ``epn_core``.  The mixin already arranges
 			for the table to be accessible by ADQL and be on disk.
 
-			This also mixes causes the product table to be populated.
+			This also causes the product table to be populated.
 			This means that grammars feeding such tables need a 
 			`//products#define`_ row filter.  At the very least, you need to say::
 
@@ -141,12 +139,16 @@
 			prodtblAccref (product URL), and prodtblPreview (thumbnail image
 			or None) keys in what's coming from your grammar.
 
-			Use the `//epntap2#populate-2.0`_ apply in rowmakers
+			Use the `//epntap2#populate-2_0`_ apply in rowmakers
 			feeding tables mixing this in.
 		]]></doc>
 
 		<mixinPar key="spatial_frame_type" description="Flavour of the 
-			coordinate system, should be the same as for ProcDef" />
+			coordinate system.  Since this determines the units of the
+			coordinates columns, this must be set globally for the
+			entire dataset. Values defined by EPN-TAP and understood
+			by this mixin include celestial, body, cartesian, cylindrical, 
+			spherical, healpix." />
 		<mixinPar key="optional_columns" description="Space-separated list
 			of names of optional columns to include.  Column names available
 			include publisher, collection_id, access_url, access_format,
@@ -227,6 +229,8 @@
 			</setup>
 			<code>
 				setFrameMeta(substrate, mixinPars["spatial_frame_type"])
+				substrate.setProperty("spatial_frame_type", 
+					mixinPars["spatial_frame_type"])
 				if mixinPars["optional_columns"]:
 					addOptionalColumns(substrate, mixinPars["optional_columns"])
 			</code>
@@ -547,6 +551,26 @@
 
 	</mixinDef>
 
+
+	<mixinDef id="localfile-2_0">
+		<doc>
+			Use this mixin if your epntap table is filled with local products
+			(i.e., sources matches files on your hard disk that DaCHS should
+			hand out itself).  This will arrange for your products to be
+			entered into the products table, and it will automatically
+			compute file size, etc.
+
+			This wants a `\\products#define`_ rowfilter in your grammar
+			and a `\\epntap2#populate-localfile-2_0`_ apply in your rowmaker.
+		</doc>
+		<events>
+			<index columns="accref"/>
+			<column original="//products#products.accref"/>
+		</events>
+		<FEED source="//products#hackProductsData"/>
+	</mixinDef>
+
+
 	<procDef type="apply" id="populate-2_0">
 		<doc>
 			Sets metadata for an epntap data set, including its products definition.
@@ -577,10 +601,6 @@
 				various times, as given by IVOA's STC data model.  Choose
 				from TT, TDB, TOG, TOB, TAI, UTC, GPS, UNKNOWN" 
 				late="True">"UNKNOWN"</par>
-			<par key="spatial_frame_type" description="Flavor of the
-				coordinate system (this also fixes the meanings of c1, c2, and
-				c3).  Values defined by EPN-TAP include celestial, body,
-				cartesian, cylindrical, spherical, healpix." late="True"/>
 			<par key="instrument_host_name" description="Name of the observatory
 				or spacecraft that the observation originated from; for
 				ground-based data, use IAU observatory codes, 
@@ -615,9 +635,9 @@
 			<LOOP>
 				<codeItems>
 					# overridden is a set of column names for which the parameters
-					# are manually defined above
+					# are manually defined above or which are set in some other way.
 					overridden = set(["index_", "dataset_id",
-						"target_name", "time_scale", "spatial_frame_type",
+						"target_name", "time_scale",
 						"instrument_host_name", "instrument_name",
 						"access_format", "target_region", "target_class"])
 
@@ -659,7 +679,19 @@
 			l = locals()
 			for key in EPNTAP_KEYS:
 				vars[key] = l[key]
-			
+			vars["spatial_frame_type"] = targetTable.tableDef.getProperty(
+				"spatial_frame_type", None)
+		</code>
+	</procDef>
+
+	<procDef id="populate-localfile-2_0" type="apply">
+		<doc>
+			Use this apply when you use the `//epntap2#local-files`_ mixin.
+			This will only (properly) work when you use a `//products#define`_
+			rowfilter; if you have that, this will work without further 
+			configuration.
+		</doc>
+		<code>			
 			# map things from products#define
 			vars["access_estsize"] = vars["prodtblFsize"]/1024
 			vars["access_url"] = makeProductLink(vars["prodtblAccref"])

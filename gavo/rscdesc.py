@@ -564,7 +564,7 @@ def getRD(srcId, doQueries=True, restricted=False, useRD=None):
 	try:
 		rd = base.parseFromStream(rd, inputFile, context=getRD_context)
 	except Exception, ex:
-		ex.srcPath = srcPath
+		ex.inFile = srcPath
 		ex.cacheable = getRD_context.failuresAreCacheable
 		raise
 	setRDDateTime(rd, inputFile)

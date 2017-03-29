@@ -151,7 +151,7 @@ class FakeSimbad(object):
 from gavo.imp import testresources
 from gavo.imp.testresources import TestResource  #noflake: exported name
 from gavo.helpers.testtricks import (  #noflake: exported names
-	XSDTestMixin, testFile, getMemDiffer) 
+	XSDTestMixin, testFile, getMemDiffer, getXMLTree) 
 
 # Here's the deal on TestResource: When setting up complicated stuff for
 # tests (like, a DB table), define a TestResource for it.  Override
@@ -438,27 +438,6 @@ def cleanXML(aString):
 	"""
 	return re.sub("\s+", " ", _xmlJunkPat.sub('', aString)).strip(
 		).replace(" />", "/>").replace(" >", ">")
-
-
-def _nukeNamespaces(xmlString):
-	nsCleaner = re.compile('^(</?)(?:[a-z0-9]+:)')
-	return re.sub("(?s)<[^>]*>", 
-		lambda mat: nsCleaner.sub(r"\1", mat.group()),
-		re.sub('xmlns="[^"]*"', "", xmlString))
-
-
-def getXMLTree(xmlString, debug=False):
-	"""returns an libxml2 etree for xmlString, where, for convenience,
-	all namespaces on elements are nuked.
-
-	The libxml2 etree lets you do xpath searching using the xpath method.
-	"""
-	from lxml import etree as lxtree
-	tree = lxtree.fromstring(_nukeNamespaces(xmlString))
-
-	if debug:
-		lxtree.dump(tree)
-	return tree
 
 
 def printFormattedXML(xmlString):

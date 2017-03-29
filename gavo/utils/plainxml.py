@@ -116,9 +116,10 @@ class iterparse(object):
 					self.close()
 					break
 			except expat.ExpatError, ex:
-				newEx = self.parseErrorClass(str(ex))
+				srcDesc = getattr(self.source, "name", "(internal source)")
+				newEx = self.parseErrorClass(srcDesc+" "+str(ex))
 				newEx.posInMsg = True  # see base.xmlstruct
-				newEx.inFile = getattr(self.source, "name", "(internal source)")
+				newEx.inFile = srcDesc
 				raise misctricks.logOldExc(newEx)
 
 		if not self.evBuf:

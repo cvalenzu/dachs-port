@@ -60,3 +60,5 @@ from gavo.user.logui import LoggingUI
 from gavo.user.plainui import StingyPlainUI, PlainUI
 
 from gavo.votable import VOTableError, ADQLTAPJob
+
+from gavo.helpers.testtricks import getXMLTree

@@ -332,8 +332,10 @@ class ValidationTest(testhelpers.VerboseTest):
 				</STREAM></resource>"""):
 			self.assertOutput(cli.main, argList=["val", "%"],
 				expectedRetcode=0, expectedStderr='',
-				expectedStdout='% -- [ERROR] %: Malformed RD input, message follows\n'
-					"  *** Error: mismatched tag: line 2, column 6\n  \nFail\n")
+				expectedStdout=lambda text: re.match(
+					r'% -- \[ERROR\] %: Malformed RD input, message follows\s+'
+					r"\*\*\* Error: .*etc/userconfig.rd"
+					"\s+mismatched tag:\s+line 2, column 6", text))
 
 
 class CLIReferenceTest(testhelpers.VerboseTest):

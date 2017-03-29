@@ -17,6 +17,7 @@ from __future__ import with_statement
 import contextlib
 import gzip
 import os
+import re
 import subprocess
 import tempfile
 import unittest
@@ -25,6 +26,30 @@ from lxml import etree
 
 from gavo import base
 from gavo import utils
+
+
+def _nukeNamespaces(xmlString):
+	nsCleaner = re.compile('^(</?)(?:[a-z0-9]+:)')
+	return re.sub("(?s)<[^>]*>", 
+		lambda mat: nsCleaner.sub(r"\1", mat.group()),
+		re.sub('xmlns="[^"]*"', "", xmlString))
+
+
+def getXMLTree(xmlString, debug=False):
+	"""returns an libxml2 etree for xmlString, where, for convenience,
+	all namespaces on elements are nuked.
+
+	The libxml2 etree lets you do xpath searching using the xpath method.
+
+	Nuking namespaces is of course not a good idea in general, so you
+	might want to think again before you use this in production code.
+	"""
+	from lxml import etree as lxtree
+	tree = lxtree.fromstring(_nukeNamespaces(xmlString))
+
+	if debug:
+		lxtree.dump(tree)
+	return tree
 
 
 def getXSDErrorsXerces(data, leaveOffending=False):

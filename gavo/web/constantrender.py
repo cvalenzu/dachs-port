@@ -46,12 +46,12 @@ class StaticRenderer(grend.ServiceBasedPage):
 		try:
 			self.indexFile = os.path.join(service.rd.resdir, 
 				service.getProperty("indexFile"))
-		except KeyError:
+		except base.NotFoundError:
 			self.indexFile = None
 		try:
 			self.staticPath = os.path.join(service.rd.resdir, 
 				service.getProperty("staticData"))
-		except KeyError:
+		except base.NotFoundError:
 			self.staticPath = None
 
 	@classmethod

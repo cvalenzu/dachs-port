@@ -28,6 +28,7 @@ of internal structure, add methods
 from gavo.base import attrdef
 from gavo.base import common
 from gavo.base import literals
+from gavo.utils import excs
 
 __docformat__ = "restructuredtext en"
 
@@ -275,7 +276,9 @@ class PropertyAttribute(DictAttribute):
 				try:
 					return self.properties[name]
 				except KeyError:
-					raise KeyError("%s has no property '%s' set"%(self, name))
+					raise excs.NotFoundError(name,
+						"property",
+						repr(self))
 			else:
 				return self.properties.get(name, default)
 		yield "getProperty", getProperty

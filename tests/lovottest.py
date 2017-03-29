@@ -131,7 +131,8 @@ class ErrorParseTest(testhelpers.VerboseTest):
 		except Exception, ex:
 			pass
 		self.assertEqual(ex.__class__.__name__, "VOTableParseError")
-		self.assertEqual(str(ex), "no element found: line 1, column 9")
+		self.assertEqual(str(ex), 
+			"(internal source) no element found: line 1, column 9")
 
 	def testInternalReporting(self):
 		table = votable.parseString("<VOTABLE><RESOURCE><TABLE>\n"
@@ -928,7 +929,7 @@ class WeirdTablesTest(testhelpers.VerboseTest):
 	def testBadStructure(self):
 		it = votable.parseString("<VOTABLE>")
 		self.assertRaisesWithMsg(votable.VOTableParseError, 
-			"no element found: line 1, column 9", list, it)
+			"(internal source) no element found: line 1, column 9", list, it)
 
 	def testLargeTabledata(self):
 		# This test is supposed to exercise multi-chunk parsing.  So,
