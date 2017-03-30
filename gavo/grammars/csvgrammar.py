@@ -23,6 +23,7 @@ class CSVIterator(FileRowIterator):
 			"delimiter": str(self.grammar.delimiter),
 			"fieldnames": self.grammar.names,
 			"skipinitialspace": self.grammar.strip,
+			"restkey": "NOTASSIGNED",
 		}
 
 		if self.grammar.topIgnoredLines:
@@ -49,6 +50,9 @@ class CSVGrammar(Grammar, FileRowAttributes):
 
 	CSVGrammars currently do not support non-ASCII inputs.
 	Contact the authors if you need that.
+
+	If data is left after filling the defind keys, it is available under
+	the NOTASSIGNED key.
 	"""
 	name_ = "csvGrammar"
 

@@ -45,7 +45,8 @@ class CDFHeaderGrammar(Grammar):
 
 	To use this grammar, additional software is required that (by 2014)
 	is not packaged for Debian.  See
-	http://spacepy.lanl.gov/doc/install_linux.html for installation 
+	https://pythonhosted.org/SpacePy/install.html
+	for installation 
 	instructions.  Note that you must install the CDF library itself as
 	described further down on that page; the default installation 
 	instructions do not install the library in a public place, so if
