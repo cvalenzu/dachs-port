@@ -45,7 +45,8 @@ from gavo.stc.times import ( #noflake: exported names
 	bYearToDateTime, jdnToDateTime, mjdToDateTime, TTtoTAI, TAItoTT)
 from gavo.utils import codetricks
 from gavo.utils import ( #noflake: exported names
-	dmsToDeg, hmsToDeg, DEG, parseISODT, iterSimpleText, getFileStem)
+	dmsToDeg, hmsToDeg, DEG, parseISODT, iterSimpleText, getFileStem,
+	getWCSAxis)
 from gavo.utils import pgsphere #noflake: exported names
 
 

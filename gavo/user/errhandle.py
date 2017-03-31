@@ -143,7 +143,7 @@ def raiseAndCatch(opts=None, output=outputError):
 
 		if getattr(msg, "row", None):
 			row = dict((key, value) for key, value in msg.row.iteritems() 
-				if not key.startswith("_") and not key.endswith("_"))
+				if key and not key.startswith("_") and not key.endswith("_"))
 			messages.append("Row %s"%str(row))
 		messages.append(str(msg).decode("iso-8859-1", "ignore"))
 

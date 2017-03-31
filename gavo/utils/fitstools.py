@@ -909,6 +909,23 @@ class WCSAxis(object):
 			get("NAXIS", 1))
 
 
+# WCSAxis.fromHeader wrapper for rmkfuncs
+@codetricks.document
+def getWCSAxis(header, axisIndex, forceSeparable=False):
+	"""returns a WCSAxis instance from an axis index and a FITS header.
+
+	If the axis is mentioned in a transformation matrix (CD or PC),
+	a ValueError is raised (use forceSeparable to override).
+
+	The axisIndex is 1-based; to get a transform for the axis described
+	by CTYPE1, pass 1 here.
+
+	The object returned has methods like pixToPhys, physToPix (and their
+	pix0 brethren) and getLimits.
+	"""
+	return WCSAxis.fromHeader(header, axisIndex, forceSeparable)
+
+
 class ESODescriptorsError(excs.SourceParseError):
 	"""is raised when something goes wrong while parsing ESO descriptors.
 	"""

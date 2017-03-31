@@ -43,7 +43,7 @@ from gavo.utils.excs import *
 
 from gavo.utils.fitstools import (readPrimaryHeaderQuick, pyfits,
 	parseESODescriptors, shrinkWCSHeader, cutoutFITS, iterScaledRows,
-	fitsLock)
+	fitsLock, getWCSAxis)
 
 from gavo.utils.mathtricks import *
 

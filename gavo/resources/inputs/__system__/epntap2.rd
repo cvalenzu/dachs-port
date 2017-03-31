@@ -477,7 +477,9 @@
 
 			<column name="processing_level" type="integer" required="True"
 				ucd="meta.code;obs.calib" 
-				description="CODMAC calibration level"
+				description="CODMAC calibration level; see the et_cal note
+					http://dc.g-vo.org/tableinfo/titan.epn_core#note-et_cal for
+					what values are defined here."
 				note="et_cal">
 				<property key="std">1</property>
 			</column>
@@ -653,9 +655,6 @@
 				complete name + usual acronym. This will allow queries on either
 				'VISIBLE AND INFRARED THERMAL IMAGING SPECTROMETER' or VIRTIS to
 				produce the same reply." late="True">None</par>
-			<par key="access_format" description="The standard text proposes
-				the standard names VOTable, Fits, CSV, ASCII, PDS, as well as
-				image formats." late="True"/>
 			<par key="target_region" description="This is a complement to the
 				target name to identify a substructure of the target that was
 				being observed (e.g., Atmosphere, Surface).  Take terms from
@@ -680,7 +679,8 @@
 					overridden = set(["index_", "dataset_id",
 						"target_name", "time_scale",
 						"instrument_host_name", "instrument_name",
-						"access_format", "target_region", "target_class"])
+						"access_format", "target_region", "target_class",
+						"spatial_frame_type"])
 
 					mixin = context.getById("table-2_0")
 					colDict = {}
@@ -727,7 +727,7 @@
 
 	<procDef id="populate-localfile-2_0" type="apply">
 		<doc>
-			Use this apply when you use the `//epntap2#localfile-2_0`_ mixin.
+			Use this apply when you use `the //epntap2#localfile-2_0 mixin`_.
 			This will only (properly) work when you use a `//products#define`_
 			rowfilter; if you have that, this will work without further 
 			configuration.
