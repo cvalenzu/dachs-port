@@ -103,8 +103,6 @@ class _GeometryTable(testhelpers.TestResource):
 geomTestTable = _GeometryTable()
 
 
-
-
 class SymbolsParseTest(testhelpers.VerboseTest):
 	"""tests for plain parsing on individual productions.
 	"""
@@ -204,6 +202,8 @@ class NakedParseTest(_ADQLParsesTest):
 				"SELECT x FROM y WHERE z=0",
 				"SELECT x, v FROM y WHERE z=0 AND v>2",
 				"SELECT 89 FROM X",
+				"SELECT 89 FROM X AS Y",
+				"SELECT 89 FROM X Y",
 			])
 
 	def testDelimited(self):
@@ -255,7 +255,7 @@ class NakedParseTest(_ADQLParsesTest):
 		self._assertDontParse([
 			"select x from t1 JOIN",
 			"select x from JOIN t1",
-			"select x from t1 quatsch JOIN t1",
+			"select x from t1 join JOIN t1",
 			"select x from t1 NATURAL JOIN t2, t3 OUTER",
 			"select x from t1 NATURAL JOIN t2, t3 ON",
 			"select x from t1, t2, t3 ON",
@@ -371,7 +371,7 @@ class NakedParseTest(_ADQLParsesTest):
 		"""tests for rejection of various bad statements.
 		"""
 		self._assertDontParse([
-			"select a, b from (select * from x) q",
+			"select a, b from (select * from x) q r",
 			"select a, b from (select * from x)",
 			"select x.y.z.a.b from a",
 			"select x from a.b.c.d",
@@ -593,7 +593,7 @@ class ParseErrorTest(testhelpers.VerboseTest):
 			" ,CIRCLE('ICRS',x,y,z))", 
 			'Expected numeric expression (at char 48)'),
 # 15
-		("SELECT * FROM (SELECT * FROM x)", 'Expected "AS" (at char 31)'),
+		("SELECT * FROM (SELECT * FROM x)", 'Expected identifier (at char 31)'),
 		("SELECT * FROM x WHERE EXISTS z", 'Expected subquery (at char 29)'),
 		("SELECT POINT(3,4) FROM z", 
 			'Expected coordinate system literal (ICRS, GALACTIC,...) (at char 13)'),

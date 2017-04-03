@@ -577,7 +577,8 @@ def getADQLGrammarCopy():
 
 # Referencing tables
 		queryExpression = Forward()
-		correlationSpecification = (( CaselessKeyword("AS") | whitespace
+		correlationSpecification = (( 
+			Optional( CaselessKeyword("AS") ) | whitespace
 			) + correlationName("alias"))
 		subqueryOpener = Literal('(')
 		subqueryOpener.setName("subquery")  # for error reporting
