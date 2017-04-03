@@ -479,7 +479,8 @@ class DatalinkMetaRowsTest(testhelpers.VerboseTest):
 	def testAccessURLAccess(self):
 		self.assertEqual(self.rows[
 			('ivo://x-unregistred/~?data/b.imp', '#proc')][0]["access_url"],
-			'http://localhost:8080/data/test/foo/dlget')
+			# take the actual access URL from the service block.
+			None)
 
 	def testAccessURLSelf(self):
 		self.assertEqual(self.rows[

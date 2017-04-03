@@ -879,7 +879,9 @@ class TableSetTest(testhelpers.VerboseTest):
 			"""<resource schema="test"><table id="foo"><column name="bar"/>
 			</table>
 			<service id="quux"><dbCore queriedTable="foo"/></service></resource>""")
-		cols = rd.getById("quux").getTableSet()[0].columns
+		ts = rd.getById("quux").getTableSet()
+		self.assertEqual(len(ts), 1)
+		cols = ts[0].columns
 		self.assertEqual(len(cols), 1)
 		self.assertEqual(cols[0].name, "bar")
 
@@ -888,7 +890,9 @@ class TableSetTest(testhelpers.VerboseTest):
 			"""<resource schema="test">
 			<service id="quux"><nullCore/><outputTable><outputField
 			name="knotz"/></outputTable></service></resource>""")
-		cols = rd.getById("quux").getTableSet()[0].columns
+		ts = rd.getById("quux").getTableSet()
+		self.assertEqual(len(ts), 1)
+		cols = ts[0].columns
 		self.assertEqual(len(cols), 1)
 		self.assertEqual(cols[0].name, "knotz")
 

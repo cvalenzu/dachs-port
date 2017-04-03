@@ -692,20 +692,16 @@ class Service(base.Structure, base.ComputedMetaMixin,
 		definition for what's to be in a tables endpoint either.
 		"""
 		tables = []
-		
-		# output our own outputTable if it sounds reasonable; if so,
-		# add the core's queried table, too, if it has one.
-		if self.outputTable and self.outputTable.columns:
-			tables.append(self.outputTable)
-			tables.append(getattr(self.core, "queriedTable", None))
 
-		else:
-			# if our outputTable is no good, just use the one of the core
-			qt = getattr(self.core, "queriedTable", None)
-			if qt is None:
-				qt = getattr(self.core, "outputTable", None)
-			if qt is not None:
-				tables.append(qt)
+		qt = getattr(self.core, "queriedTable", None)
+		if qt is None or not qt.columns:
+			qt = getattr(self.core, "outputTable", None)
+			if qt is None or not qt.columns:
+				if self.outputTable and self.outputTable.columns:
+					qt = self.outputTable
+
+		if qt is not None:
+			tables.append(qt)
 
 		# XXX TODO: This stinks big time.  It's because we got TAP factorization
 		# wrong.  Sync and async should be renderers, and there should
