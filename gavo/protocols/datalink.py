@@ -663,7 +663,7 @@ class DatalinkCoreBase(svcs.Core, base.ExpansionDelegator):
 		"""
 		internalLinks = []
 
-		internalLinks.extend(LinkDef(s.pubDID, service.getURL(s.rendName),
+		internalLinks.extend(LinkDef(s.pubDID, None,
 				serviceType=ctx.getOrMakeIdFor(s), semantics="#proc")
 			for s in self.datalinkEndpoints)
 
