@@ -862,6 +862,34 @@ class STCEmbedTest(testhelpers.VerboseTest):
 		self.assertEqual(
 			self.twotree.xpath("//*[@ID='%s']"%sysname)[0].get("system"),
 			"ICRS")
+	
+	def testCoreference(self):
+		td = base.parseFromString(rscdef.TableDef, """
+			<table>
+				<stc>Position ICRS "ra0" "dec0" Velocity "pmra_1" "pmde_1"</stc>
+				<stc>Position ICRS "ra0" "dec0" Velocity "pmra_2" "pmde_2"</stc>
+				<column name="ra0"/><column name="dec0"/>
+				<column name="pmra_1"/><column name="pmde_1"/>
+				<column name="pmra_2"/><column name="pmde_2"/>
+			</table>""")
+
+		tree = testhelpers.getXMLTree(
+			votablewrite.getAsVOTable(
+				rsc.TableForDef(td)),
+			debug=False)
+
+		self.assertEqual(tree.xpath("//FIELD[@name='ra0']")[0].get("ref"),
+			"system")
+		self.assertEqual(tree.xpath("//FIELD[@name='dec0']")[0].get("ref"),
+			"system")
+		self.assertEqual(tree.xpath("//FIELD[@name='pmra_1']")[0].get("ref"),
+			"system")
+		self.assertEqual(tree.xpath("//FIELD[@name='pmde_1']")[0].get("ref"),
+			"system")
+		self.assertEqual(tree.xpath("//FIELD[@name='pmra_2']")[0].get("ref"),
+			"system0")
+		self.assertEqual(tree.xpath("//FIELD[@name='pmde_2']")[0].get("ref"),
+			"system0")
 
 
 class STCParseTest(testhelpers.VerboseTest):

@@ -183,6 +183,19 @@ def identity(val):
 	return val
 
 
+def uniqueItems(seq):
+	"""returns a list of the uniqe items in seq as they appear in seq.
+
+	Execept for order and return type, this is essentially like set(seq).
+	"""
+	seenItems, result = set(), []
+	for item in seq:
+		if item not in seenItems:
+			result.append(item)
+			seenItems.add(item)
+	return result
+
+
 def _test():
 	import doctest, algotricks
 	doctest.testmod(algotricks)

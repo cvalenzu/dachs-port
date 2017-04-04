@@ -17,7 +17,7 @@ reason or another should be within the dc package.
 import os
 
 from gavo.utils.algotricks import (
-	chunk, identity, topoSort, commonPrefixLength)
+	chunk, identity, topoSort, commonPrefixLength, uniqueItems)
 
 from gavo.utils.autonode import AutoNode
 

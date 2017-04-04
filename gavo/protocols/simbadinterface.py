@@ -19,6 +19,8 @@ from gavo import utils
 from gavo.utils import ElementTree
 
 
+# TODO: use http://vizier.cfa.harvard.edu/viz-bin/nph-sesame as fallback
+
 class ObjectCache(object):
 	def __init__(self, id):
 		self.id = id

@@ -462,7 +462,7 @@ def _makeCOOSYSFromSTC(utypeMap, serManager):
 	seems preferable to not declaring anything.
 
 	As a side effect, this will change column/@ref attributes (possibly also
-	param/@ref).  If a column is part of two STC structures, the last
+	param/@ref).  If a column is part of two STC structures, the first
 	one will win.  Yeah, that spec sucks.
 	"""
 	coosys = V.COOSYS()
@@ -482,7 +482,9 @@ def _makeCOOSYSFromSTC(utypeMap, serManager):
 		if utype in utypeMap:
 			val = utypeMap[utype]
 			if isinstance(val, stc.ColRef):
-				serManager.getColumnByName(str(val))["ref"] = sysId
+				col = serManager.getColumnByName(str(val))
+				if not col.get("ref"):
+					col["ref"] = sysId
 
 	return coosys
 

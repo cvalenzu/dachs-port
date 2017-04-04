@@ -734,7 +734,7 @@ class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,
 		"""
 		# Do not use our stc attribute -- the columns may come from different
 		# tables and carry stc from there.
-		stcObjects = set(col.stc for col in self)
+		stcObjects = utils.uniqueItems(col.stc for col in self)
 		if None in stcObjects: 
 			stcObjects.remove(None)
 		return stcObjects
