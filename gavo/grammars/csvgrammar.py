@@ -13,7 +13,8 @@ from __future__ import with_statement
 import csv
 
 from gavo import base
-from gavo.grammars.common import Grammar, FileRowIterator, FileRowAttributes
+from gavo.grammars.common import(
+	Grammar, FileRowIterator, FileRowAttributes, MapKeys)
 
 
 class CSVIterator(FileRowIterator):
@@ -31,9 +32,16 @@ class CSVIterator(FileRowIterator):
 				self.inputFile.readline()
 
 		self.csvSource = csv.DictReader(self.inputFile, **consArgs)
-			
+
+	def _iterMappedRows(self):
+		for row in self.csvSource:
+			yield self.grammar.mapKeys.doMap(row)
+
 	def _iterRows(self):
-		return self.csvSource
+		if self.grammar.mapKeys:
+			return self._iterMappedRows()
+		else:
+			return self.csvSource
 
 	def getLocator(self):
 		return "line %s"%self.csvSource.line_num
@@ -72,5 +80,9 @@ class CSVGrammar(Grammar, FileRowAttributes):
 
 	_til = base.IntAttribute("topIgnoredLines", default=0, description=
 		"Skip this many lines at the top of each source file.")
+
+	_mapKeys = base.StructAttribute("mapKeys", childFactory=MapKeys,
+		default=None, copyable=True, description="Prescription for how to"
+		" map header keys to grammar dictionary keys")
 
 	rowIterator = CSVIterator
