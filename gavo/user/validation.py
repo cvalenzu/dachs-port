@@ -89,7 +89,7 @@ def loadRD(rdId):
 			rd = rd.getRealRD()
 
 	except api.RDNotFound:
-		outputError(rdId, "Could not be located")
+		outputError(rdId, "RD or dependency not found, message follows", True)
 	except api.LiteralParseError:
 		outputError(rdId, "Bad literal in RD, message follows", True)
 	except api.StructureError:
