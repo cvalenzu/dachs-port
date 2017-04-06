@@ -39,7 +39,7 @@ from gavo.registry.builders import (getVOResourceElement,
 	getVORMetadataElement)
 from gavo.registry.identifiers import (getResobFromIdentifier,
 	getResobFromRestup, parseIdentifier)
-from gavo.registry.publication import findAllRDs
+from gavo.registry.publication import findAllRDs, HIDDEN_RENDERERS
 from gavo.registry.servicelist import getTableDef
 from gavo.registry.nonservice import ResRec
 from gavo.registry.tableset import getTablesetForService

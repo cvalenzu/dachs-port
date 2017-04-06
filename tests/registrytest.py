@@ -1326,7 +1326,7 @@ class _OtherServiceRRTree(testhelpers.TestResource):
 			if key=="interfaces"]
 
 		return (testhelpers.getXMLTree(
-				builders.getVOResourceElement(rd.services[1]).render(), debug=False),
+				builders.getVOResourceElement(rd.services[1]).render(), debug=True),
 			recs)
 
 
@@ -1368,7 +1368,7 @@ class OtherServiceTest(testhelpers.VerboseTest):
 	def testDBCSLink(self):
 		csIntf = [r for r in self.treeAndRecs[1] if r["renderer"]=="scs.xml"]
 		assert len(csIntf)==1
-		self.assertFalse(r["browseable"])
+		self.assertFalse(csIntf[0]["browseable"])
 		self.assertEqual(csIntf[0]["referenceURL"],
 			"http://localhost:8080/k/scs/info")
 		self.assertEqual(csIntf[0]["accessURL"],

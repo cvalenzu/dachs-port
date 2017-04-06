@@ -34,6 +34,14 @@ from gavo.registry import builders
 from gavo.registry import common
 
 
+# Names of renders that should not be shown to humans; these are
+# also not included in the dc.interfaces table.  Right now, this
+# list only contains the VOSI renderers, but other infrastructure-type
+# capabilites might belong here, too.
+HIDDEN_RENDERERS = frozenset([
+	'tableMetadata', 'availability', 'capabilities'])
+
+
 def makeBaseRecord(res, keepTimestamp=False):
 	"""returns a dictionary giving the metadata common to resource records.
 	"""
@@ -106,9 +114,11 @@ def iterSvcRecs(service, keepTimestamp=False):
 	yield ("resources", rec)
 
 	# each publication becomes one interface, except for auxiliary
-	# publications, which are for the VO registry only.
+	# and VOSI publications, which are for the VO registry only.
 	for pub in service.publications:
 		if pub.auxiliary:
+			continue
+		if pub.render in HIDDEN_RENDERERS:
 			continue
 
 		try:
