@@ -20,10 +20,8 @@ def getSetsForResource(restup):
 	"""
 	with base.getTableConn() as conn:
 		return [str(r[0]) for r in
-			conn.query(
-				common.getServicesRD().getById("sets").getSimpleQuery(
-					["setName"],
-					"sourceRD=%(sourceRD)s AND resId=%(resId)s"),
+			conn.query("SELECT DISTINCT setName FROM dc.sets WHERE"
+				" sourceRD=%(sourceRD)s AND resId=%(resId)s AND NOT deleted",
 				restup)]
 
 

@@ -1232,16 +1232,27 @@ class IdResolutionTest(testhelpers.VerboseTest):
 			"ivo://junk/blastes")
 
 
-class ListRecordsTest(testhelpers.VerboseTest):
-	def testRecords(self):
-		tree = testhelpers.getXMLTree(
+class _ListIdentifiersResponse(testhelpers.TestResource):
+	def make(self, ignored):
+		return testhelpers.getXMLTree(
 			oaiinter.runPMH({"verb": "ListIdentifiers", "metadataPrefix": "ivo_vor"},
-				oaiinter.RegistryCore.builders).render())
-		res = set(el.text for el in tree.xpath("//identifier"))
+				oaiinter.RegistryCore.builders).render(), debug=False)
+
+
+class ListIdentifiersTest(testhelpers.VerboseTest):
+	resources = [("tree", _ListIdentifiersResponse())]
+
+	def testRegistryAndAuthorityPresent(self):
+		res = set(el.text for el in self.tree.xpath("//identifier"))
 		expected = set([
 			"ivo://x-unregistred/__system__/services/registry",
 			"ivo://x-unregistred"])
 		self.assertEqual(res&expected, expected)
+
+	def testSetSpec(self):
+		sets = self.tree.xpath("//header[1]/setSpec")
+		self.assertEqual(len(sets), 1)
+		self.assertEqual(sets[0].text, "ivo_managed")
 
 
 class OAIParameterTest(testhelpers.VerboseTest):
@@ -1261,7 +1272,6 @@ class ResumptionTokenTest(testhelpers.VerboseTest):
 		newPars = oaiinter.parseResumptionToken(pars)
 		self.assertEqual(pars["verb"], newPars["verb"])
 		self.assertEqual(newPars["resumptionToken"], 20)
-		
 
 	def testBadTokenFailsProperly(self):
 		self.assertRaisesWithMsg(oaiinter.BadResumptionToken,

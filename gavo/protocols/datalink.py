@@ -225,7 +225,7 @@ class DescriptorGenerator(rscdef.ProcApp):
 	  - FITSProductDescriptor -- the base class of FITS product descriptors
 	  - DLFITSProductDescriptor -- the same, just for when the product table
 	    has a datalink.
-	  - ProductDescriptor -- the base class of FITSProductDescriptor
+	  - ProductDescriptor -- a base class for your own custom descriptors
 	  - DatalinkFault -- use this when flagging failures
 	  - soda -- contents of the soda module for convenience
 	
