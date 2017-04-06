@@ -444,9 +444,11 @@ class To15Upgrader(Upgrader):
 
 	@classmethod
 	def u_10_add_uws_creationTime(cls, connection):
+		q = base.UnmanagedQuerier(connection)
 		for tableName in [
 				"dc.datalinkjobs", "uws.userjobs", "tap_schema.tapjobs"]:
-			connection.execute("ALTER TABLE IF EXISTS %s"
+			if q.tableExists(tableName):
+				connection.execute("ALTER TABLE %s"
 					" ADD COLUMN creationTime TIMESTAMP"%tableName)
 
 # next upgrade: drop DM declaration for Obscore 1.0
