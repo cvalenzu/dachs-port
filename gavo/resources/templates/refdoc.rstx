@@ -793,8 +793,8 @@ type
 
   humanDate
     display a timestamp value or a real number in either yr (julian
-    year), d (JD, or MJD if xtype is mjd), or s (unix timestamp) as 
-    an ISO string.
+    year), d (JD, or MJD if DaCHS guesses it's mjd; that's unfortunately
+    arcane still), or s (unix timestamp) as an ISO string.
 
   humanDay
     display a timestamp or date value as an ISO string without time.

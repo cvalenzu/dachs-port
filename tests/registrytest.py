@@ -1326,7 +1326,7 @@ class _OtherServiceRRTree(testhelpers.TestResource):
 			if key=="interfaces"]
 
 		return (testhelpers.getXMLTree(
-				builders.getVOResourceElement(rd.services[1]).render(), debug=True),
+				builders.getVOResourceElement(rd.services[1]).render(), debug=False),
 			recs)
 
 

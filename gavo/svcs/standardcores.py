@@ -37,7 +37,8 @@ class PhraseMaker(rscdef.ProcApp):
 
 	PhraseMaker code must *yield* SQL fragments that can occur in WHERE
 	clauses, i.e., boolean expressions (thus, they must be generator
-	bodies).
+	bodies).  The clauses yielded by a single condDesc are combined
+	with the joiner set in the containing CondDesc (default=OR).
 
 	The following names are available to them:
 

@@ -317,7 +317,8 @@ def datetimeMapperFactory(colDesc):
 			colDesc["nullvalue"] = ""
 
 		elif (colDesc["ucd"] and "MJD" in colDesc["ucd"].upper()
-				) or colDesc["xtype"]=="mjd":
+				) or (colDesc["xtype"]=="mjd"
+				) or "mjd" in colDesc["name"]:
 			colDesc["unit"] = "d"
 			fun = lambda val: (val and dateTimeToMJD(val))
 			destType = ("double", '1')

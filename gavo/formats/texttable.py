@@ -184,13 +184,15 @@ def jdMapperFactory(colDesc):
 	"""maps JD, MJD, unix timestamp, and julian year columns to 
 	human-readable datetimes.
 
-	MJDs are caught by inspecting the UCD.
+	MJDs are caught by inspecting the UCD or the name.
 	"""
 	if (colDesc["displayHint"].get("type")=="humanDate"
 			and colDesc["dbtype"] in ("double precision", "real")):
 
 		if colDesc["unit"]=="d":
-			if "mjd" in colDesc["ucd"].lower() or colDesc["xtype"]=="mjd":
+			if ("mjd" in colDesc["ucd"].lower() 
+					or colDesc["xtype"]=="mjd"
+					or "mjd" in colDesc["name"]):
 				converter = stc.mjdToDateTime
 			else:
 				converter = stc.jdnToDateTime
