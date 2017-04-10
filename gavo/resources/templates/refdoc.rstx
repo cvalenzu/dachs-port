@@ -903,9 +903,9 @@ The elements of SIL are:
 * Plain Identifiers. These are C-like identifiers (a letter or an
   underscore optionally followed by letters, number or underscores).
 
-* Comments. SIL comments are classical C-style comments (/*...*/).  They
+* Comments. SIL comments are classical C-style comments (``/*...*/``).  They
   don't nest yet, but they probably will at some point, so don't write
-  put /* within a comment.
+  ``/*`` within a comment.
 
 * Object annotation.  This is like a dictionary; only plain identifiers
   are allowed as keys.  So, an object looks like this::

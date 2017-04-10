@@ -691,6 +691,7 @@
 			<index columns="ssa_creatorDID"/>
 			<index columns="ssa_targname"/>
 			<index columns="ssa_targetpos" method="GIST"/>
+			<index columns="ssa_location" method="GIST"/>
 			<LFEED source="//ssap#hcd_fields"/>
 			<LFEED source="//ssap#hcd_outpars"/>
 		</events>

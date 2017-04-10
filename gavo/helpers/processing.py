@@ -627,23 +627,22 @@ class SpectralPreviewMaker(PreviewMaker):
 		PreviewMaker._createAuxiliaries(self, dd)
 		self.sdmDD = self.dd.rd.getById(self.sdmId)
 
-	def getPreviewData(self, accref):
-		table = rsc.makeData(self.sdmDD, forceSource={
-			"accref": accref}).getPrimaryTable()
-		data = [(r["spectral"], r["flux"]) for r in table.rows]
-		data.sort()
-
+	@staticmethod
+	def get2DPlot(tuples, linear=False):
+		"""returns a jpg-compressed pixel image for a 2D plot of (x,y)
+		tuples.
+		"""
 		fig = pyplot.figure(figsize=(4,2))
 		ax = fig.add_axes([0,0,1,1], frameon=False)
 
-		if self.linearFluxes:
+		if linear:
 			plotter = ax.plot
 		else:
 			plotter = ax.semilogy
 		
 		plotter(
-			[r[0] for r in data], 
-			[r[1] for r in data],
+			[r[0] for r in tuples], 
+			[r[1] for r in tuples],
 			color="black")
 		ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
 		ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
@@ -660,6 +659,14 @@ class SpectralPreviewMaker(PreviewMaker):
 		compressed = StringIO()
 		im.save(compressed, format="png", bits=3)
 		return compressed.getvalue()
+
+	def getPreviewData(self, accref):
+		table = rsc.makeData(self.sdmDD, forceSource={
+			"accref": accref}).getPrimaryTable()
+		data = [(r["spectral"], r["flux"]) for r in table.rows]
+		data.sort()
+
+		return self.get2DPlot(data, self.linearFluxes)
 
 
 def procmain(processorClass, rdId, ddId):

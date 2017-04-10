@@ -172,7 +172,8 @@ class SSAPCore(svcs.DBCore):
 		previewName = col.name
 
 		for row in resultTable:
-			row[previewName] = row["accref"]+"?preview=True"
+			if row[previewName] is None:
+				row[previewName] = row["accref"]+"?preview=True"
 
 	def getQueryCols(self, service, queryMeta):
 		"""changes our spoint columns to array[2] as required by SSA.
