@@ -322,7 +322,8 @@ def defineField(ctx, element, colDesc):
 	# bomb if you got an Element rather than an instance -- with an
 	# Element, things would appear to work, but changes are lost when
 	# this function ends.
-	assert not isinstance(element, type)
+	assert not isinstance(element, type), ("Got FIELD/PARAM element"
+		" instead of instance in VOTable defineField")
 
 	if colDesc["arraysize"]!='1':
 		element(arraysize=colDesc["arraysize"])

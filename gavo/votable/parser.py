@@ -68,7 +68,8 @@ class IGNORE(object):
 def _processNodeDefault(text, child, parent):
 	"""the default node processor: Append child to parent, return child.
 	"""
-	assert not (text and text.strip())
+	assert not (text and text.strip()), (
+		"Content '%s' in must-empty VOTable element %s"%(text, repr(child)))
 	parent[child]
 	return child
 
@@ -84,6 +85,10 @@ def _processNodeWithContent(text, child, parent):
 
 _end_DESCRIPTION = _processNodeWithContent
 _end_INFO = _processNodeWithContent
+_end_MODEL = _processNodeWithContent
+_end_URL = _processNodeWithContent
+_end_LITERAL = _processNodeWithContent
+_end_NAME = _processNodeWithContent
 # STREAMs and TABLEDATA should ordinarily be processed by the table 
 # iterator, so this really is only interesting for special applications:
 _end_STREAM = _processNodeWithContent  
