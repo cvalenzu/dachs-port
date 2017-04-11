@@ -226,13 +226,9 @@ class Model(object):
 	def getVOT(self, ctx, instance):
 		"""returns xmlstan for a VOTable declaration of this DM.
 		"""
-		return V.GROUP(vodml_type="vo-dml:Model")[
-			V.PARAM(datatype="char", arraysize="*",name="prefix", value=self.prefix,
-				vodml_role="name"),
-			V.PARAM(datatype="char", arraysize="*", name="version", 
-				value=self.version, vodml_role="version"),
-			V.PARAM(datatype="char", arraysize="*", name="url", value=self.url,
-				vodml_role="url")]
+		return V.MODEL[
+			V.NAME(version=self.version)[self.prefix],
+			V.URL[self.url]]
 
 
 @utils.memoized

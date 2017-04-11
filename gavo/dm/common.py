@@ -16,6 +16,7 @@ import contextlib
 import re
 import weakref
 
+from gavo import utils
 from gavo import votable
 from gavo.votable import V
 
@@ -139,17 +140,28 @@ class AtomicAnnotation(AnnotationBase):
 			newInstance)
 
 	def getVOT(self, ctx, instance):
-		attrs = votable.guessParamAttrsForValue(self.value)
-		attrs.update({
-			"unit": self.unit,
-			"ucd": self.ucd})
+		# if we have additional metadata, serialise this using a param
+		if self.unit or self.ucd:
+			attrs = votable.guessParamAttrsForValue(self.value)
+			attrs.update({
+				"unit": self.unit,
+				"ucd": self.ucd})
 
-		param = V.PARAM(name=self.name,
-			id=ctx.getOrMakeIdFor(self.value), 
-				vodml_role=completeVODMLId(ctx, self.name),
-				**attrs)
-		votable.serializeToParam(param, self.value)
-		return param
+			param = V.PARAM(name=self.name,
+				id=ctx.getOrMakeIdFor(self.value), 
+					dmrole=completeVODMLId(ctx, self.name),
+					**attrs)
+			ctx.getEnclosingContainer()[
+				votable.serializeToParam(param, self.value)]
+			return V.CONSTANT(ref=param.id)
+
+		else:
+			# no additional metadata, just dump a literal string
+			# (technically, we should use ivoa: types.  Oh, bother, another
+			# type system, just what we need).
+			return V.LITERAL(dmtype="ivoa:string")[
+				utils.safe_str(self.value)]
+
 
 	def asSIL(self, suppressType=False):
 		if suppressType:
@@ -256,33 +268,20 @@ class _AttributeGroupAnnotation(AnnotationBase, _WithMapCopyMixin):
 		return "%s{\n  %s}\n"%(typeAnn,
 			"\n  ".join(r.asSIL() for r in self.childRoles.values()))
 
-	def _makeVOTGroup(self, ctx, instance):
+	def getVOT(self, ctx, instance):
 		"""helps getVOT.
 		"""
-		ctx.groupIdsInTree.add(id(self))
-		return V.GROUP(
-				vodml_type=self.type,
-				vodml_role=completeVODMLId(ctx, self.name),
-				ID=ctx.getOrMakeIdFor(self))[
-			[ann.getVOT(ctx, instance)
-				for ann in self.childRoles.values()]]
-
-	def getVOT(self, ctx, instance):
 		ctx.addVODMLPrefix(self.modelPrefix)
-		with containerTypeSet(ctx, self.type):
-			group = self._makeVOTGroup(ctx, instance)
-			return group
+		ctx.groupIdsInTree.add(id(self))
+		res = V.INSTANCE(
+				dmtype=self.type,
+				ID=ctx.getOrMakeIdFor(self))
+		
+		for role, ann in self.childRoles.iteritems():
+			res[V.ATTRIBUTE(dmrole=completeVODMLId(ctx, role))[
+					ann.getVOT(ctx, instance)]]
 
-		# TODO: we'll have to figure out where to put the groups under what
-		# conditions in the end.
-		#ctx.getEnclosingResource()[group]
-		#if self.name is not None:
-		#	# group in an attribute: return a reference to it
-		#	ctx.makeIdFor(self)
-		#	ctx.addID(self, group)
-		#	return V.GROUP(ref=group.ID)[
-		#		V.VODML[V.ROLE[self.name]]]
-	
+		return res
 
 class DatatypeAnnotation(_AttributeGroupAnnotation):
 	"""An annotation for a datatype.
@@ -350,12 +349,11 @@ class CollectionAnnotation(AnnotationBase, _WithMapCopyMixin):
 # So... it's unclear at this point what to do here -- I somehow feel
 # we should serialise collections into a table.  But then this would
 # entail one table each whenever an attribute is potentially sequence-valued,
-# and that doesn't seem right either.  So, we'll dump groups for now
-# and see how we can tell when there's actually tables out there.
+# and that doesn't seem right either.  So, we'll dump multiple things
+# into one attribute for now and see how far we get with than.
 		if self.type:
 			ctx.addVODMLPrefix(self.modelPrefix)
-		return V.GROUP(vodml_role=self.name)[
-			[c.getVOT(ctx, instance) for c in self.children]]
+		return [c.getVOT(ctx, instance) for c in self.children]
 
 	
 def _test():

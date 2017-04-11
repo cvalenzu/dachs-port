@@ -45,8 +45,7 @@ class ColumnAnnotation(common.TableRelativeAnnotation):
 		return self.__class__(self.name, self.weakref(), newInstance)
 
 	def getVOT(self, ctx, instance):
-		return V.FIELDref(ref=ctx.getOrMakeIdFor(self.value),
-			vodml_role=common.completeVODMLId(ctx, self.name))
+		return V.COLUMN(ref=ctx.getOrMakeIdFor(self.value))
 
 
 class ParamAnnotation(common.TableRelativeAnnotation):
@@ -70,8 +69,7 @@ class ParamAnnotation(common.TableRelativeAnnotation):
 
 	def getVOT(self, ctx, container):
 		referenced = container.getParamByName(self.value.name)
-		res = V.PARAMref(ref=ctx.getOrMakeIdFor(referenced),
-			vodml_role=common.completeVODMLId(ctx, self.name))
+		res = V.CONSTANT(ref=ctx.getOrMakeIdFor(referenced))
 		return res
 
 
@@ -107,9 +105,8 @@ class GroupRefAnnotation(common.TableRelativeAnnotation):
 					ID=ctx.getOrMakeIdFor(self.objectReferenced))]
 			ctx.groupIdsInTree.add(id(self.objectReferenced))
 
-		return V.GROUP(ref=ctx.getIdFor(self.objectReferenced),
-			vodml_type="vo-dml:GROUPref",
-			vodml_role=common.completeVODMLId(ctx, self.name))
+		return V.REFERENCE[
+			V.IDREF[ctx.getIdFor(self.objectReferenced)]]
 
 
 class ForeignKeyAnnotation(common.TableRelativeAnnotation):
@@ -136,14 +133,15 @@ class ForeignKeyAnnotation(common.TableRelativeAnnotation):
 		destTD = self.value.inTable
 		srcTD = self.value.parent
 
-		pkDecl = V.GROUP(vodml_role="vo-dml:ObjectTypeInstance.ID")[[
+		raise NotImplementedError("Do not know how to annotate a foreign key")
+		pkDecl = V.GROUP(dmrole="vo-dml:ObjectTypeInstance.ID")[[
 			V.FIELDref(ref=ctx.getOrMakeIdFor(
 					destTD.tableDef.getColumnByName(colName)))
 				for colName in self.foreignKey.dest]]
 		pkDecl(ID=ctx.getOrMakeIdFor(pkDecl))
 
 		fkDecl = V.GROUP(ref=ctx.getOrMakeIdFor(pkDecl),
-			vodml_type="vo-dml:ORMReference")[
+			dmtype="vo-dml:ORMReference")[
 			[V.FIELDref(ref=ctx.getIdFor(srcTD.getColumnByName(colName)))
 				for colName in self.foreignKey.source]]
 

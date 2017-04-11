@@ -210,7 +210,7 @@ class TAPTransitions(uws.ProcessBasedUWSTransitions):
 		uws.SimpleUWSTransitions.__init__(self, "TAP")
 
 	def getCommandLine(self, wjob):
-		return "gavo", ["gavo", "tap", "--", str(wjob.jobId)]
+		return "gavo", ["gavo", "--ui", "stingy", "tap", "--", str(wjob.jobId)]
 
 	def queueJob(self, newState, wjob, ignored):
 		"""puts a job on the queue.

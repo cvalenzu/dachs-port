@@ -347,141 +347,139 @@ class SBox(PgSAdapter):
 			SPoint(maxX, minY)))
 
 
-try:
-	# temporary measure to shut up astropy's configuration parser.
-	import __builtin__
-	__builtin__._ASTROPY_SETUP_ = True
+# temporary measure to shut up astropy's configuration parser.
+import __builtin__
+__builtin__._ASTROPY_SETUP_ = True
 
-	import pymoc
-	from pymoc.io.fits import read_moc_fits_hdu
 
-	class SMoc(PgSAdapter):
-		"""a MOC with a pgsphere interface.
+class SMoc(PgSAdapter):
+	"""a MOC with a pgsphere interface.
 
-		The default constructor accepts a pymoc.MOC instance, which is 
-		accessible as the moc attribute.  The database interface uses
-		the ASCII serialisation, for which there's the fromASCII constructor.
+	The default constructor accepts a pymoc.MOC instance, which is 
+	accessible as the moc attribute.  The database interface uses
+	the ASCII serialisation, for which there's the fromASCII constructor.
+	"""
+	pgType = "smoc"
+	checkedAttributes = ["moc"]
+
+	def __init__(self, moc):
+		self.moc = moc
+
+	_orderHeadRE = re.compile(r"(\d+)/")
+	_rangeRE = re.compile(r"\s*(\d+)(?:-(\d+))?\s*$")
+
+	@classmethod
+	def _parseCells(cls, cellLiteral, firstPos):
+		"""returns a sequence of cells from a MOC cell literal.
+
+		firstPos is the string position of the beginning of cellLiteral
+		for error messages.
 		"""
-		pgType = "smoc"
-		checkedAttributes = ["moc"]
+		curPos = 0
+		cells = []
 
-		def __init__(self, moc):
-			self.moc = moc
+		for item in cellLiteral.split(","):
+			mat = cls._rangeRE.match(item)
+			if not mat:
+				raise ValueError("MOC literal syntax error at char %s"%
+					(firstPos+curPos))
 
-		_orderHeadRE = re.compile(r"(\d+)/")
-		_rangeRE = re.compile(r"\s*(\d+)(?:-(\d+))?\s*$")
-
-		@classmethod
-		def _parseCells(cls, cellLiteral, firstPos):
-			"""returns a sequence of cells from a MOC cell literal.
-
-			firstPos is the string position of the beginning of cellLiteral
-			for error messages.
-			"""
-			curPos = 0
-			cells = []
-
-			for item in cellLiteral.split(","):
-				mat = cls._rangeRE.match(item)
-				if not mat:
-					raise ValueError("MOC literal syntax error at char %s"%
-						(firstPos+curPos))
-
-				if mat.group(2) is None:
-					cells.append(int(mat.group(1)))
-				else:
-					cells.extend(range(int(mat.group(1)), int(mat.group(2))+1))
-
-				curPos += len(item)+1
-
-			return cells
-
-		@classmethod
-		def fromASCII(cls, literal):
-			"""returns an SMoc from a quasi-standard ASCII serialisation.
-			"""
-			# we do the parsing ourselves -- the pymoc interface is too clumsy,
-			# and the rigidity of the parser doesn't look good.
-			seps = list(cls._orderHeadRE.finditer(literal))+[re.search("$", literal)]
-			if len(seps)==1:
-				raise ValueError("No order separator visible in MOC literal '%s'"%
-					texttricks.makeEllipsis(literal, 40))
-			if not re.match(r"\s*$", literal[:seps[0].start()]):
-				raise ValueError("MOC literal '%s' does not start with order spec"%
-					texttricks.makeEllipsis(literal, 40))
-
-			moc = pymoc.MOC()
-
-			for openMat, closeMat in codetricks.iterRanges(seps):
-				order = int(openMat.group(1))
-				cells = cls._parseCells(literal[openMat.end():closeMat.start()],
-					openMat.end())
-				moc.add(order, cells)
-
-			return cls(moc)
-
-		@staticmethod
-		def _formatASCIIRange(minCell, maxCell):
-			"""returns a cell literal for a MOC.
-			"""
-			if minCell==maxCell:
-				return str(minCell)
+			if mat.group(2) is None:
+				cells.append(int(mat.group(1)))
 			else:
-				return "%d-%d"%(minCell, maxCell)
+				cells.extend(range(int(mat.group(1)), int(mat.group(2))+1))
 
-		def asASCII(self):
-			"""returns an ascii serialisation of this MOC.
-			"""
-			# this is essentially the pymoc code, but again saving the file 
-			# interface that we don't want here.
-			parts = []
-			for order, cells in self.moc:
-				ranges = []
-				rmin = rmax = None
+			curPos += len(item)+1
 
-				for cell in sorted(cells):
-					if rmin is None:
-						rmin = rmax = cell
-					elif rmax==cell-1:
-						rmax = cell
-					else:
-						ranges.append(self._formatASCIIRange(rmin, rmax))
-						rmin = rmax = cell
+		return cells
 
-				ranges.append(self._formatASCIIRange(rmin, rmax))
-				parts.append("%d/%s"%(order, ",".join(ranges)))
+	@classmethod
+	def fromASCII(cls, literal):
+		"""returns an SMoc from a quasi-standard ASCII serialisation.
+		"""
+		import pymoc
 
-			return " ".join(parts)
+		# we do the parsing ourselves -- the pymoc interface is too clumsy,
+		# and the rigidity of the parser doesn't look good.
+		seps = list(cls._orderHeadRE.finditer(literal))+[re.search("$", literal)]
+		if len(seps)==1:
+			raise ValueError("No order separator visible in MOC literal '%s'"%
+				texttricks.makeEllipsis(literal, 40))
+		if not re.match(r"\s*$", literal[:seps[0].start()]):
+			raise ValueError("MOC literal '%s' does not start with order spec"%
+				texttricks.makeEllipsis(literal, 40))
 
-		@classmethod
-		def fromFITS(cls, literal):
-			"""returns an SMoc from a string containing a FITS-serialised MOC.
-			"""
-			moc = pymoc.MOC()
-			read_moc_fits_hdu(moc,
-				pyfits.open(StringIO(literal))[1])
-			return cls(moc)
+		moc = pymoc.MOC()
 
-		@staticmethod
-		def _adaptToPgSphere(smoc):
-			return AsIs("smoc '%s'"%(smoc.asASCII()))
+		for openMat, closeMat in codetricks.iterRanges(seps):
+			order = int(openMat.group(1))
+			cells = cls._parseCells(literal[openMat.end():closeMat.start()],
+				openMat.end())
+			moc.add(order, cells)
 
-		@classmethod
-		def _castFromPgSphere(cls, value, cursor):
-			if value is not None:
-				return cls.fromASCII(value)
+		return cls(moc)
 
-		def asPoly(self):
-			raise TypeError("MOCs cannot be represented as polygons")
+	@staticmethod
+	def _formatASCIIRange(minCell, maxCell):
+		"""returns a cell literal for a MOC.
+		"""
+		if minCell==maxCell:
+			return str(minCell)
+		else:
+			return "%d-%d"%(minCell, maxCell)
 
-		def asSTCS(self, frame):
-			# no STCS for MOCs, but this is really just for VOTable serialisation,
-			# so let's cheat
-			return self.asASCII()
+	def asASCII(self):
+		"""returns an ascii serialisation of this MOC.
+		"""
+		# this is essentially the pymoc code, but again saving the file 
+		# interface that we don't want here.
+		parts = []
+		for order, cells in self.moc:
+			ranges = []
+			rmin = rmax = None
 
-except ImportError:
-	# for now, don't hard-depend on pymoc
-	pass
+			for cell in sorted(cells):
+				if rmin is None:
+					rmin = rmax = cell
+				elif rmax==cell-1:
+					rmax = cell
+				else:
+					ranges.append(self._formatASCIIRange(rmin, rmax))
+					rmin = rmax = cell
+
+			ranges.append(self._formatASCIIRange(rmin, rmax))
+			parts.append("%d/%s"%(order, ",".join(ranges)))
+
+		return " ".join(parts)
+
+	@classmethod
+	def fromFITS(cls, literal):
+		"""returns an SMoc from a string containing a FITS-serialised MOC.
+		"""
+		from pymoc.io.fits import read_moc_fits_hdu
+		import pymoc
+
+		moc = pymoc.MOC()
+		read_moc_fits_hdu(moc,
+			pyfits.open(StringIO(literal))[1])
+		return cls(moc)
+
+	@staticmethod
+	def _adaptToPgSphere(smoc):
+		return AsIs("smoc '%s'"%(smoc.asASCII()))
+
+	@classmethod
+	def _castFromPgSphere(cls, value, cursor):
+		if value is not None:
+			return cls.fromASCII(value)
+
+	def asPoly(self):
+		raise TypeError("MOCs cannot be represented as polygons")
+
+	def asSTCS(self, frame):
+		# no STCS for MOCs, but this is really just for VOTable serialisation,
+		# so let's cheat
+		return self.asASCII()
 
 
 try:
@@ -512,9 +510,9 @@ try:
 			conn.commit()
 		except:
 			psycopg2._pgsphereLoaded = False
-			raise
 
 except ImportError:
+	raise
 	# psycopg2 not installed.  Since preparsePgSphere can only be
 	# called from code depending on psycopg2, there's no harm if
 	# we don't define it.

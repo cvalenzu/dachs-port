@@ -25,22 +25,72 @@ NAMESPACES = {
 registerPrefix("vot", NAMESPACES["1.3"], schemaURL("VOTable-1.3.xsd"))
 registerPrefix("vot2", NAMESPACES["1.2"], schemaURL("VOTable-1.2.xsd"))
 registerPrefix("vot1", NAMESPACES["1.1"], schemaURL("VOTable-1.1.xsd"))
-	
 
-class VOTable(object):
+
+class _VODMLElements(object):
+	"""extra VODML element, slated for VOTable 1.4.
+	"""
+	class _VODMLElement(Element):
+		_prefix = "vot"
+		_local = True
+		_a_ID = None
+
+	class VODML(_VODMLElement):
+		_childSequence = ["MODEL", "GLOBALS", "TEMPLATES"]
+	
+	class MODEL(_VODMLElement):
+		_childSequence = ["NAME", "URL"]
+
+	class GLOBALS(_VODMLElement):
+		_childSequence = ["INSTANCE"]
+
+	class TEMPLATES(_VODMLElement):
+		_childSequence = ["INSTANCE"]
+
+	class NAME(_VODMLElement):
+		_a_version = None
+	
+	class URL(_VODMLElement): pass
+
+	class INSTANCE(_VODMLElement):
+		_a_dmtype = None
+		_childSequence = ["REFERENCE", "ATTRIBUTE"]
+
+	class REFERENCE(_VODMLElement):
+		_a_dmrole = None
+		_childSequence = ["IDREF"]
+
+	class IDREF(_VODMLElement): pass
+
+	class ATTRIBUTE(_VODMLElement):
+		_a_dmrole = None
+		_childSequence = [
+			"CONSTANT", "COLUMN", "LITERAL", "INSTANCE", "REFERENCE"]
+	
+	class CONSTANT(_VODMLElement):
+		_mayBeEmpty = True
+		_a_dmrole = None
+		_a_ref = None
+
+	class COLUMN(_VODMLElement):
+		_mayBeEmpty = True
+		_a_ref = None
+		_a_dmrole = None
+	
+	class COMPOSITION(_VODMLElement):
+		_childSequence = ["INSTANCE"]
+	
+	class LITERAL(_VODMLElement):
+		_a_dmtype = None
+		_a_value = None
+
+
+class VOTable(_VODMLElements):
 	"""The container for VOTable elements.
 	"""
 	class _VOTElement(Element):
 		_prefix = "vot"
 		_local = True
-
-	class _Annotatable(object):
-		"""a mixin for elements that can have VO-DML annotation.
-		"""
-		_a_vodml_type = None
-		_a_vodml_role = None
-		_name_a_vodml_type = "vodml-type"
-		_name_a_vodml_role = "vodml-role"
 
 	class _DescribedElement(_VOTElement):
 		_a_ID = None
@@ -136,7 +186,7 @@ class VOTable(object):
 			else:
 				self[VOTable.VALUES(null=val)]
 
-	class _RefElement(_ValuedElement, _Annotatable):
+	class _RefElement(_ValuedElement):
 		_a_ref = None
 		_a_ucd = None
 		_a_utype = None
@@ -216,7 +266,7 @@ class VOTable(object):
 	class FITS(_VOTElement):
 		_childSequence = ["STREAM"]
 	
-	class GROUP(_DescribedElement, _Annotatable):
+	class GROUP(_DescribedElement):
 		_mayBeEmpty = True
 		_a_ref = None
 		_childSequence = ["DESCRIPTION", "PARAM", "FIELDref", 
@@ -277,7 +327,7 @@ class VOTable(object):
 		_mayBeEmpty = True
 
 
-	class PARAM(_TypedElement, _Annotatable):
+	class PARAM(_TypedElement):
 		_mayBeEmpty = True
 		_a_value = ""  # supposed to mean "ah, somewhat null"
 		               # Needs to be cared for in client code.
@@ -292,7 +342,8 @@ class VOTable(object):
 		_a_name = None
 		_a_type = None
 		_a_utype = None
-		_childSequence = ["DESCRIPTION", "DEFINITIONS", "COOSYS", "INFO", "GROUP", 
+		_childSequence = ["DESCRIPTION", "VODML", "DEFINITIONS", 
+			"COOSYS", "INFO", "GROUP", 
 			"PARAM", "LINK", "TABLE", "INFO_atend", "RESOURCE", "stub"]
 		# (stub for delayed overflow warnings and such)
 
@@ -398,7 +449,7 @@ class VOTable(object):
 					getPrefixInfo("vot")[0],
 					getPrefixInfo("xsi")[0])
 				+getPrefixInfo("vot"))
-		_childSequence = ["DESCRIPTION", "DEFINITIONS", "INFO", "COOSYS",
+		_childSequence = ["DESCRIPTION", "VODML", "DEFINITIONS", "INFO", "COOSYS",
 			"GROUP", "PARAM", "RESOURCE"]
 
 

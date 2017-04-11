@@ -217,6 +217,7 @@ class TestSILParser(testhelpers.VerboseTest):
 		self.assertEqual(normalizeSIL(res.asSIL()),
 			'(testdm:testclass) { { attr2: val} }')
 
+
 def getByID(tree, id):
 	# (for checking VOTables)
 	res = tree.xpath("//*[@ID='%s']"%id)
@@ -305,74 +306,69 @@ class DirectSerTest(testhelpers.VerboseTest):
 
 	def testVODMLModelDefined(self):
 		dmgroup = self.tree.xpath(
-			"//GROUP[@vodml-type='vo-dml:Model']"
-			"[PARAM[@vodml-role='name']/@value='vo-dml']")[0]
+			"VODML/MODEL[NAME='vo-dml']")[0]
 		self.assertEqual(
-			dmgroup.xpath("PARAM[@vodml-role='name']")[0].get("value"),
-			"vo-dml")
-		self.assertEqual(
-			dmgroup.xpath("PARAM[@vodml-role='url']")[0].get("value"),
+			dmgroup.xpath("URL")[0].text,
 			"http://www.ivoa.net/dm/VO-DML.vo-dml.xml")
 		self.assertEqual(
-			dmgroup.xpath("PARAM[@vodml-role='version']")[0].get("value"),
+			dmgroup.xpath("NAME")[0].get("version"),
 			"0.x")
 
 	def testTestModelDefined(self):
 		dmgroup = self.tree.xpath(
-			"//GROUP[@vodml-type='vo-dml:Model']"
-			"[PARAM[@vodml-role='name']/@value='dachstoy']")[0]
-
+			"VODML/MODEL[NAME='dachstoy']")[0]
 		self.assertEqual(
-			dmgroup.xpath("PARAM[@vodml-role='url']")[0].get("value"),
+			dmgroup.xpath("URL")[0].text,
 			"http://docs.g-vo.org/dachstoy")
 		self.assertEqual(
-			dmgroup.xpath("PARAM[@vodml-role='version']")[0].get("value"),
+			dmgroup.xpath("NAME")[0].get("version"),
 			"1.0a-pl23.44c")
 
 	def testNoExtraModels(self):
 		self.assertEqual(3,
-			len(self.tree.xpath("//GROUP[@vodml-type='vo-dml:Model']")))
+			len(self.tree.xpath("VODML/MODEL")))
 
 	def testTestclassInstancePresent(self):
 		res = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP[@vodml-type='dachstoy:Ruler']")
+			"VODML/TEMPLATES/INSTANCE[@dmtype='dachstoy:Ruler']")
 		self.assertEqual(len(res), 1)
 	
 	def testLiteralSerialized(self):
 		par = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[@vodml-type='dachstoy:Location']"
-			"/PARAM[@vodml-role='x']")[0]
-		self.assertEqual(par.get("value"), "0.1")
-		self.assertEqual(par.get("datatype"), "unicodeChar")
+			"//INSTANCE[@dmtype='dachstoy:Location']"
+			"/ATTRIBUTE[@dmrole='x']"
+			"/LITERAL")[0]
+		self.assertEqual(par.text, "0.1")
+		self.assertEqual(par.get("dmtype"), "ivoa:string")
 
 	def testChildColumnAnnotated(self):
 		fr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP[@vodml-type='dachstoy:Ruler']"
-			"/FIELDref[@vodml-role='width']")[0]
+			"VODML/TEMPLATES/INSTANCE[@dmtype='dachstoy:Ruler']"
+			"/ATTRIBUTE[@dmrole='width']/COLUMN")[0]
 		col = getByID(self.tree, fr.get("ref"))
 		self.assertEqual(col.get("name"), "col1")
 
 	def testNestedColumnAnnotated(self):
 		fr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[@vodml-type='dachstoy:Location']"
-			"/FIELDref[@vodml-role='y']")[0]
+			"VODML/TEMPLATES/INSTANCE/ATTRIBUTE/"
+			"INSTANCE[@dmtype='dachstoy:Location']/ATTRIBUTE[@dmrole='y']/COLUMN")[0]
 		col = getByID(self.tree, fr.get("ref"))
 		self.assertEqual(col.get("name"), "raj2000")
 
 	def testCollection(self):
 		gr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[@vodml-role='maker']")
+			"VODML/TEMPLATES/INSTANCE/ATTRIBUTE[@dmrole='maker']")
 		self.assertEqual(len(gr), 1)
-		params = gr[0].xpath("PARAM")
+		params = gr[0].xpath("LITERAL")
 		self.assertEqual(len(params), 2)
-		self.assertEqual(params[0].get("value"), "Oma")
-		self.assertEqual(params[1].get("value"), "Opa Rudolf")
+		self.assertEqual(params[0].text, "Oma")
+		self.assertEqual(params[1].text, "Opa Rudolf")
 
 	def testParamReferenced(self):
 		gr = self.tree.xpath(
-			"RESOURCE/TABLE/GROUP/GROUP[@vodml-role='maker']")[0]
-		paramref = gr.xpath("PARAMref")[0]
-		self.assertEqual(paramref.get("vodml-role"), "maker")
+			"VODML/TEMPLATES/INSTANCE/ATTRIBUTE[@dmrole='maker']/CONSTANT")
+		self.assertEqual(len(gr), 1)
+		paramref = gr[0]
 		par = getByID(self.tree, paramref.get("ref"))
 		self.assertEqual(par.get("value"), "Onkel Fritz")
 
@@ -537,15 +533,15 @@ class ObjReftest(testhelpers.VerboseTest):
 
 	def testInstanceRefSerialisation(self):
 		grouprefs = self.serialized.xpath(
-			"//GROUP[@vodml-type='ds:DataSet']/GROUP[@vodml-role='target']"
-			"/GROUP[@vodml-role='position']")
+			"//INSTANCE[@dmtype='ds:DataSet']/ATTRIBUTE[@dmrole='target']"
+			"/INSTANCE/ATTRIBUTE[@dmrole='position']/REFERENCE/IDREF")
 		self.assertEqual(len(grouprefs), 1)
 		pos = self.serialized.xpath(
-			"//GROUP[@ID='%s']"%grouprefs[0].get("ref"))[0]
-		self.assertEqual(pos.get("vodml-type"), "stc2:Coordinates")
-		self.assertEqual(pos.xpath("GROUP[@vodml-role='temporal']"
-			"/GROUP[@vodml-role='frame']"
-			"/PARAM[@vodml-role='referencePosition']")[0].get("value"),
+			"//INSTANCE[@ID='%s']"%grouprefs[0].text)[0]
+		self.assertEqual(pos.get("dmtype"), "stc2:Coordinates")
+		self.assertEqual(pos.xpath("ATTRIBUTE[@dmrole='temporal']"
+			"/INSTANCE/ATTRIBUTE[@dmrole='frame']/INSTANCE"
+			"/ATTRIBUTE[@dmrole='referencePosition']/LITERAL")[0].text,
 			"HELIOCENTER")
 
 

@@ -89,12 +89,23 @@ class VOTableContext(utils.IdManagerMixin):
 		# referenced by multiple other annotations.
 		self.groupIdsInTree = set()
 		self.modelsUsed = {}
+		self.rootVODML = V.VODML()
+		self.vodmlTemplates = V.TEMPLATES()
+		self.rootVODML[self.vodmlTemplates]
 
 	def addVODMLPrefix(self, prefix):
 		"""arranges the DM with prefix to be included in modelsUsed.
 		"""
 		if prefix not in self.modelsUsed:
 			self.modelsUsed[prefix] = dm.getModelForPrefix(prefix)
+
+	def addVODMLMaterial(self, stuff):
+		"""adds VODML annotation to this VOTable.
+
+		Note that it will only be rendered if produceVODML is true
+		(in general, for target versions >1.3).
+		"""
+		self.vodmlTemplates[stuff]
 
 	def makeTable(self, table):
 		"""returns xmlstan for a table.
@@ -591,10 +602,11 @@ def makeTable(ctx, table):
 		if ctx.produceVODML:
 			for ann in table.tableDef.annotations:
 				try:
-					result[ann.getVOT(ctx, table)]
+					ctx.addVODMLMaterial(ann.getVOT(ctx, table))
 				except Exception, msg:
 					# never fail just because stupid DM annotation doesn't work out
-					base.ui.notifyError("DM annotation failed: %s"%msg)
+					base.ui.notifyError("%s-typed DM annotation failed: %s"%(
+						ann.type, msg))
 
 		# iterate STC before serialising the columns so the columns
 		# have the stupid ref to COOSYS
@@ -685,8 +697,12 @@ def makeVOTable(data, ctx=None, **kwargs):
 		if ctx.modelsUsed:
 			# if we declare any models, we'll need vo-dml
 			ctx.addVODMLPrefix("vo-dml")
-		for model in ctx.modelsUsed.values():
-			vot[model.getVOT(ctx, None)]
+
+		ctx.rootVODML[[
+				model.getVOT(ctx, None)
+			for model in ctx.modelsUsed.values()]]
+
+		vot[ctx.rootVODML]
 
 	if ctx.suppressNamespace:  
 		# use this for "simple" table with nice element names
@@ -699,6 +715,7 @@ def makeVOTable(data, ctx=None, **kwargs):
 		rootHacks = [vot._fixedTagMaterial]+[
 			item.getContent() for item in rootAttrs]
 		vot._fixedTagMaterial = " ".join(s for s in rootHacks if s)
+	
 
 	return vot
 
