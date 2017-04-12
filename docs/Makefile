@@ -45,6 +45,7 @@ dachs.1.html: dachs.1
 
 ref.rstx:
 	gavo --debug --traceback gendoc refdoc > ref.rstx
+	cp $@ $RST_DIR
 
 elemref.rstx:
 	python makeElementIndex.py > $@

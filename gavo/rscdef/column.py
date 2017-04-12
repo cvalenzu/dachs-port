@@ -834,6 +834,9 @@ class ParamBase(ColumnBase):
 					type, arraysize, xtype = self._getVOTableType()
 					if atom:
 						arraysize = None
+
+					if type not in ["char", "unicodeChar"]:
+						literal = literal.strip()
 					
 					value = paramval.getVOTParser(type, arraysize, 
 						self.xtype or xtype)(literal)

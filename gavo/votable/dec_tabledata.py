@@ -235,7 +235,7 @@ def _getArrayDecoderLines(field):
 
 	As per VOTable 1.3, we translate empty strings to Nones; we use the
 	liberty that empty and NULL arrays are not distinguished to return
-	empty strings as empty strings, though.
+	empty arrays as empty arrays, though.
 	"""
 	type = field.datatype
 
@@ -259,7 +259,11 @@ def _getArrayDecoderLines(field):
 		src.append("for val in tokenizeBitArr(arrayLiteral):")
 	else:
 		src.append("for val in tokenizeNormalArr(arrayLiteral):")
+
 	src.extend(coding.indentList(_decoders[type](field), "  "))
+
+	src.extend(coding.makeShapeValidator(field))
+
 	src.append("fullRow.append(list(row))")
 	src.append("row = fullRow")
 
@@ -292,8 +296,10 @@ def getRowDecoderSource(tableDefinition):
 			"  try:",
 			"    val = rawRow[%d]"%index,]+
 			coding.indentList(getLinesFor(field), "    ")+[
-			"  except:",
-			"    raise common.BadVOTableLiteral('%s', val)"%field.datatype])
+			"  except common.VOTableError:",
+			"    raise",
+			"  except Exception, ex:",
+			"    raise common.BadVOTableLiteral('%s', val, ex)"%field.datatype])
 	source.append("  return row")
 	return "\n".join(source)
 

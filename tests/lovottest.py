@@ -237,7 +237,8 @@ class TabledataReadTest(testhelpers.VerboseTest):
 			'<FIELD name="y" datatype="float"/>',
 			[['1', '0.5e10'], ['-999.', '']],
 			[[1.0, 5e09],     [None, None]]
-		), ( # 05
+# 5
+		), ( 
 			'<FIELD name="x" datatype="floatComplex"><VALUES null="-999. 0"/></FIELD>'
 			'<FIELD name="y" datatype="floatComplex"/>',
 			[['1 1', '0.5e10 -2e5'], ['-999. 0', '20']],
@@ -259,6 +260,7 @@ class TabledataReadTest(testhelpers.VerboseTest):
 			'<FIELD name="x" datatype="short" arraysize="*"><VALUES null="0"/></FIELD>',
 			[['1 2 3 0 1'], [""]], 
 			[[[1,2,3,None,1]], [None]]
+#10
 		), (
 			'<FIELD name="y" datatype="floatComplex" arraysize="*"/>',
 			[['1 1 0.5e10 -2e5'], [""]],
@@ -275,7 +277,10 @@ class TabledataReadTest(testhelpers.VerboseTest):
 			'<FIELD datatype="unicodeChar" arraysize="*"/>',
 			[[u'\xe4'], [""]],
 			[[u'\xe4'], [None]]
-		),
+		), (
+			'<FIELD datatype="float" arraysize="*"/>',
+			[[" "]], 
+			[[[]]])
 	]
 
 
@@ -913,6 +918,64 @@ class NDArrayTest(testhelpers.VerboseTest):
 	def testUnravel3d(self):
 		self._assertRavels("3x2x2", range(12), 
 			[[[0,1,2],[3,4,5]], [[6,7,8],[9,10,11]]])
+
+
+class ArraySizeValidationTest(testhelpers.VerboseTest):
+	def _decode(self, fieldbody, literal):
+		table = votable.parseString((
+			'<VOTABLE><RESOURCE><TABLE>'+
+			'<FIELD name="x" '+fieldbody+'/>'
+			'<DATA><TABLEDATA>'+
+			'<TR><TD>'+literal+'</TD></TR>'
+			'</TABLEDATA></DATA>'
+			'</TABLE></RESOURCE></VOTABLE>')).next()
+		return list(table)[0][0]
+
+	def test1DMissingRaises(self):
+		self.assertRaisesWithMsg(votable.BadVOTableLiteral,
+			"Invalid literal for int[2]: '<1 token(s)>'",
+			self._decode,
+			('datatype="int" arraysize="2"', '1'))
+
+	def test1DOverflowRaises(self):
+		self.assertRaisesWithMsg(votable.BadVOTableLiteral,
+			"Invalid literal for int[2]: '<3 token(s)>'",
+			self._decode,
+			('datatype="int" arraysize="2"', '1 2 3'))
+
+	def test1DFlexibleOk(self):
+		self.assertEqual(self._decode('datatype="int" arraysize="2*"', '1 2 3'),
+			[1, 2, 3])
+	
+	def test2DMissingRaises(self):
+		self.assertRaisesWithMsg(votable.BadVOTableLiteral,
+			"Invalid literal for float[2x3]: '<5 token(s)>'",
+			self._decode,
+			('datatype="float" arraysize="2x3"', '1 2 3 4 5'))
+
+	def test2DMFlexibleRaises(self):
+		self.assertRaisesWithMsg(votable.BadVOTableLiteral,
+			"Invalid literal for float[2x*]: '<5 token(s)>'",
+			self._decode,
+			('datatype="float" arraysize="2x*"', '1 2 3 4 5'))
+
+	def test2DMFlexibleOk(self):
+		self.assertEqual(self._decode('datatype="float" arraysize="2x*"', 
+			'1 2 3 4'),
+			[1., 2., 3., 4.])
+
+	def testBadArraysize(self):
+		self.assertRaisesWithMsg(votable.VOTableError,
+			"Invalid arraysize '*x2' specificed in field or param name 'x'",
+			self._decode,
+			('datatype="float" arraysize="*x2"', '1 2 3 4 5'))
+
+	def testMoreBadArraysize(self):
+		self.assertRaisesWithMsg(votable.VOTableError,
+			"Invalid arraysize fragment '*2' in field or param name 'x'",
+			self._decode,
+			('datatype="float" arraysize="4x4x*2"', '1 2 3 4 5'))
+
 
 
 class WeirdTablesTest(testhelpers.VerboseTest):

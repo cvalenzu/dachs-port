@@ -1249,6 +1249,24 @@ class SDMDatalinkTest(testhelpers.VerboseTest):
 				"FORMAT": "application/x-votable+xml",
 				"BAND": "-Inf 1.927e-8"},))
 
+	def testBlankInIntervalIgnored(self):
+		res = self.runService(
+			{"ID": ['ivo://test.inv/test1'], 
+				"FORMAT": ["text/plain"],
+				"BAND": " "})
+		mime, payload = res.original
+		self.assertEqual(len(payload), 2450)
+
+	def testIncompleteArgumentRejected(self):
+		self.assertRaisesWithMsg(
+			api.ValidationError,
+			"Field BAND: Bad parameter literal ['23 '] (Invalid literal for"
+			" double[2]: '<1 token(s)>')",
+			self.runService, ({
+				"ID": ['ivo://test.inv/test1'], 
+				"FORMAT": ["text/plain"],
+				"BAND": "23 "},))
+
 	def testOriginalCalibOk(self):
 		mime, payload = self.runService(
 			{"ID": 'ivo://test.inv/test1', 

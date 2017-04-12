@@ -40,8 +40,9 @@ def getRowDecoderSource(tableDefinition):
 		source.extend([
 			"  try:",]+
 			coding.indentList(getLinesFor(field), "    ")+[
+			"  except common.VOTableError:",
+			"    raise",
 			"  except:",
-			"    import ipdb;ipdb.set_trace()",
 			"    raise common.BadVOTableLiteral('%s', repr(inF.lastRes))"%(
 				field.datatype),
 			])

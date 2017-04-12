@@ -585,10 +585,10 @@ class _FunctionCompiler(object):
 		# this makes our compiled lines available to the traceback writer.
 		# we might want to do sys.excepthook = traceback.print_exception
 		# somewhere so the post mortem dumper uses this, too.  Let's see
-		# if it's worth the added rist of breaking things.
+		# if it's worth the added risk of breaking things.
 		linecache.cache[uniqueName] = len(src), None, src.split("\n"), uniqueName
 		func._cleanup = weakref.ref(func, 
-			lambda _, key=uniqueName: linecache.cache.pop(key, None))
+			lambda _, key=uniqueName: linecache and linecache.cache.pop(key, None))
 
 		if debug:
 			debugLocals = {}

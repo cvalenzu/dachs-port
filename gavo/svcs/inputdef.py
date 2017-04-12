@@ -19,6 +19,7 @@ import itertools
 from gavo import base
 from gavo import grammars
 from gavo import rscdef
+from gavo import votable
 from gavo import utils
 from gavo.rscdef import column
 from gavo.svcs import dalipars
@@ -176,7 +177,7 @@ class InputKey(column.ParamBase):
 
 		else:
 			if inputList:
-				 return self._parse(inputList[-1])
+				return self._parse(inputList[-1])
 			else:
 				return None
 
@@ -381,8 +382,13 @@ class ContextRowIterator(grammars.RowIterator):
 
 		for ik in self.grammar.iterInputKeys():
 			self.locator = "param %s"%ik.name
-			self.coreArgs[ik.name] = ik.computeCoreArgValue(
-				self.sourceToken.get(ik.name))
+			try:
+				self.coreArgs[ik.name] = ik.computeCoreArgValue(
+					self.sourceToken.get(ik.name))
+			except votable.BadVOTableLiteral, ex:
+				raise base.ValidationError("Bad parameter literal %s (%s)"%(
+					self.sourceToken.get(ik.name), ex),
+					ik.name)
 
 		if False:
 			yield {}  # contextGrammars yield no rows.

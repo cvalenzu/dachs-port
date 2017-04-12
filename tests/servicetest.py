@@ -158,10 +158,10 @@ class InputKeyParsingTestGood(testhelpers.VerboseTest):
 		('type="integer[2]" multiplicity="multiple"/>', ['12 13'], [[12, 13]]),
 		('type="integer[2]" multiplicity="multiple"/>', 
 			['12 13', '14 15'], [[12, 13], [14, 15]]),
-		('type="integer[2]"/>', ["4"], [4,]),
-		('type="integer[2]"/>', ["4 4 5"], [4,4,5]),
+		('type="integer[]"/>', ["4"], [4,]),
+		('type="integer[3]"/>', ["4 4 5"], [4,4,5]),
 #15
-		('type="integer[2]" multiplicity="multiple"/>', 
+		('type="integer[3]" multiplicity="multiple"/>', 
 			["4 4 5", "7 8 9"],
 			[[4,4,5], [7,8,9]]),
 		('multiplicity="multiple"/>', [], None),

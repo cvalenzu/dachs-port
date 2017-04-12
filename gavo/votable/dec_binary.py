@@ -238,6 +238,8 @@ def getRowDecoderSource(tableDefinition):
 			"    if inF.atEnd and row==[]:",
 			"      return None",
 			"    raise",
+			"  except common.VOTableError:",
+			"    raise",
 			"  except:",
 			"    raise common.BadVOTableLiteral('%s', repr(inF.lastRes))"%(
 				field.datatype)])

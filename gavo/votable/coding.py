@@ -59,15 +59,9 @@ def buildCodec(source, env):
 	"""
 	ns = {}
 	ns.update(env)
-	try:
-		# open("codec.py", "w").write(source)
-		exec source in ns
-	except:
-		utils.sendUIEvent("Error", 
-			"Error when compling VOTable codec (source in dcInfo)")
-		utils.sendUIEvent("Info", "The failing source code was:\n"+source)
-		raise
-	return ns["codec"]
+
+#	open("codec.py", "w").write(source)
+	return utils.compileFunction(source, "codec", useGlobals=ns)
 
 
 def buildEncoder(tableDefinition, encoderModule):
@@ -124,6 +118,75 @@ def unravelArray(arraysize, seq):
 		seq = [seq[i:i+step] for i in range(0, len(seq), step)]
 	return seq
 
+
+def parseVOTableArraysizeEl(spec, fieldName):
+	"""parses a single VOTable arraysize number to (flexible, length).
+
+	This will accept single numbers (returns False, number),
+	number* (returns True, number) and just * (returns 0, number).
+
+	This is used to parse the last part of an ND array spec.  Everything
+	before that must be an integer only.
+	"""
+	try:
+		if spec=="*":
+			return True, 0
+		
+		elif spec.endswith("*"):
+			return True, int(spec[:-1])
+
+		else:
+			return False, int(spec)
+	except ValueError:
+		raise common.VOTableError("Invalid arraysize fragment '%s' in"
+			" field or param name '%s'"%(spec, fieldName))
+
+
+def makeShapeValidator(field):
+	"""returns code lines to validate an an array shape against a flat
+	sequence in row.
+
+	This is used by the array decoders.  Since for now we don't re-pack
+	arrays, for more complex array shapes we essentially only check plausibilty.
+	"""
+	arraysize = field.arraysize
+	if not arraysize:
+		return []
+	dimensions = arraysize.strip().split("x")
+
+	stride = 1
+	# all dimensions except the last must be integers
+	if len(dimensions)>1:
+		try:
+			stride = reduce(lambda a,b: a*b, [int(l) for l in dimensions[:-1]])
+		except ValueError:
+			raise common.VOTableError("Invalid arraysize '%s' specificed in"
+				" field or param name '%s'"%(
+				field.arraysize, field.name))
+	
+	flexible, length = parseVOTableArraysizeEl(dimensions[-1], field.name)
+	
+	if flexible:
+		# 0..n; all we have to do is check that the length is a multiple of
+		# stride, if that's non-trivial.
+		# TODO: enfoce length limits?  By error or by cropping?
+		if stride>1:
+			return [
+				"if len(row) %% %d:"%stride,
+				"  raise common.BadVOTableLiteral('%s[%s]',"
+				"    '<%%d token(s)>'%%(len(row)))"%(
+					field.datatype, field.arraysize)]
+
+	else:
+		# exact size specification
+		return [
+			"if len(row)!=%d:"%(length*stride),
+			"  raise common.BadVOTableLiteral('%s[%s]',"
+			"    '<%%d token(s)>'%%(len(row)))"%(
+				field.datatype, field.arraysize)]
+
+	# fallback: no validation
+	return []
 
 def trim(seq, arraysize, padder):
 	"""returns seq with length arraysize.

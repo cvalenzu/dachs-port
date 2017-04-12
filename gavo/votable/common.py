@@ -20,11 +20,12 @@ class VOTableError(utils.Error):
 class BadVOTableLiteral(VOTableError):
 	"""Raised when a literal in a VOTable is invalid.
 	"""
-	def __init__(self, type, literal, hint=None):
+	def __init__(self, type, literal, hint=None, originalException=None):
 		VOTableError.__init__(self, 
 			"Invalid literal for %s: '%s'"%(type, repr(literal)),
 			hint=hint)
 		self.type, self.literal = type, literal
+		self.originalException = originalException
 	
 	def __str__(self):
 		return "Invalid literal for %s: %s"%(self.type, repr(self.literal))
