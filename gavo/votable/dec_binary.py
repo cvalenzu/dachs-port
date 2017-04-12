@@ -206,6 +206,9 @@ def _getArrayDecoderLines(field):
 	src.extend([
 		"for i in range(arraysize):"])
 	src.extend(coding.indentList(_decoders[type](field), "  "))
+
+	src.extend(coding.makeShapeValidator(field))
+
 	src.extend([
 		"fullRow.append(list(row))",
 		"row = fullRow"])

@@ -890,6 +890,14 @@ class Binary2RoundtripTest(testhelpers.VerboseTest):
 			[['a', None], [None, 'abc']]),
 		([V.FIELD(datatype="boolean"), V.FIELD(datatype="doubleComplex")],
 			[[True, None], [None, 0.25+3j]]),
+		([V.FIELD(datatype="int", arraysize="2")],
+			[[[1,2]], [[-2, -3]], [None]]),
+		([V.FIELD(datatype="int", arraysize="2*")],
+			[[[1,2,3,4]], [[-2, -3, -4]], [None]]),
+		([V.FIELD(datatype="float", arraysize="2x3")],
+			[[[1,2,3,4,-2,-3]], [None]]),
+		([V.FIELD(datatype="float", arraysize="2x3*")],
+			[[[1,2,3,4,-2,-3]], [None]]),
 	]
 
 
