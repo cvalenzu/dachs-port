@@ -624,13 +624,14 @@ class SpectralPreviewMaker(PreviewMaker):
 	linearFluxes = False
 	spectralColumn = "spectral"
 	fluxColumn = "flux"
+	connectPoints = True
 
 	def _createAuxiliaries(self, dd):
 		PreviewMaker._createAuxiliaries(self, dd)
 		self.sdmDD = self.dd.rd.getById(self.sdmId)
 
 	@staticmethod
-	def get2DPlot(tuples, linear=False):
+	def get2DPlot(tuples, linear=False, connectPoints=True):
 		"""returns a jpg-compressed pixel image for a 2D plot of (x,y)
 		tuples.
 		"""
@@ -641,10 +642,16 @@ class SpectralPreviewMaker(PreviewMaker):
 			plotter = ax.plot
 		else:
 			plotter = ax.semilogy
-		
+
+		if connectPoints:
+			linestyle = "-"
+		else:
+			linestyle = "o"
+
 		plotter(
 			[r[0] for r in tuples], 
 			[r[1] for r in tuples],
+			linestyle,
 			color="black")
 		ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
 		ax.yaxis.set_major_locator(matplotlib.ticker.NullLocator())
@@ -668,7 +675,7 @@ class SpectralPreviewMaker(PreviewMaker):
 		data = [(r[self.spectralColumn], r[self.fluxColumn]) for r in table.rows]
 		data.sort()
 
-		return self.get2DPlot(data, self.linearFluxes)
+		return self.get2DPlot(data, self.linearFluxes, self.connectPoints)
 
 
 def procmain(processorClass, rdId, ddId):
