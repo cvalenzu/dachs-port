@@ -117,7 +117,9 @@ def getXMLGrammar(manipulator):
 		value = (QuotedString(quoteChar="'", multiline=True, unquoteResults=False) 
 			| QuotedString(quoteChar='"', multiline=True, unquoteResults=False))
 		attribute = (name
+			+ Optional(White())
 			+ Literal("=")
+			+ Optional(White())
 			+ value)
 		tagOpener = (opener 
 			+ name 
