@@ -622,6 +622,8 @@ class PreviewMaker(FileProcessor):
 
 class SpectralPreviewMaker(PreviewMaker):
 	linearFluxes = False
+	spectralColumn = "spectral"
+	fluxColumn = "flux"
 
 	def _createAuxiliaries(self, dd):
 		PreviewMaker._createAuxiliaries(self, dd)
@@ -663,7 +665,7 @@ class SpectralPreviewMaker(PreviewMaker):
 	def getPreviewData(self, accref):
 		table = rsc.makeData(self.sdmDD, forceSource={
 			"accref": accref}).getPrimaryTable()
-		data = [(r["spectral"], r["flux"]) for r in table.rows]
+		data = [(r[self.spectralColumn], r[self.fluxColumn]) for r in table.rows]
 		data.sort()
 
 		return self.get2DPlot(data, self.linearFluxes)
