@@ -586,7 +586,7 @@ def makeReferenceDocs():
 	f.close()
 	docStructure.fillOut(res)
 	_decodeStrings(res)
-	return "".join(res)
+	return "..\n  WARNING: GENERATED DOCUMENT.\n  Edit this in refdoc.rstx or the DaCHS source code.\n\n"+"".join(res)
 
 
 

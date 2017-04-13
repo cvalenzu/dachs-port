@@ -136,10 +136,10 @@ def raiseAndCatch(opts=None, output=outputError):
 			base.MetaValidationError), msg:
 
 		if not getattr(msg, "posInMsg", False):
-			if getattr(msg, "inFile", None):
-				messages.append("In %s:"%msg.inFile)
-			elif getattr(msg, "pos", None):
+			if getattr(msg, "pos", None):
 				messages.append("At or near %s:"%msg.pos)
+			elif getattr(msg, "inFile", None):
+				messages.append("In %s:"%msg.inFile)
 
 		if getattr(msg, "row", None):
 			row = dict((key, value) for key, value in msg.row.iteritems() 
