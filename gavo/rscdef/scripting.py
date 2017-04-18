@@ -205,7 +205,8 @@ class Script(base.Structure, base.RestrictionMixin):
 		validValues=["SQL", "python", "AC_SQL"], copyable=True)
 	_type = base.EnumeratedUnicodeAttribute("type", default=base.Undefined,
 		description="Point of time at which script is to run.", 
-		validValues=["preImport", "newSource", "preIndex", "postCreation",
+		validValues=["preImport", "newSource", "preIndex", "preCreation",
+			"postCreation",
 			"beforeDrop", "sourceDone"], copyable=True)
 	_name = base.UnicodeAttribute("name", default="anonymous",
 		description="A human-consumable designation of the script.",

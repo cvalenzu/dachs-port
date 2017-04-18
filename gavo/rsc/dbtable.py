@@ -534,6 +534,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 	def create(self):
 		base.ui.notifyDebug("Create DB Table %s"%self.tableName)
 		self.ensureSchema()
+		self.runScripts("preCreation")
 		self.connection.execute(self.tableDef.getDDL())
 		self.newlyCreated = True
 		return self.configureTable()

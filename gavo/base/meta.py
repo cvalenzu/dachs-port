@@ -74,7 +74,10 @@ class MetaCardError(MetaError):
 	"""
 	def __init__(self, msg, carrier=None, hint=None, key=None):
 		self.origMsg = msg
-		MetaError.__init__(self, "%s (key %s)"%(msg, key), hint=hint)
+		if key is None:
+			MetaError.__init__(self, msg, hint=hint)
+		else:
+			MetaError.__init__(self, "%s (key %s)"%(msg, key), hint=hint)
 
 
 class MetaValueError(MetaError):

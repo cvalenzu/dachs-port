@@ -704,13 +704,13 @@
 			is deprecated, this should not be used in new RDs, either.  For
 			//ssap#mixc tables, use publishSSAPMIXC.
 
-			This works like //obscore#publish except some defaults apply
+			This works like `the //obscore#publish mixin`_ except some defaults apply
 			that copy fields that work analoguously in SSAP and in ObsTAP.
 
-			For special situations, you can, of course, override any
-			of the parameters, but most of them should already be all right.
-			To find out what the parameters described as "preset for SSAP"
-			mean, refer to //obscore#publish.
+			The columns already set in SSAP are marked as UNDOCUMENTED in the
+			parameter list below.  For special situations, you can, of course,
+			override any of the parameters.  To find out what they actually mean,
+			mean, refer to `the //obscore#publish mixin`_.
 
 			Note that this mixin does *not* set coverage (obscore: s_region).
 			This is because although we could make a circle from ssa_location
@@ -726,7 +726,8 @@
 		<LFEED source="_publishProduct"/>
 		<LFEED source="_publishCommon"/>
 
-		<mixinPar name="coverage"
+		<mixinPar name="coverage" description="Use ssa_region when the
+			table also mixes in //ssap#simpleCoverage"
 			>NULL</mixinPar>
 		<mixinPar name="collectionName">
 			\sqlquote{\getParam{ssa_collection}{NULL}}</mixinPar>
@@ -755,14 +756,13 @@
 		<doc>
 			Publish a table mixing in //ssap#mixc to ObsTAP.
 
-			This works like //obscore#publish except some defaults apply
+			This works like `the //obscore#publish mixin`_ except some defaults apply
 			that copy fields that work analoguously in SSAP and in ObsTAP.
 
-			For special situations, you can, of course, override any
-			of the parameters, but most of them should already be all right.
-			To find out what the parameters described as "preset for SSAP"
-			mean, refer to //obscore#publish.  You'll usually want to fix
-			calibLevel, though (typically to 2).
+			The columns already set in SSAP are marked as UNDOCUMENTED in the
+			parameter list below.  For special situations, you can, of course,
+			override any of the parameters.  To find out what they actually mean,
+			mean, refer to `the //obscore#publish mixin`_.
 
 			Note that this mixin does *not* set coverage (obscore: s_region).
 			This is because although we could make a circle from ssa_location
@@ -778,7 +778,8 @@
 		<LFEED source="_publishProduct"/>
 		<LFEED source="_publishCommon"/>
 
-		<mixinPar name="coverage"
+		<mixinPar name="coverage" description="Use ssa_region when the
+			table also mixes in //ssap#simpleCoverage"
 			>NULL</mixinPar>
 		<mixinPar name="collectionName">ssa_collection</mixinPar>
 		<mixinPar name="creatorDID">ssa_creatorDID</mixinPar>
@@ -794,7 +795,7 @@
 			>\sqlquote{\metaString{facility}}</mixinPar>
 		<mixinPar name="oUCD"
 			>\sqlquote{\getParam{ssa_fluxucd}}</mixinPar>
-		<mixinPar name="productType">'spectrum'</mixinPar>
+		<mixinPar name="productType">ssa_dstype</mixinPar>
 		<mixinPar name="sResolution">\getParam{ssa_spaceRes}{NULL}/3600.</mixinPar>
 		<mixinPar name="tMax">ssa_dateObs+ssa_timeExt/2</mixinPar>
 		<mixinPar name="tMin">ssa_dateObs-ssa_timeExt/2</mixinPar>
@@ -848,11 +849,13 @@
 		</make>
 	</data>
 
-	<data id="refreshAfterSchemaUpdate">
+	<data id="refreshAfterSchemaUpdate" auto="False" updating="True">
 		<recreateAfter>create</recreateAfter>
+		<sources item="dummy"/>
+		<nullGrammar/>
 		<make table="emptyobscore"/>
 		<make table="ObsCore">
-			<script name="update all obscore definitions" type="postCreation"
+			<script name="update all obscore definitions" type="newSource"
 					lang="python">
 				from gavo import rsc
 				from gavo.rscdef import scripting
