@@ -507,8 +507,23 @@ class SMoc(PgSAdapter):
 	def asSTCS(self, frame):
 		# no STCS for MOCs, but this is really just for VOTable serialisation,
 		# so let's cheat
-		return self.asASCII()
+		return "MOC "+self.asASCII()
 
+	def asSMoc(self, order=6):
+		"""returns a copy of self, normalised for order.
+		"""
+		moc = self.moc.copy()
+		moc.normalize(order)
+		return self.__class__(moc)
+
+	def getPlot(self):
+		"""returns a png string with a plot visualising this moc.
+		"""
+		from pymoc.util.plot import plot_moc
+		import tempfile
+		with tempfile.NamedTemporaryFile(suffix=".png") as f:
+			plot_moc(self.moc, filename=f.name, projection="moll")
+			return f.read()
 
 try:
 	import psycopg2

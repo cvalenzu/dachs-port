@@ -581,6 +581,9 @@ class _Geometry(_CoordinateLike):
 	Geometries may contain two sorts of column references; ordinary ones
 	are just stand-ins of actual values, while GeometryColRefs describe the
 	whole thing in a database column.
+
+	For the spatial registry prototype, geometries can define an 
+	asSMoc(order=6) method returning a pgpshere.SMoc coverage for them.
 	"""
 	_a_size = None
 	_a_fillFactor = None
@@ -608,7 +611,10 @@ class AllSky(_Geometry):
 
 	def _getValuesSplit(self):
 		return []
-	
+
+	def asSMoc(self, order=6):
+		return pgsphere.SMoc.fromCells(0, range(12))
+
 
 class Circle(_Geometry):
 	_a_center = None
@@ -634,6 +640,13 @@ class Circle(_Geometry):
 			center=(sCircle.center.x/utils.DEG, sCircle.center.y/utils.DEG),
 			radius=(sCircle.radius/utils.DEG))
 
+	def asSMoc(self, order):
+		return pgsphere.SCircle(
+			pgsphere.SPoint.fromDegrees(*self.center),
+			self.radius*utils.DEG
+			).asPoly(
+			).asSMoc()
+			
 
 class Ellipse(_Geometry):
 	_a_center = None
@@ -697,6 +710,12 @@ class Polygon(_Geometry):
 		return cls(frame=frame,
 			vertices=[(p.x/utils.DEG, p.y/utils.DEG) 
 				for p in sPoly.points])
+
+	def asSMoc(self, order=6):
+		# let's assume points are in degrees here; this is hopefully only
+		# temporary, anyway
+		return pgsphere.SPoly(
+			[pgsphere.SPoint.fromDegrees(*p) for p in self.vertices]).asSMoc(order)
 
 
 class Convex(_Geometry):
