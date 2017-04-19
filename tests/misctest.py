@@ -802,6 +802,19 @@ class PgSphereDryTest(testhelpers.VerboseTest):
 		self.assertEqual(m.asASCII(),
 			"1/1,3-4 2/4,12-14,21,25")
 
+	def testMocFromPoly(self):
+		m = pgsphere.SPoly.fromSODA([0, 0, 45, 0, 0, 90]).asSMoc(order=4)
+#		from pymoc.util.plot import plot_moc
+#		res = plot_moc(m.moc, filename="zw.png", projection="moll")
+		self.assertEqual(m.asASCII(),
+			'1/2 2/2,14,71,77 3/2,14,50,62,279,283,305,317'
+			' 4/2,14,50,62,194,206,242,254,1111,1115,1127,1131,1217,1229,1265,1277')
+	
+	def testMocFromCircle(self):
+		m = pgsphere.SCircle.fromSODA([-50, 33, 2]).asPoly().asSMoc()
+		self.assertEqual(m.asASCII(),
+			'5/3309 6/13233-13235,13240-13241,13243-13246,13280,13282')
+
 
 class KVLParseTest(testhelpers.VerboseTest):
 # Tests for our key-value line format (as in postgres)

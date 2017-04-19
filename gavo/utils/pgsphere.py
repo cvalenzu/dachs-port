@@ -132,6 +132,11 @@ class SPoint(PgSAdapter):
 
 	def p(self):   # helps below
 		return "(%r, %r)"%(self.x, self.y)
+	
+	def asUnitSphereVec(self):
+		"""returns self as a triple of cx, cy, cz on the unit sphere.
+		"""
+		return mathtricks.spherToCart(self.x, self.y)
 
 
 class SCircle(PgSAdapter):
@@ -261,6 +266,19 @@ class SPoly(PgSAdapter):
 
 	def asPoly(self):
 		return self
+	
+	def asSMoc(self, order=6, inclusive=True):
+		"""returns an SMoc instance for this polygon.
+
+		If inclusive is False, do not include healpixes that lie
+
+		order is the maximum order of the moc returned.
+		"""
+		import healpy
+		pixels = healpy.query_polygon(vertices=[
+				p.asUnitSphereVec() for p in self.points],
+			nside=2**order, nest=True)
+		return SMoc.fromCells(order, pixels)
 
 
 class SBox(PgSAdapter):
@@ -417,6 +435,16 @@ class SMoc(PgSAdapter):
 				openMat.end())
 			moc.add(order, cells)
 
+		return cls(moc)
+	
+	@classmethod
+	def fromCells(cls, order, pixels):
+		"""returns a SMoc instance from a collection of pixels at order.
+		"""
+		import pymoc
+		
+		moc = pymoc.MOC(order=order, cells=pixels)
+		moc.normalize()
 		return cls(moc)
 
 	@staticmethod

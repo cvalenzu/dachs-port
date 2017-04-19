@@ -215,6 +215,6 @@ def tryRemoteReload(rdId):
 			creds=("gavoadmin", pw))
 		f.read()
 	except IOError, ex:
-		utils.sendUIEvent("Warning", "Could not reload %s RD (%s).  This means"
+		utils.sendUIEvent("Debug", "Could not reload %s RD (%s).  This means"
 			" that the server may still use stale metadata.  You may want"
 			" to reload %s manually (or restart the server)."%(rdId, ex, rdId))
