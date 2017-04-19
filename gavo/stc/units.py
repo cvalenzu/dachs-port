@@ -289,7 +289,7 @@ def getVelocityConverter(fromSpaceUnits, fromTimeUnits, toSpace, toTime,
 
 @memoized
 def getUnitConverter(fromCoo, toCoo):
-	"""returns a pair unit info and a conversion function to take fromCoo
+	"""returns a pair of unit info and a conversion function to take fromCoo
 	to the units of toCoo.
 
 	toCoo may be None, in which case the unit of fromCoo is returned together

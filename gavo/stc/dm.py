@@ -364,6 +364,11 @@ class _SpatialMixin(object):
 		return f
 
 	def getUnitArgs(self):
+		if self.unit==():
+			# horrendous default: an empty spatial coordiate as (deg, deg),
+			# because that's what most likely works with geometries.
+			# Oh boy, STC1 is *so* broken it's not funny any more.
+			return {"unit": ("deg", "deg")}
 		return {"unit": self.unit}
 
 	def getValues(self):
