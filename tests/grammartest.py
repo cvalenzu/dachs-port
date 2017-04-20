@@ -588,7 +588,7 @@ class DirectGrammarTest(testhelpers.VerboseTest):
 		src = directgrammar.getSource("data/dgs#fits2nd")
 		self.failUnless("fits_movabs_hdu(fitsInput, 2+1," in src)
 		self.failUnless("FITSColDesc COL_DESCS[1] = {\n"
-			"{.cSize = sizeof(long long), .fitsType = TLONGLONG, .index=1}\n};"
+			"{.cSize = sizeof(long long), .fitsType = TLONGLONG, .index=1, .arraysize=1}\n};"
 			in src)
 
 	def testFITSWithAdditionalCols(self):

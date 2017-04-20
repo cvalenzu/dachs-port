@@ -584,7 +584,7 @@ class GeometryTest(VOTableRenderTest):
 			0].get("xtype"), "adql:REGION")
 		self.assertEqual(
 			tree.xpath("RESOURCE/TABLE/DATA/TABLEDATA/TR/TD")[0].text,
-			"5/4,10-12 6/564-581")
+			"MOC 5/4,10-12 6/564-581")
 
 
 class GeoXtypeTest(VOTableRenderTest):

@@ -676,7 +676,7 @@ class FITSCodeGenerator(_CodeGenerator):
 			if col is None:
 				# table column not part of FITS table, suppress reading
 				# my having .cSize=0
-				res.append("{.cSize = 0, .fitsType = 0, .index=0}")
+				res.append("{.cSize = 0, .fitsType = 0, .index=0, .arraysize=0}")
 				continue
 
 			length, typecode = self._parseFITSFormat(fcd.format, fcd.name)
@@ -684,17 +684,17 @@ class FITSCodeGenerator(_CodeGenerator):
 			if typecode=="A":
 				# special handling for strings, as we need their size
 				# var length strings have been rejected above
-				res.append("{.cSize = %d, .fitsType = TSTRING, .index=%d}"%(
+				res.append(
+					"{.cSize = %d, .fitsType = TSTRING, .index=%d, .arraysize=1}"%(
 					length, index+1))
 
 			else:
-				if length!=1:
-					raise base.ReportableError("Column %s: Arrays not supported"
-						" by gavo mkboost."%fcd.name)
-				res.append("{.cSize = sizeof(%s), .fitsType = %s, .index=%d}"%(
-					self.fitsTypes[typecode][1], 
+				res.append(
+					"{.cSize = sizeof(%s), .fitsType = %s, .index=%d, .arraysize=%d}"%(
+					self.fitsTypes[typecode][1],
 					self.fitsTypes[typecode][0],
-					index+1))
+					index+1,
+					length))
 
 		return res
 
@@ -710,6 +710,7 @@ typedef struct FITSColDesc_s {
 	size_t cSize;
 	int fitsType;
 	int index;  /* in the FITS columns */
+	size_t arraysize;
 } FITSColDesc;
 
 FITSColDesc COL_DESCS[%(nCols)d] = %(colDescs)s;
@@ -757,16 +758,16 @@ FITSColDesc COL_DESCS[%(nCols)d] = %(colDescs)s;
 			}
 
 		} else {
-			if (!(data[i] = malloc(nRows*COL_DESCS[i].cSize))) {
+			if (!(data[i] = malloc(nRows*COL_DESCS[i].cSize*COL_DESCS[i].arraysize))) {
 				die("out of memory");
 			}
 		}
-		if (!(nulls[i] = malloc(nRows*sizeof(char)))) {
+		if (!(nulls[i] = malloc(nRows*sizeof(char)*COL_DESCS[i].arraysize))) {
 			die("out of memory");
 		}
 		FITSCATCH(fits_read_colnull(fitsInput, COL_DESCS[i].fitsType, 
 			COL_DESCS[i].index, 1, 1,
-     	nRows, data[i], nulls[i], &ignored, &status));
+     	nRows*COL_DESCS[i].arraysize, data[i], nulls[i], &ignored, &status));
 	}"""%infoDict
 		+COMMON_MAIN_INTRO
 		+"""	for (i=0; i<nRows; i++) {"""
