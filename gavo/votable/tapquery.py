@@ -499,7 +499,6 @@ def request(host, path, data="", customHeaders={}, method="GET",
 			or resp.status==301
 			or resp.status==302):
 		parts = urlparse.urlparse(resp.getheader("location"))
-		assert parts.scheme=="http"
 		return request(parts.netloc, parts.path+'?'+parts.query, 
 			data, customHeaders, method, expectedStatus, 
 			followRedirects=followRedirects-1)
@@ -536,7 +535,6 @@ class _WithEndpoint(object):
 	def _defineEndpoint(self, endpointURL):
 		self.endpointURL = endpointURL.rstrip("/")
 		parts = urlparse.urlsplit(self.endpointURL)
-		assert parts.scheme=="http"
 		self.destHost = parts.hostname
 		if parts.port:
 			self.destHost = "%s:%s"%(self.destHost, parts.port)
