@@ -113,7 +113,7 @@
 			tablehead="A string must be in here as well">
 			<values nullLiteral=""/>
 		</column>
-		<column name="adate" tablehead="When" type="date"/>
+		<column name="adate" tablehead="When" type="date" unit="d"/>
 	</table>
 
 	<data id="tableMaker">

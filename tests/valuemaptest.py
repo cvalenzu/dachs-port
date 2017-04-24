@@ -62,7 +62,8 @@ class MapperBasicTest(testhelpers.VerboseTest):
 
 
 class _MapperTestBase(testhelpers.VerboseTest):
-	def assertMapsTo(self, colDef, inValue, expectedValue):
+	def assertMapsTo(self, colDef, inValue, expectedValue, 
+			expectedAttributes=[]):
 		column = base.parseFromString(rscdef.Column, 
 			"<column %s</column>"%colDef)
 		annCol = valuemappers.AnnotatedColumn(column)
@@ -71,6 +72,9 @@ class _MapperTestBase(testhelpers.VerboseTest):
 			self.assertAlmostEqual(expectedValue, res, places=3)
 		else:
 			self.assertEqual(expectedValue, res)
+		
+		for key, value in expectedAttributes:
+			self.assertEqual(annCol[key], value)
 
 
 class _EnumeratedMapperTest(_MapperTestBase):
@@ -85,10 +89,12 @@ class _EnumeratedMapperTest(_MapperTestBase):
 class StandardMapperTest(_EnumeratedMapperTest):
 	samples = [
 # 0
-		('name="d" type="date" unit="Y-M-D">',
-			datetime.date(2003, 5, 4), "2003-05-04"),
+		('name="d" type="date">',
+			datetime.date(2003, 5, 4), "2003-05-04",
+			[("xtype", "adql:TIMESTAMP")]),
 		('name="d" type="date" unit="yr">',
-			datetime.date(2003, 5, 4), 2003.33607118),
+			datetime.date(2003, 5, 4), 2003.33607118,
+			[("datatype", "double")]),
 		('name="d" type="date" unit="d">',
 			datetime.date(2003, 5, 4), 2452763.5),
 		('name="d" type="timestamp" unit="d">',
@@ -120,6 +126,9 @@ class StandardMapperTest(_EnumeratedMapperTest):
 		('name="d" unit="d" xtype="mjd">',
 			54320.2,
 			54320.2),
+		('name="d" type="timestamp" xtype="adql:TIMESTAMP">',
+			datetime.datetime(2000, 12, 31, 11, 59, 59),
+			"2000-12-31T11:59:59"),
 	]
 
 
@@ -179,7 +188,6 @@ class HTMLMapperTest(testhelpers.VerboseTest):
 			[0.002, 0.004],
 			"[7.2000, 14.4000]",
 			{"unit": "arcsec/pix"}),
-
 	]
 
 

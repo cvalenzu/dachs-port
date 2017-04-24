@@ -634,7 +634,7 @@ class HTMLRenderTest(testhelpers.VerboseTest):
 	
 	def testDefaultDateDisplay(self):
 		self._assertXpathText("table/tbody/tr[1]/td[3]", 
-			"2453463.58403")
+			"2005-04-03T02:01:00")
 
 	def testDateNull(self):
 		self._assertXpathText("table/tbody/tr[2]/td[3]", "N/A")
@@ -847,7 +847,7 @@ class GeojsonTest(testhelpers.VerboseTest):
 				}
 			</dm>
 			<column name="s_region" type="spoly"/>
-			<column name="observed_at" type="timestamp"/>
+			<column name="observed_at" type="timestamp" unit="d"/>
 			<column name="s_point" type="spoint"/>
 			</table>""")
 		table = rsc.TableForDef(td, rows=[{

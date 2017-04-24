@@ -307,18 +307,15 @@ def datetimeMapperFactory(colDesc):
 			# must look in original, as the one in colDesc comes from typesystems
 			or colDesc.original.xtype=="adql:TIMESTAMP"):
 		unit = colDesc["unit"]
-		if (
-				unit=="Y:M:D" 
-				or unit=="Y-M-D" 
-				or colDesc["displayHint"].get("format")=="humanDate"
+		if (colDesc["displayHint"].get("format")=="humanDate"
 				or colDesc.original.xtype=="adql:TIMESTAMP"):
 			fun = lambda val: (val and val.isoformat()) or None
 			destType = ("char", "*")
 			colDesc["nullvalue"] = ""
 
 		elif (colDesc["ucd"] and "MJD" in colDesc["ucd"].upper()
-				) or (colDesc["xtype"]=="mjd"
-				) or "mjd" in colDesc["name"]:
+				 or colDesc["xtype"]=="mjd"
+				 or "mjd" in colDesc["name"]):
 			colDesc["unit"] = "d"
 			fun = lambda val: (val and dateTimeToMJD(val))
 			destType = ("double", '1')
@@ -346,16 +343,12 @@ def datetimeMapperFactory(colDesc):
 			colDesc["nullvalue"] = "NaN"
 			colDesc["xtype"] = None
 
-		elif unit=="iso":
-			fun = lambda val: (val and val.isoformat())
+		else:
+			# default for datetime column: serialise to adql:TIMESTAMP
+			fun = lambda val: (val and val.isoformat()) or None
 			destType = ("char", "*")
 			colDesc["nullvalue"] = ""
-
-		else:   # Fishy, but not our fault
-			fun = lambda val: (val and dateTimeToJdn(val))
-			destType = ("double", '1')
-			colDesc["nullvalue"] = "NaN"
-			colDesc["xtype"] = None
+			colDesc["xtype"] = "adql:TIMESTAMP"
 
 		colDesc["datatype"], colDesc["arraysize"] = destType
 		return fun
