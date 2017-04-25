@@ -3,7 +3,7 @@
 
 <resource resdir="__tests" schema="tests">
 
-	<data id="fileUploadTest">
+	<data id="fileUploadTest" updating="True">
 		<property name="stagingDir">upload</property>
 		<sources pattern="upload/[a-z]*"/>
 		<keyValueGrammar/>

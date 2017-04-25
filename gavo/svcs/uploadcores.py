@@ -34,7 +34,10 @@ class UploadCore(core.Core):
 
 	It allows users to upload individual files into a special staging
 	area (taken from the stagingDir property of the destination data descriptor)
-	and causes these files to be parsed using destDD.
+	and causes these files to be parsed using destDD.  Note that destDD
+	*must* have ``updating="True"` for this to work properly (it will otherwise
+	drop the table on each update).  If uploads are the only way updates
+	into the table occur, source management is not necessary for these, though.
 
 	You can tell UploadCores to either insert or update the incoming data using
 	the "mode" input key.
@@ -42,7 +45,8 @@ class UploadCore(core.Core):
 	name_ = "uploadCore"
 
 	_destDD = base.ReferenceAttribute("destDD", default=base.Undefined,
-		description="Reference to the data we are uploading into.")
+		description="Reference to the data we are uploading into. The"
+			" destination must be an updating data descriptor.")
 
 	inputTableXML = """
 		<inputTable id="inFields">
@@ -101,8 +105,9 @@ class UploadCore(core.Core):
 		"""
 		base.ui.notifyInfo("Web upload ingesting %s in %s mode"%(sourcePath, mode))
 		try:
-			parseOptions = rsc.getParseOptions(validateRows=True, 
-				updateMode=True, doTableUpdates=mode=="u")
+			parseOptions = rsc.getParseOptions(
+				validateRows=True, 
+				doTableUpdates=mode=="u")
 			with base.getWritableAdminConn() as conn:
 				res = rsc.makeData(self.destDD, parseOptions=parseOptions, 
 					forceSource=sourcePath, connection=conn)

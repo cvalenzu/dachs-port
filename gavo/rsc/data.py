@@ -277,7 +277,7 @@ class Data(base.MetaMixin, common.ParamMixin):
 		System tables are only recreated when the systemImport parseOption
 		is true.
 		"""
-		if self.parseOptions.updateMode or self.dd.updating:
+		if self.dd.updating:
 			if self.parseOptions.dropIndices:
 				for t in self:
 					if t.tableDef.onDisk:

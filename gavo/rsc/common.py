@@ -124,7 +124,7 @@ class ParseOptions(object):
 		return newInstance
 
 
-def getParseOptions(validateRows=True, updateMode=False, doTableUpdates=False,
+def getParseOptions(validateRows=True, doTableUpdates=False,
 		batchSize=1024, maxRows=None, keepGoing=False, dropIndices=False,
 		dumpRows=False, metaOnly=False, buildDependencies=True,
 		systemImport=False, commitAfterMeta=False, dumpIngestees=False):
@@ -149,7 +149,6 @@ def getParseOptions(validateRows=True, updateMode=False, doTableUpdates=False,
 	po.validateRows = validateRows
 	po.systemImport = systemImport
 	po.keepGoing = keepGoing
-	po.updateMode = updateMode
 	po.dumpRows = dumpRows
 	po.doTableUpdates = doTableUpdates
 	po.batchSize = batchSize

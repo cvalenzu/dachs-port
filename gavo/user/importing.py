@@ -145,9 +145,6 @@ def main():
 		parser.add_option("-I", "--meta-and-index", help="do not import, but"
 			" update table meta (privileges, column descriptions,...) and recreate"
 			" the indices", dest="metaPlusIndex", action="store_true")
-		parser.add_option("-u", "--update", help="update mode -- don't drop"
-			" tables before writing.", dest="updateMode", 
-			action="store_true", default=False)
 		parser.add_option("-s", "--system", help="(re-)create system tables, too",
 			dest="systemImport", action="store_true")
 		parser.add_option("-v", "--verbose", help="talk a lot while working",

@@ -249,7 +249,6 @@ class Make(base.Structure, scripting.ScriptingMixin):
 			parseOptions=parseOptions, connection=connection, role=self.role,
 			create=True, **kwargs)
 		if (self.table.onDisk
-				and not parseOptions.updateMode 
 				and not getattr(self.parent, "updating", False)):
 			newTable._runScripts = self.getRunner()
 		return newTable

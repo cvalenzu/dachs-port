@@ -24,6 +24,10 @@ Version 0.9.9 beta 1 (2017-03-27)
 
 	* Removed SODA procs in //datalink (use the ones from //soda instead)
 
+	* Removed imp -u flag and the corresponding updateMode parse option.
+	  If you used that or the uploadCore, just mark the dds involved
+	  with updating="True".
+
 	* Massive sanitation of input parameter processing.  If you've been
 	  using inputTable, inputDD, or have been doing creative things with
 	  inputKeys, please check the respective services carefully.  See
