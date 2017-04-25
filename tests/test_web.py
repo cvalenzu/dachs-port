@@ -572,12 +572,23 @@ class SCSTest(trialhelpers.ArchiveTest):
 				"RESPONSEFORMAT": "votabletd", "_DBOPTIONS_DIR": "DESC"}
 			).addCallback(assertSorted)
 
+	def testProtocolDeclared(self):
+		return self.assertGETHasStrings("/data/cores/scs/scs.xml", 
+			{"RA": ["1"], "DEC": ["2"], "SR": ["1"]},
+			['<INFO name="standardID" value="ivo://ivoa.net/std/ConeSearch"',
+				'Written by DaCHS ', ' SCSRenderer'])
+
 
 class SSATest(trialhelpers.ArchiveTest):
 	def testMetadataFormat(self):
 		return self.assertGETHasStrings("/data/ssatest/c/ssap.xml",
 			{"FORMAT": "Metadata", "REQUEST": "queryData"},
 			["<VOTABLE", 'name="QUERY_STATUS" value="OK"', 'name="INPUT:SIZE"'])
+
+	def testProtocolDeclared(self):
+		return self.assertGETHasStrings("/data/ssatest/c/ssap.xml",
+			{"REQUEST": "queryData"},
+			['<INFO name="standardID" value="ivo://ivoa.net/std/ssap"'])
 
 
 class SIAP2Test(trialhelpers.ArchiveTest):

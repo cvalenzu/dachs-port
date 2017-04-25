@@ -189,6 +189,8 @@ class SSAPCore(svcs.DBCore):
 		return cols
 
 	def _run_queryData(self, service, inputTable, queryMeta):
+		# TODO: Remove this again and have web.vodal do all the formatting
+		# SSA no longer is that much of a special case.
 		format = inputTable.getParam("FORMAT") or ""
 		if format.lower()=="metadata":
 			return self._makeMetadata(service)
@@ -234,7 +236,8 @@ class SSAPCore(svcs.DBCore):
 		resElement[
 			V.INFO(name="SERVICE_PROTOCOL", value=self.ssapVersion)["SSAP"],
 			V.INFO(name="QUERY_STATUS", value=queryStatus)[
-				queryStatusBody]]
+				queryStatusBody],
+			V.INFO(name="standardID", value="ivo://ivoa.net/std/ssap")]
 	
 		datalinkId = service.getProperty("datalink", None)
 		if datalinkId and res:

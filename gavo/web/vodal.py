@@ -53,6 +53,7 @@ class DALRenderer(grend.ServiceBasedPage):
 
 	resultType = base.votableType
 	urlUse = "base"
+	standardId = None
 
 	def __init__(self, ctx, *args, **kwargs):
 		reqArgs = inevow.IRequest(ctx).args
@@ -163,6 +164,12 @@ class DALRenderer(grend.ServiceBasedPage):
 		data.original.addMeta("info", "", infoName="QUERY_STATUS", 
 			infoValue="OK")
 
+		if self.standardId:
+			data.original.addMeta("info", 
+				"Written by DaCHS %s %s"%(base.getVersion(), self.__class__.__name__),
+				infoName="standardID",
+				infoValue=self.standardId)
+
 		request = inevow.IRequest(ctx)
 		if "RESPONSEFORMAT" in request.args:
 			# This is our DALI RESPONSEFORMAT implementation; to declare
@@ -223,6 +230,7 @@ class SCSRenderer(DALRenderer):
 	name = "scs.xml"
 	version = "1.0"
 	parameterStyle = "pql"
+	standardId = "ivo://ivoa.net/std/ConeSearch"
 
 	def __init__(self, ctx, *args, **kwargs):
 		reqArgs = inevow.IRequest(ctx).args
@@ -308,6 +316,7 @@ class SIAPRenderer(DALRenderer):
 	version = "1.0"
 	name = "siap.xml"
 	parameterStyle = "pql"
+	standardId = "ivo://ivoa.net/std/sia"
 
 	def __init__(self, ctx, *args, **kwargs):
 		reqArgs = inevow.IRequest(ctx).args
@@ -397,6 +406,7 @@ class SIAP2Renderer(UnifiedDALRenderer):
 	"""
 	parameterStyle = "dali"
 	name = "siap2.xml"
+	standardId = "ivo://ivoa.net/std/sia"
 
 	def _makeErrorTable(self, ctx, msg, queryStatus="ERROR"):
 		# FatalFault, DefaultFault
@@ -454,6 +464,9 @@ class SSAPRenderer(UnifiedDALRenderer):
 	version = "1.04"
 	name = "ssap.xml"
 	parameterStyle = "pql"
+	# this, unfortunately, is not currently used as protocols.ssap produces
+	# its own VOTables (which should change).
+	standardId = "ivo://ivoa.net/std/ssap"
 
 
 class SLAPRenderer(UnifiedDALRenderer):
@@ -473,6 +486,7 @@ class SLAPRenderer(UnifiedDALRenderer):
 	version = "1.0"
 	name = "slap.xml"
 	parameterStyle = "pql"
+	standardId = "ivo://ivoa.net/std/ssap"
 
 	def _formatOutput(self, data, ctx):
 		data.original.addMeta("_votableRootAttributes",
@@ -659,6 +673,7 @@ class DatalinkGetDataRenderer(_DatalinkRendererBase):
 	"""
 	name = "dlget"
 	attachResult = True
+	standardId = "ivo://ivoa.net/std/soda"
 
 
 class DatalinkGetMetaRenderer(_DatalinkRendererBase):
@@ -673,6 +688,7 @@ class DatalinkGetMetaRenderer(_DatalinkRendererBase):
 	"""
 	name = "dlmeta"
 	resultType = "application/x-votable+xml;content=datalink"
+	standardId = "ivo://ivoa.net/std/datalink"
 
 	def _formatData(self, svcResult, request):
 		# this is a (hopefully temporary) hack that does XSLT server-side
