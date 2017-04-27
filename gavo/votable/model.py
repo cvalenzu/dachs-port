@@ -343,7 +343,7 @@ class VOTable(_VODMLElements):
 		_a_type = None
 		_a_utype = None
 		_childSequence = ["DESCRIPTION", "VODML", "DEFINITIONS", 
-			"COOSYS", "INFO", "GROUP", 
+			"INFO", "COOSYS", "GROUP", 
 			"PARAM", "LINK", "TABLE", "INFO_atend", "RESOURCE", "stub"]
 		# (stub for delayed overflow warnings and such)
 

@@ -1,5 +1,5 @@
 """
-Data model related code.
+Legacy data model related code.
 
 This is legacy stuff.  Cool folks would use the stuff from gavo.dm.  When
 there's actually something useful to be done with it.
