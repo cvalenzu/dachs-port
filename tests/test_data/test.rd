@@ -108,6 +108,9 @@
 			<values nullLiteral="-8888"/></column>
 		<column name="afloat" tablehead="Some Real"/>
 		<column name="adouble" tablehead="And a Double"
+			description="This is a complex
+			beast so it needs a description that requires continuation cards in
+			FITS binary tables."
 			type="double precision"/>
 		<column name="atext" type="unicode" description="Just by a µ."
 			tablehead="A string must be in here as well">

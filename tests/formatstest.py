@@ -444,7 +444,12 @@ class FITSOutputTest(FormatOutputTest):
 		self.assertOutputHas("TTYPE2  = 'afloat  '")
 		self.assertOutputHas("TTYPE3  = 'adouble '")
 		self.assertOutputHas("TFORM3  = 'D       '")
-	
+
+	def testDescriptionPresent(self):
+		self.assertOutputHas("TCOMM3  = 'This is a complex beast so it needs"
+			" a description that requires &'   "
+			"CONTINUE  'continuation cards in FITS binary tables.&'")
+
 	def testSimplePar(self):
 		self.assertOutputHas(
 			"INTPAR  =                   42 / test integer parameter")

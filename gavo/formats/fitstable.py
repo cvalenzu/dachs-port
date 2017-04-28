@@ -138,6 +138,7 @@ def _makeExtension(serMan):
 	cards = hdu.header.ascard
 	for colInd, desc in enumerate(descriptions):
 		cards["TTYPE%d"%(colInd+1)].comment = desc.encode("ascii", "ignore")
+		hdu.header.update("TCOMM%d"%(colInd+1), desc.encode("ascii", "ignore"))
 
 	if not hasattr(serMan.table, "IgnoreTableParams"):
 		for param in serMan.table.iterParams():

@@ -11,14 +11,12 @@ out (or delete them) -->
 	<meta name="subject">__</meta>
 
 	<meta name="creator">___; ___</meta>
-	<meta name="contact.name">___</meta>
-	<meta name="contact.email">___</meta>
 	<meta name="instrument">___</meta>
 	<meta name="facility">___</meta>
 
 	<meta name="source">___</meta>
 	<meta name="contentLevel">Research</meta>
-	<meta name="type">Catalog</meta>  <!-- or Archive, Survey -->
+	<meta name="type">Catalog</meta>  <!-- or Archive, Survey, Simulation -->
 
 	<meta name="coverage">
 		<meta name="waveband">___</meta> <!-- One of Radio, Millimeter, 

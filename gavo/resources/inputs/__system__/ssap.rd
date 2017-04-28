@@ -1041,6 +1041,9 @@
 						>//ssap#sdm-instance</mixin>
 				</table>
 
+			The mixin thus defines a gazillion of params.  This will almost 
+			always be filled using `//ssap#feedSSAToSDM`_ as explaned in
+			`SDM compliant tables`_
 			]]></doc>
 		
 		<!-- technically the sdm-instance defines the (silly) SDM-groups
