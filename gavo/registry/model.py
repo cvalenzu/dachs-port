@@ -275,6 +275,8 @@ class VOR:
 	class accessURL(VORElement):
 		_a_use = None
 	
+	class mirrorURL(VORElement): pass
+
 	class securityMethod(VORElement):
 		def isEmpty(self):
 			return self.standardId is None

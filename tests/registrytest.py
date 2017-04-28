@@ -1315,7 +1315,11 @@ class _OtherServiceRRTree(testhelpers.TestResource):
 					<meta name="testQuery.ra">1</meta>
 					<meta name="testQuery.dec">1</meta>
 					<meta name="testQuery.sr">1</meta>
-					<publish render="scs.xml" sets="ivo_managed"/>
+					<publish render="scs.xml" sets="ivo_managed">
+						<meta name="mirrorURL">http://somewhere.el.se/fakemirror?</meta>
+						<meta name="mirrorURL">http://right.the.re/fakemirror?</meta>
+						<meta name="mirrorURL">http://localhost:8080/k/scs/scs.xml?</meta>
+					</publish>
 					<publish render="form" sets="ivo_managed" service="web"/>
 					</service></resource>
 				""")
@@ -1374,6 +1378,14 @@ class OtherServiceTest(testhelpers.VerboseTest):
 		self.assertEqual(csIntf[0]["accessURL"],
 			"/k/scs/scs.xml?")
 
+	def testMirrors(self):
+		intf = self.treeAndRecs[0].xpath(
+				"//capability[@standardID='ivo://ivoa.net/std/ConeSearch']/"
+				"interface[@role='std']")[0]
+		self.assertEqual(intf.xpath("mirrorURL")[0].text, 
+				"http://somewhere.el.se/fakemirror?")
+		self.assertEqual(intf.xpath("mirrorURL")[1].text, 
+				"http://right.the.re/fakemirror?")
 
 
 if __name__=="__main__":
