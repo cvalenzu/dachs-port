@@ -99,6 +99,7 @@ class VOSIInterface(InterfaceMaker):
 	class interfaceClass(VS.ParamHTTP):
 		role = "std"
 
+
 class VOSIAvInterface(VOSIInterface):
 	renderer = "availability"
 

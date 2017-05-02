@@ -328,7 +328,9 @@ class PublishableDataMixin(object):
 
 		for service in services:
 			for pub in service.getPublicationsForSet(setNames):
-				yield pub.change(parent_=self, auxiliary=True)
+				copy = pub.change(parent_=self, auxiliary=True)
+				copy.meta_ = self.registration.meta_
+				yield copy
 
 
 class TableDef(base.Structure, base.ComputedMetaMixin, common.PrivilegesMixin,

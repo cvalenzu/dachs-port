@@ -788,8 +788,10 @@ class _TableVORRecord(testhelpers.TestResource):
 			<table id="punk">
 				<column name="oink" utype="noises:animal.pig"/>
 				<column name="where" type="spoint" ucd="pos.eq;source"/>
-				<register sets="ivo_managed,local" 
-					services="//tap#run,data/pubtest#moribund"/>
+				<publish sets="ivo_managed,local" 
+					services="//tap#run,data/pubtest#moribund">
+					<meta name="mirrorURL">http://whereever.el.se/overview</meta>
+				</publish>					
 				<meta name="utype">testing.table.name</meta>
 				<meta name="description">Some silly test data</meta>
 				<meta name="subject">testing</meta>
@@ -905,6 +907,10 @@ class TablePublicationRecordTest(testhelpers.VerboseTest):
 		self.assertEqual(self.tree.xpath(
 			"//capability[@standardID='ivo://ivoa.net/std/VOSI#availability']"),
 			[])
+	
+	def testMirrorURL(self):
+		self.assertEqual(self.tree.xpath(
+			"//mirrorURL")[0].text, "http://whereever.el.se/overview")
 
 
 class _DataGetRecordRes(testhelpers.TestResource):
