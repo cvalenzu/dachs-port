@@ -790,6 +790,7 @@ class _TableVORRecord(testhelpers.TestResource):
 				<column name="where" type="spoint" ucd="pos.eq;source"/>
 				<publish sets="ivo_managed,local" 
 					services="//tap#run,data/pubtest#moribund">
+					<meta name="mirrorURL">http://localhost:8080/tap</meta>
 					<meta name="mirrorURL">http://whereever.el.se/overview</meta>
 				</publish>					
 				<meta name="utype">testing.table.name</meta>
@@ -909,8 +910,9 @@ class TablePublicationRecordTest(testhelpers.VerboseTest):
 			[])
 	
 	def testMirrorURL(self):
-		self.assertEqual(self.tree.xpath(
-			"//mirrorURL")[0].text, "http://whereever.el.se/overview")
+		mirrors = self.tree.xpath("//mirrorURL")
+		self.assertEqual(len(mirrors), 1)
+		self.assertEqual(mirrors[0].text, "http://whereever.el.se/overview")
 
 
 class _DataGetRecordRes(testhelpers.TestResource):

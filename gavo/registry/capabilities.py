@@ -88,7 +88,7 @@ class InterfaceMaker(object):
 				standardId=base.getMetaText(publication, "securityId")),
 			[VOR.mirrorURL[v.getContent()]
 				for v in publication.iterMeta("mirrorURL")
-				if v!=accessURL],
+				if v.getContent()!=accessURL],
 		]
 
 	def __call__(self, publication):
