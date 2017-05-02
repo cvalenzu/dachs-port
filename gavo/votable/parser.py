@@ -93,6 +93,8 @@ _end_NAME = _processNodeWithContent
 # iterator, so this really is only interesting for special applications:
 _end_STREAM = _processNodeWithContent  
 _end_TD = _processNodeWithContent
+_end_IDREF = _processNodeWithContent
+_end_LITERAL = _processNodeWithContent
 
 
 def _end_VOTABLE(text, child, parent):
