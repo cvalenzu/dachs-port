@@ -43,11 +43,11 @@ class IgnoreSpec(base.Structure):
 	_fromdb = base.UnicodeAttribute("fromdb", default=None,
 		description="A DB query to obtain a set of sources to ignore; the"
 			" select clause must select exactly one column containing the"
-			" source key.")
+			" source key.", copyable=True)
 	_fromfile = common.ResdirRelativeAttribute("fromfile", default=None,
 		description="A name of a file containing blacklisted source"
 			" paths, one per line.  Empty lines and lines beginning with a hash"
-			" are ignored.")
+			" are ignored.", copyable=True)
 	_patterns = base.ListOfAtomsAttribute("patterns", description=
 		"Shell patterns to ignore.  Slashes are treated like any other"
 		" character, i.e., patterns do not know about paths.",

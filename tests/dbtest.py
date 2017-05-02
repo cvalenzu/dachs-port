@@ -509,20 +509,16 @@ class TestIgnoreFrom(testhelpers.VerboseTest):
 			set([('gabriel',), ('michael',)]))
 
 	def testWorksWithTable(self):
-		# remove table and drop cache to make sure we start without
-		# ignored sources.
-		self.connection.execute("DROP TABLE IF EXISTS test.prodtest")
-		base.caches.clearForName("data/test")
+		dd = testhelpers.getTestRD().getById("productimport")
 
-		data1 = rsc.makeData(
-			testhelpers.getTestRD().getById("productimport"),
+		data1 = rsc.makeData(dd,
 			rsc.getParseOptions(keepGoing=True),
 			connection=self.connection)
 		self.assertEqual(data1.nAffected, 2)
 
-		base.caches.clearForName("data/test")
-		data2 = rsc.makeData(
-			testhelpers.getTestRD().getById("productimport"),
+		modDD = dd.change(updating=True)
+
+		data2 = rsc.makeData(modDD,
 			rsc.getParseOptions(keepGoing=True),
 			connection=self.connection)
 		self.assertEqual(data2.nAffected, 0)

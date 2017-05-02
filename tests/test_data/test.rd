@@ -325,7 +325,7 @@
 		<map dest="delta">dmsToDeg(@delta, ' ')</map>
 	</rowmaker>
 
-	<data id="productimport" updating="True">
+	<data id="productimport">
 		<sources><pattern>data/*.imp</pattern>
 			<ignoreSources fromdb="select accref from test.prodtest"/></sources>
 		<keyValueGrammar id="pi-gram">
