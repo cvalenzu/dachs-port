@@ -207,7 +207,7 @@ class IVOMetaMixin(object):
 		return "active"
 
 
-class Registration(base.Structure):
+class Registration(base.Structure, base.MetaMixin):
 	"""A request for registration of a data or table item.
 
 	This is much like publish for services, just for data and tables;

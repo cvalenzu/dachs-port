@@ -213,7 +213,6 @@ class Publication(base.Structure, base.ComputedMetaMixin):
 			" This is mostly used internally; you probably have no reason"
 			" to touch it.")
 
-
 	def completeElement(self, ctx):
 		if self.render is base.Undefined:
 			self.render = "form"
