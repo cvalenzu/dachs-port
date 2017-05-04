@@ -81,10 +81,26 @@ class _UrlopenRemotePasswordMgr(urllib2.HTTPPasswordMgr):
 			return creds
 
 
+try:
+	import ssl
+
+	class HTTPSHandler(urllib2.HTTPSHandler):
+		def __init__(self, debuglevel=0, context=None):
+			if context is None:
+				context = ssl.create_default_context(
+					purpose=ssl.Purpose.SERVER_AUTH,
+					cafile="/etc/ssl/certs/ca-certificates.crt")
+				context.check_hostname = False
+				context.verify_mode = ssl.CERT_NONE
+			urllib2.HTTPSHandler.__init__(self, debuglevel, context)
+except ImportError:
+	from urllib2 import HTTPSHandler
+
+
 _restrictedURLOpener = urllib2.OpenerDirector()
 _restrictedURLOpener.add_handler(urllib2.HTTPRedirectHandler())
 _restrictedURLOpener.add_handler(urllib2.HTTPHandler())
-_restrictedURLOpener.add_handler(urllib2.HTTPSHandler())
+_restrictedURLOpener.add_handler(HTTPSHandler())
 _restrictedURLOpener.add_handler(urllib2.HTTPErrorProcessor())
 _restrictedURLOpener.add_handler(
 	urllib2.HTTPBasicAuthHandler(_UrlopenRemotePasswordMgr()))
