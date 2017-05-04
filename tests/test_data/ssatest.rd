@@ -136,6 +136,13 @@
 	</service>
 
 	<table id="instance">
+		<dm>
+			(dachstoy:Location) {
+				x: @spectral
+				y: @flux
+				z: 23.4
+			}
+		</dm>
 		<mixin ssaTable="hcdtest"
 			spectralDescription="Wavelength"
 			fluxDescription="Stellar surface flux density"

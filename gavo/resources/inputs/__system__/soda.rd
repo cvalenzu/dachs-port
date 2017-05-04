@@ -239,7 +239,7 @@ This is a temporary location for procDefs and friends complying to
 						"text/plain": "Tab separated values",
 						"text/csv": "Comma separated values",
 						"application/fits": "FITS binary table",
-						"vodml": "VOTable 1.4 beta"}
+						"application/x-votable+xml;version=1.4": "VOTable 1.4 beta"}
 
 				yield MS(InputKey, name="FORMAT", type="text",
 					ucd="meta.code.mime",

@@ -121,6 +121,19 @@ class SyncTest(trialhelpers.ArchiveTest):
 			["spec2:Char.SpatialAxis.Coverage.Location.Value",
 			"1908.0"])
 
+	def testVOT14Spectrum(self):
+		def assertMediatype(res):
+			self.assertEqual(res[1].headers["content-type"], 
+				"application/x-votable+xml;version=1.4")
+
+		return self.assertGETHasStrings("/data/ssatest/dl/dlget", {
+				"FORMAT": "application/x-votable+xml;version=1.4",
+				"ID": "ivo://test.inv/test2"}, [
+			'dmtype="dachstoy:Location"',
+			'<COLUMN ref="flux"/>',
+			"1755.0"]
+			).addCallback(assertMediatype)
+
 	def testNoMultiArguments(self):
 		def assertErrorResponse(res):
 			self.assertEqual(res[1].code, 422)
