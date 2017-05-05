@@ -579,7 +579,7 @@ class SCSTest(trialhelpers.ArchiveTest):
 				'Written by DaCHS ', ' SCSRenderer'])
 
 	def testValidResponse(self):
-		return self.assertValidResponse("/data/cores/scs/scs.xml", 
+		return self.assertGETIsValid("/data/cores/scs/scs.xml", 
 			{"RA": ["0"], "DEC": ["0"], "SR": ["180"]})
 
 
@@ -587,12 +587,14 @@ class SSATest(trialhelpers.ArchiveTest):
 	def testMetadataFormat(self):
 		return self.assertGETHasStrings("/data/ssatest/c/ssap.xml",
 			{"FORMAT": "Metadata", "REQUEST": "queryData"},
-			["<VOTABLE", 'name="QUERY_STATUS" value="OK"', 'name="INPUT:SIZE"'])
+			["<VOTABLE", 'name="QUERY_STATUS" value="OK"', 'name="INPUT:SIZE"']
+			).addCallback(self.assertResponseIsValid)
 
 	def testProtocolDeclared(self):
 		return self.assertGETHasStrings("/data/ssatest/c/ssap.xml",
 			{"REQUEST": "queryData"},
-			['<INFO name="standardID" value="ivo://ivoa.net/std/ssap"'])
+			['<INFO name="standardID" value="ivo://ivoa.net/std/ssap"']
+			).addCallback(self.assertResponseIsValid)
 
 
 class SIAP2Test(trialhelpers.ArchiveTest):
@@ -602,7 +604,8 @@ class SIAP2Test(trialhelpers.ArchiveTest):
 				"UsageFault: Field POS: Invalid SIAPv2 geometry",
 				"<VOTABLE",
 				'RESOURCE type="results"',
-				'value="ERROR"'])
+				'value="ERROR"']
+			).addCallback(self.assertResponseIsValid)
 
 
 class TestExamples(trialhelpers.ArchiveTest):

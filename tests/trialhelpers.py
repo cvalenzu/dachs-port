@@ -241,14 +241,14 @@ class RenderTest(TrialTest):
 			).addCallback(cb
 			).addErrback(eb)
 
-	def assertValidResponse(self, path, args={}):
-		def cb(res):
-			errs = testtricks.getXSDErrors(res[0], True)
-			if errs:
-				raise AssertionError(errs)
+	def assertResponseIsValid(self, res):
+		errs = testtricks.getXSDErrors(res[0], True)
+		if errs:
+			raise AssertionError(errs)
 
+	def assertGETIsValid(self, path, args={}):
 		return runQuery(self.renderer, "GET", path, args
-			).addCallback(cb)
+			).addCallback(self.assertResponseIsValid)
 
 
 class ArchiveTest(RenderTest):
