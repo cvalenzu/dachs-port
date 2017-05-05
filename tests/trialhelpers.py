@@ -25,6 +25,7 @@ from twisted.python import failure  #noflake: exported name
 from twisted.internet import defer
 
 from gavo.helpers import testhelpers
+from gavo.helpers import testtricks
 
 from gavo import base
 from gavo import rsc
@@ -239,6 +240,15 @@ class RenderTest(TrialTest):
 		return runQuery(self.renderer, "GET", path, args
 			).addCallback(cb
 			).addErrback(eb)
+
+	def assertValidResponse(self, path, args={}):
+		def cb(res):
+			errs = testtricks.getXSDErrors(res[0], True)
+			if errs:
+				raise AssertionError(errs)
+
+		return runQuery(self.renderer, "GET", path, args
+			).addCallback(cb)
 
 
 class ArchiveTest(RenderTest):

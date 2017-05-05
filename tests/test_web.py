@@ -578,6 +578,10 @@ class SCSTest(trialhelpers.ArchiveTest):
 			['<INFO name="standardID" value="ivo://ivoa.net/std/ConeSearch"',
 				'Written by DaCHS ', ' SCSRenderer'])
 
+	def testValidResponse(self):
+		return self.assertValidResponse("/data/cores/scs/scs.xml", 
+			{"RA": ["0"], "DEC": ["0"], "SR": ["180"]})
+
 
 class SSATest(trialhelpers.ArchiveTest):
 	def testMetadataFormat(self):
