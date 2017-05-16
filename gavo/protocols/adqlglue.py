@@ -217,8 +217,8 @@ def _addTableMeta(query, tree, table):
 	"""
 	# Copy over tableDef meta so it doesn't get obscured by what
 	# we're setting now.
-	for infoMeta in table.tableDef.iterMeta("info", propagate=False):
-		table.addMeta("info", infoMeta)
+#	for infoMeta in table.tableDef.iterMeta("info", propagate=False):
+#		table.addMeta("info", infoMeta)
 
 	table.addMeta("info", "", infoName="server", 
 		infoValue=base.getConfig("web", "serverURL"))

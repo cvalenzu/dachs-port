@@ -972,6 +972,12 @@ class DataGetRecordTest(testhelpers.VerboseTest, testtricks.XSDTestMixin):
 		self.assertEqual(utypeChildren[0].text, 
 			"ivo://some.mad.stuff/datamodel#schema-2.0")
 
+	def testTablesetPresent(self):
+		tables = self.srcAndTree[1].xpath(
+			"//tableset/schema/table")
+		self.assertEqual(tables[0].xpath("name")[0].text, "honk")
+		self.assertEqual(tables[1].xpath("name")[0].text, "funk")
+
 
 class _ExternalRecordRes(testhelpers.TestResource):
 	def make(self, ignored):
