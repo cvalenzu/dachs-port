@@ -279,7 +279,8 @@ class DataDescriptor(base.Structure, base.ComputedMetaMixin,
 
 	_rowmakers = base.StructListAttribute("rowmakers",
 		childFactory=rmkdef.RowmakerDef, 
-		description="Embedded build rules (usually rowmakers are defined toplevel)",
+		description="Embedded build rules (preferably put rowmakers directly"
+			" into make elements)",
 		copyable=True,
 		before="makes")
 

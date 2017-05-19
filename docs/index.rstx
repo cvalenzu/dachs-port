@@ -15,33 +15,39 @@ publishing registry, and support for many VO protocols and standards.
 Documentation
 =============
 
-Except for the reference manual and the element reference (which are
-programmatically generated), DaCHS' documentation is now 
-`maintained on github <https://github.com/chbrandt/dachs-doc>`_.  You
-are very welcome to file documentation bugs there, and of course to
-contribute if you see fit.
+DaCHS' documentation is now 
+`maintained on github <https://github.com/chbrandt/dachs-doc>`_;
+formatted versions are
+`available on readthedocs
+<http://dachs-doc.readthedocs.io/index.html>`_ .
+Please file documentation bugs there; other contributions are always
+welcome.
 
+Reading guide
+-------------
 
-What to read when?
-------------------
+You do not need to read all of the documentation to get started.
 
-Obviously, you should start with the installation instructions (have a
-brief glance at them even if you install from Debian package).  You
-should then probably read and work through the tutorial to get a feel
-for how DaCHS works.  Once you have data and want to go live, you'll
-have to read the operator's guide.  That's about all there is to read
-sequentially.
+Of the installation guide, you probably only need the first couple of
+pages.  At least skim over the tutorial before starting out, though, so
+you know what's discussed in there to return when you have a particular
+sort of data at hand.
 
-When you get error messages you don't understand, check the "Hints on
-common problems".  When you have some funky litte requirement the
-solution for which is not immediately obvious, try the "How do I"
+Analogously, skim over the operations guide when you want to make your
+site public, and dig into the passages relevant to you as needed.
+
+When you get error messages you don't understand, check the “Hints on
+common problems”.  When you have some funky litte requirement the
+solution for which is not immediately obvious, try the “How do I”
 document.  If what you want is not covered, ask the authors.
 
-The reference is, well, the reference, and I'm afraid you'll have to
-look up things in there fairly regularly.  The good news is that there's
-examples in the index to elements and attributes in the GAVO DC; these
-are essentially live, and as long as you've had a look at the reference,
-there's nothing wrong with lavishly copying from there.
+Always keep the reference under your pillow.  Even the authors regularly
+go back there.
+
+Almost all RDs for the services at the `GAVO data center
+<http://dc.g-vo.org>`_ are available for your inspection, and the
+element reference may help you locate those relevant to whatever you're
+trying to do. There's nothing wrong with lavishly copying from there.
 
 You can ignore the topic guides (booster grammars, preprocessing,
 anything else that might yet come) until you notice you need to read

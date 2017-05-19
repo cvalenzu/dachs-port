@@ -68,7 +68,7 @@ class _DataFeeder(table._Feeder):
 			feeder = table.getFeeder(batchSize=self.batchSize)
 			makeRow = make.rowmaker.compileForTableDef(table.tableDef)
 
-			def addRow(srcRow, feeder=feeder, makeRow=makeRow):
+			def addRow(srcRow, feeder=feeder, makeRow=makeRow, table=table):
 				try:
 					procRow = makeRow(srcRow, table)
 					if self.dumpIngestees:

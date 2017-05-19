@@ -539,7 +539,7 @@ class Rowmaker(object):
 	Within DaCHS, Rowmakers generate database rows (and parameter dictionaries)
 	from the output of grammars.
 
-	It is constructed with the source of the mapping function, a dictionary of
+	They are constructed with the source of the mapping function, a dictionary of
 	globals the function should see, a dictionary of defaults, giving keys to be
 	inserted into the incoming rowdict before the mapping function is called, and
 	a map of line numbers to names handled in that line.
