@@ -615,9 +615,11 @@ class PreviewMaker(FileProcessor):
 		dirPart = os.path.dirname(path)
 		if not os.path.exists(dirPart):
 			os.makedirs(dirPart)
+			os.chmod(dirPart, 0775)
 
 		with utils.safeReplaced(path) as f:
 			f.write(self.getPreviewData(accref))
+		os.chmod(path, 0664)
 
 
 class SpectralPreviewMaker(PreviewMaker):
