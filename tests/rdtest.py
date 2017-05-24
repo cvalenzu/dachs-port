@@ -440,10 +440,10 @@ class DependentsTest(testhelpers.VerboseTest):
 		t0 = rsc.TableForDef(rd.getById("pythonscript"), connection=self.conn,
 			create=False)
 		t0.drop()
-		self.failIf(q.tableExists("test.pythonscript"))
+		self.failUnless(q.getTableType("test.pythonscript") is None)
 		data = rsc.makeDependentsFor([rd.getById("recaftertest")],
 			rsc.parseNonValidating, connection=self.conn)
-		self.failUnless(q.tableExists("test.pythonscript"))
+		self.failIf(q.getTableType("test.pythonscript") is None)
 		self.conn.rollback()
 
 	def testFailedDependencyNonFatal(self):

@@ -27,22 +27,24 @@ class Error(base.Error):
 
 
 class BadMethod(Error):
-	"""signifies that a HTTP 405 should be returned by the dispatcher.
+	"""raised to generate an HTTP 405 response.
 	"""
 	def __str__(self):
 		return "This resource cannot respond to the HTTP '%s' method"%self.msg
 
 
 class UnknownURI(Error):
-	"""signifies that a HTTP 404 should be returned by the dispatcher.
+	"""raised to generate an HTTP 404 response.
 	"""
+
 
 class ForbiddenURI(Error):
-	"""signifies that a HTTP 403 should be returned by the dispatcher.
+	"""raised to generate an HTTP 403 response.
 	"""
 
+
 class Authenticate(Error):
-	"""is raised when an authentication should be performed.
+	"""raised to initiate an authentication request.
 
 	Authenticates are optionally constructed with the realm the user 
 	shall authenticate in.  If you leave the realm out, the DC-wide default
@@ -66,7 +68,7 @@ class RedirectBase(Error):
 
 
 class WebRedirect(RedirectBase):
-	"""is raised when the user agent should look somwhere else.
+	"""raised to redirect a user agent to a different resource (HTTP 301).
 
 	WebRedirectes are constructed with the destination URL that can be
 	relative (to webRoot) or absolute (starting with http).
@@ -74,7 +76,7 @@ class WebRedirect(RedirectBase):
 
 
 class SeeOther(RedirectBase):
-	"""is raised when the user agent should look somwhere else.
+	"""raised to redirect a user agent to a different resource (HTTP 303).
 
 	SeeOthers are constructed with the destination URL that can be
 	relative (to webRoot) or absolute (starting with http).

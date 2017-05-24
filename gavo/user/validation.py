@@ -288,7 +288,7 @@ def validateTables(rd, args):
 		if td.onDisk and args.compareDB:
 			with base.getTableConn() as conn:
 				q = base.UnmanagedQuerier(conn)
-				if q.tableExists(td.getQName()):
+				if q.getTableType(td.getQName()) is not None:
 					t = api.TableForDef(td, connection=conn)
 					try:
 						t.ensureOnDiskMatches()

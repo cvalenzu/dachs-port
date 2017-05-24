@@ -915,13 +915,16 @@ def getWCSAxis(header, axisIndex, forceSeparable=False):
 	"""returns a WCSAxis instance from an axis index and a FITS header.
 
 	If the axis is mentioned in a transformation matrix (CD or PC),
-	a ValueError is raised (use forceSeparable to override).
+	a ``ValueError`` is raised (use ``forceSeparable`` to override).
 
-	The axisIndex is 1-based; to get a transform for the axis described
+	The ``axisIndex`` is 1-based; to get a transform for the axis described
 	by CTYPE1, pass 1 here.
 
-	The object returned has methods like pixToPhys, physToPix (and their
-	pix0 brethren) and getLimits.
+	The object returned has methods like ``pixToPhys``, ``physToPix`` (and their
+	``pix0`` brethren), and ``getLimits``.
+
+	Note that at this point WCSAxis only supports linear transforms (it's
+	a DaCHS-specific implementation).  We'll extend it on request.
 	"""
 	return WCSAxis.fromHeader(header, axisIndex, forceSeparable)
 

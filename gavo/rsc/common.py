@@ -101,8 +101,14 @@ class ParamMixin(object):
 
 
 class ParseOptions(object):
-	"""see getParseOptions.
+	"""see `function getParseOptions`_ .
 	"""
+	def __repr__(self):
+		return "<ParseOptions validateRows=%s maxRows=%s keepGoing=%s>"%(
+			self.validateRows,
+			self.maxRows,
+			self.keepGoing)
+		
 	def change(self, **kwargs):
 		"""returns a copy of self with the keyword parameters changed.
 

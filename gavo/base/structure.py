@@ -499,10 +499,15 @@ class RestrictionMixin(object):
 
 
 def makeStruct(structClass, **kwargs):
-	"""creates a parentless instance of structClass with **kwargs, going
-	through all finishing actions.
+	"""creates a parentless instance of structClass with ``**kwargs``.
 
-	You can pass in a parent_ kwarg to force a parent.
+	You can pass in a ``parent_`` kwarg to force a parent.
+
+	This is the preferred way to create struct instances in DaCHS, as it
+	will cause the sequence of completers and validators run.  Use it like
+	this::
+
+		MS(rscdef.Column, name="ra", type="double precision)
 	"""
 	parent = None
 	if "parent_" in kwargs:

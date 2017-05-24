@@ -324,23 +324,39 @@ class DBMethodsMixin(sqlsupport.QuerierMixin):
 
 
 class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
-	"""is a table in the database.
+	"""An interface to a table in the database.
 
-	It is created, if necessary, on construction, but indices and primary
-	keys will only be created if a feeder finishes, or on a manual makeIndices
-	call.
+	These are usually created using ``api.TableForDef(tableDef)`` with a
+	table definition obtained, e.g., from an RD, saying ``onDisk=True``.
 
-	The constructor will never drop an existing table and does not check if
-	the schema of the table on disk matches the tableDef.  If you changed
-	tableDef, you will need to call the recreate method.
+	When constructing a DBTable, it will be created if necessary (unless
+	``create=False`` is passed), but indices or primary keys keys will only be
+	created on a call to ``importFinished``.
 
-	You can pass a nometa boolean kw argument to suppress entering the table
-	into the dc_tables.
+	The constructor does not check if the schema of the table on disk matches the
+	tableDef.  If you changed ``tableDef``, you will need to call the recreate
+	method.
+
+	You can pass a ``nometa`` boolean kw argument to suppress entering the table
+	into the ``dc_tables`` table.
 
 	You can pass an exclusive boolean kw argument; if you do, the
-	iterQuery (and possibly similar methods in the future) method
+	``iterQuery`` (and possibly similar methods in the future) method
 	will block concurrent writes to the selected rows ("FOR UPDATE")
 	as long as the transaction is active.
+
+	The main attributes (with API guarantees) include:
+
+	* tableDef -- the defining tableDef
+	* getFeeder() -- returns a function you can call with rowdicts to 
+	  insert them into the table.
+	* importFinished() -- must be called after you've fed all rows when
+	  importing data.
+	* drop() -- drops the table in the database
+	* recreate() -- drops the table and generates a new empty one.
+	* getTableForQuery(...) -- returns a Table instance built from a query
+	  over this table (you probably to use ``conn.query*`` and 
+	  ``td.getSimpleQuery`` instead).
 	"""
 	_runScripts = None  # this is overridden by make (Yikes!)
 
@@ -389,10 +405,7 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 		return list(self.query("select count(*) from %s"%self.getQName()))[0][0]
 
 	def exists(self):
-		if self.tableDef.temporary:
-			return self.temporaryTableExists(self.tableName)
-		else:
-			return self.tableExists(self.tableName)
+		return self.getTableType(self.tableDef.getQName()) is not None
 
 	def getFeeder(self, **kwargs):
 		if "notify" not in kwargs:
@@ -565,16 +578,12 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 			self.create()
 		return self
 	
-	def drop(self, what="TABLE"):
+	def drop(self):
 		"""drops the table.
-
-		Avoid calling this directly, as this bypasses running beforeDrop
-		scripts.  Instead, construct the enclosing data element and drop
-		that.
 		"""
 		if self.exists():
 			self.runScripts("beforeDrop")
-			self.connection.execute("DROP %s %s CASCADE"%(what, self.tableName))
+			self.dropTable(self.tableDef.getQName(), cascade=True)
 			if not self.nometa:
 				self.cleanFromMeta()
 		return self
@@ -699,9 +708,6 @@ class View(DBTable):
 		DBTable.__init__(self, *args, **kwargs)
 		del self.addCommand
 
-	def exists(self):
-		return self.viewExists(self.tableName)
-
 	def addRow(self, row):
 		raise base.DataError("You cannot add data to views")
 
@@ -728,6 +734,3 @@ class View(DBTable):
 		if self.ownedConnection:
 			self.connection.commit()
 		return self
-
-	def drop(self):
-		return DBTable.drop(self, "VIEW")

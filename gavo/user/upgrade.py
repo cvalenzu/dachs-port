@@ -447,7 +447,7 @@ class To15Upgrader(Upgrader):
 		q = base.UnmanagedQuerier(connection)
 		for tableName in [
 				"dc.datalinkjobs", "uws.userjobs", "tap_schema.tapjobs"]:
-			if q.tableExists(tableName):
+			if q.getTableType(tableName) is not None:
 				connection.execute("ALTER TABLE %s"
 					" ADD COLUMN creationTime TIMESTAMP"%tableName)
 

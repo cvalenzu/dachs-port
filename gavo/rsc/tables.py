@@ -25,7 +25,8 @@ def TableForDef(tableDef, suppressIndex=False,
 	in-memory tables with primary keys.  Use it when you are sure
 	you will not need the index (e.g., if staging an on-disk table).
 
-	See getParseOptions above for parseOptions.
+	See the `function getParseOptions`_ for what you can pass in as 
+	``parseOptions``; arguments there can also be used here.
 	"""
 	if isinstance(tableDef, rscdef.SimpleView):
 		tableDef = tableDef.getTableDef()

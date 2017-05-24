@@ -4,8 +4,8 @@ Description and handling of inputs to services.
 This module in particular describes the InputKey, the primary means
 of describing input widgets and their processing.
 
-They are collected in contextGrammars, entities creating input tables
-and parameters.
+They are collected in contextGrammars, entities creating inputArgs
+items.
 """
 
 #c Copyright 2008-2017, the GAVO project

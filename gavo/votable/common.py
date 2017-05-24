@@ -14,7 +14,7 @@ from gavo import utils
 NaN = float("NaN")
 
 class VOTableError(utils.Error):
-	"""Various VOTable-related errors.
+	"""The base class of VOTable-related errors.
 	"""
 
 class BadVOTableLiteral(VOTableError):

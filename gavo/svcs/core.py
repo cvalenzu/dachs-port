@@ -111,15 +111,13 @@ class _OutputTableFactory(object):
 class Core(base.Structure):
 	"""A definition of the "active" part of a service.
 
-	Cores receive their input in tables the structure of which is
-	defined by their inputTable attribute.
+	A core will receive input from a renderer in the form of a ``svcs.CoreArgs``
+	(see `Core Args`_).  A core will return a table or perhaps directly
+	data as discussed in `DaCHS' Service Interface`_ .
 
 	The abstract core element will never occur in resource descriptors.  See 
 	`Cores Available`_ for concrete cores.  Use the names of the concrete
 	cores in RDs.
-
-	You can specify an input table in an inputTableXML and an output table
-	in an outputTableXML class attribute.
 	"""
 	name_ = "core"
 

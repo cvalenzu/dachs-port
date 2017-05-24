@@ -46,7 +46,7 @@ from gavo.stc.times import ( #noflake: exported names
 from gavo.utils import codetricks
 from gavo.utils import ( #noflake: exported names
 	dmsToDeg, hmsToDeg, DEG, parseISODT, iterSimpleText, getFileStem,
-	getWCSAxis)
+	getWCSAxis, getRelativePath)
 from gavo.utils import pgsphere #noflake: exported names
 
 
@@ -108,11 +108,11 @@ def getQueryMeta():
 
 @utils.document
 def parseTime(literal, format="%H:%M:%S"):
-	"""returns a datetime.timedelta object for literal parsed according
+	"""returns a ``datetime.timedelta`` object for literal parsed according
 	to format.
 
-	For format, you can the magic values !!secondsSinceMidnight,
-	!!decimalHours or a strptime-like spec using the H, M, and S codes.
+	For format, you can the magic values ``!!secondsSinceMidnight``,
+	``!!decimalHours`` or a strptime-like spec using the H, M, and S codes.
 
 	>>> parseTime("89930", "!!secondsSinceMidnight")
 	datetime.timedelta(1, 3530)
@@ -137,23 +137,23 @@ def parseTime(literal, format="%H:%M:%S"):
 
 @utils.document
 def parseDate(literal, format="%Y-%m-%d"):
-	"""returns a datetime.date object of literal parsed according to the
+	"""returns a ``datetime.date`` object of literal parsed according to the
 	strptime-similar format.
 
-	The function understands the special dateFormat !!julianEp 
+	The function understands the special ``dateFormat`` ``!!jYear``
 	(stuff like 1980.89).
 	"""
-	if format=="!!julianEp":
+	if format in ("!!julianEp", "!!jYear"):
 		return stc.jYearToDateTime(float(literal))
 	return datetime.datetime(*time.strptime(literal, format)[:3])
 
 
 @utils.document
 def parseTimestamp(literal, format="%Y-%m-%dT%H:%M:%S"):
-	"""returns a datetime.datetime object of literal parsed according to the
-	strptime-similar format.
+	"""returns a ``datetime.datetime`` object from a literal parsed according 
+	to the strptime-similar format.
 
-	A ValueError is raised if literal doesn't match format (actually,
+	A ``ValueError`` is raised if literal doesn't match format (actually,
 	a parse with essentially DALI-standard ISO representation is always tried)
 	"""
 	try:
@@ -249,7 +249,7 @@ def killBlanks(literal):
 
 @utils.document
 def lastSourceElements(path, numElements):
-	"""returns a path made up from the last numElements items in path.
+	"""returns a path made up from the last ``numElements`` items in ``path``.
 	"""
 	newPath = []
 	for i in range(int(numElements)):
@@ -274,10 +274,23 @@ def scale(val, factor, offset=0):
 @utils.document
 def parseWithNull(literal, baseParser, nullLiteral=base.Undefined,
 		default=None, checker=None):
-	"""returns default if literal is nullLiteral, else baseParser(literal).
+	"""returns default if literal is ``nullLiteral``, else 
+	``baseParser(literal)``.
 
-	If checker is non-None, it must be a callable returning True if its
+	If ``checker`` is non-None, it must be a callable returning ``True`` if its
 	argument is a null value.
+
+	``nullLiteral`` is compared against the unprocessed literal (usually, a
+	string).  The intended use is like this (but note that often, a
+	``nullExcs`` attribute on a rowmaker ``map`` element is the more
+	elegant way:
+
+	>>> parseWithNull("8888.0", float, "8888")
+	8888.0
+	>>> print(parseWithNull("8888", float, "8888"))
+	None
+	>>> print(parseWithNull("N/A", int, "N/A"))
+	None
 	"""
 	if (nullLiteral is not base.Undefined and literal==nullLiteral
 		) or literal is None:
@@ -336,8 +349,8 @@ def getHTTPPar(inputData, parser, single=False, forceUnique=False,
 
 @utils.document
 def requireValue(val, fieldName):
-	"""returns val unless it is None, in which case a ValidationError
-	for fieldName will be raised.
+	"""returns ``val`` unless it is ``None``, in which case a ``ValidationError``
+	for ``fieldName`` will be raised.
 	"""
 	if val is None:
 		raise base.ValidationError("Value is required but was not provided", 
@@ -345,17 +358,21 @@ def requireValue(val, fieldName):
 	return val
 
 
-@utils.document
 def genLimitKeys(inputKey):
 	"""yields _MAX and _MIN inputKeys from a single input key.
 
 	This also tries to sensibly fix descriptions and ucds.
 	This is mainly for datalink metaMakers; condDescs may use a 
 	similar thing, but that's not exposed to RDs.
+
+	Don't use this function any more.  It will go away soon.
 	"""
 	name = inputKey.name
 	ucd = inputKey.ucd or None
 	description = inputKey.description
+	base.ui.notifyWarning("Deprecated genLimitKeys function used."
+		"  Fix your RD to use proper DALI-intervals (ask dachs-support"
+		" if you don't know what to do.)")
 
 	yield inputKey.change(name=name+"_MIN", 
 		ucd=ucd and "par.min;"+ucd,

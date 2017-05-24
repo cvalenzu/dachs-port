@@ -163,11 +163,15 @@ iterFormats = FORMATS_REGISTRY.iterFormats
 def formatData(formatName, table, outputFile, acquireSamples=True):
 	"""writes a table to outputFile in the format given by key.
 
-	Table may be a table or a Data instance.   formatName is a format shortcut
-	or a MIME type.  If you pass None, the default VOTable format will be
-	selected.
+	Table may be a table or a ``Data`` instance.   ``formatName`` is a format 
+	shortcut (``formats.iterFormats()`` gives keys available) or a media type.
+	If you pass None, the default VOTable format will be selected.
 
-	This raises a CannotSerializeIn exception if formatName is not recognized.
+	This raises a ``CannotSerializeIn`` exception if ``formatName`` is 
+	not recognized.  Note that you have to import the serialising modules
+	from the format package to make the formats available (fitstable,
+	csvtable, geojson, jsontable, texttable, votable; api itself already
+	imports the more popular of these).
 	"""
 	if formatName is None:
 		formatName = base.votableType
@@ -178,8 +182,8 @@ def getFormatted(formatName, table, acquireSamples=False):
 	"""returns a string containing a representation of table in the
 	format given by formatName.
 
-	This is just wrapping formatData; it might use large amounts of memory
-	for large data.
+	This is just wrapping the `function formatData`_; se there for formatName.
+	This function will use large amounts of memory for large data.
 	"""
 	buffer = StringIO()
 	formatData(formatName, table, buffer, acquireSamples)

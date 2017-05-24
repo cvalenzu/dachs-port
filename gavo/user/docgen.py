@@ -123,7 +123,7 @@ class ParentPlaceholder(object):
 
 
 class DocumentStructure(dict):
-	"""is a dict keeping track of what elements have been processed and
+	"""a dict keeping track of what elements have been processed and
 	which children they had.
 
 	From this information, it can later fill out the ParentPlaceholders
@@ -540,6 +540,46 @@ def getMetaKeyDocs():
 	return content.content
 
 
+NO_API_SYMBOLS = frozenset(["__builtins__", "AdhocQuerier",
+	"__doc__", "__file__", "__name__", "__package__", "addCartesian",
+	"combinePMs", "getBinaryName", "getDefaultValueParsers", "getHTTPPar",
+	"makeProc", "ParseOptions"])
+
+def getAPIDocs(docStructure):
+	from gavo import api
+	content = RSTFragment()
+
+	for name in sorted(dir(api)):
+		obj = getattr(api, name)
+		if (name in NO_API_SYMBOLS
+				or type(obj)==type(re) 
+				or not obj.__doc__):
+			continue
+
+		whatsit = ""
+		if type(obj)==type(getMetaKeyDocs):
+			whatsit = "Function "
+		elif type(obj)==type:
+			whatsit = "Class "
+		elif isinstance(obj, float):
+			whatsit = "Constant "
+
+		content.addHead1(whatsit+name)
+		content.makeSpace()
+		if whatsit=="Function ":
+			content.addNormalizedPara(
+				"Signature: ``%s%s``"%(
+					name, inspect.formatargspec(*inspect.getargspec(obj))))
+		content.makeSpace()
+
+		if whatsit=="Constant ":
+			content.addNormalizedPara("A constant, valued %s"%obj)
+		else:
+			content.addNormalizedPara(obj.__doc__)
+
+	return content.content
+
+
 _replaceWithResultPat = re.compile(".. replaceWithResult (.*)")
 
 def makeReferenceDocs():
@@ -589,7 +629,6 @@ def makeReferenceDocs():
 	return "..\n  WARNING: GENERATED DOCUMENT.\n  Edit this in refdoc.rstx or the DaCHS source code.\n\n"+"".join(res)
 
 
-
 @exposedFunction([], help="Writes ReStructuredText for the reference"
 	" documentation to stdout")
 def refdoc(args):
@@ -629,4 +668,4 @@ def main():
 
 if __name__=="__main__":
 	docStructure = DocumentStructure()
-	print getRendererDocs(docStructure)
+	print "".join(getAPIDocs(docStructure))

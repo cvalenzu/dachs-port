@@ -37,11 +37,13 @@ from gavo.rscdef import executing
 
 class RD(base.Structure, base.ComputedMetaMixin, scripting.ScriptingMixin,
 		base.StandardMacroMixin, common.PrivilegesMixin, registry.DateUpdatedMixin):
-	"""A resource descriptor (RD); the root for all elements described here.
+	"""A resource descriptor.
 	
 	RDs collect all information about how to parse a particular source (like a
 	collection of FITS images, a catalogue, or whatever), about the database
 	tables the data ends up in, and the services used to access them.
+
+	In DaCHS' RD XML serialisation, they correspond to the root element.
 	"""
 	name_ = "resource"
 

@@ -20,7 +20,7 @@ def restoreObscore(conn):
 	it if it's missing.
 	"""
 	q = base.UnmanagedQuerier(conn)
-	if q.tableExists("ivoa._obscoresources"):
+	if q.getTableType("ivoa._obscoresources") is not None:
 		n = list(q.query("SELECT count(*) from ivoa._obscoresources"))[0][0]
 		if n>1: # ivoa.emptyobscore doesn't count
 			api.makeData(api.resolveCrossId("//obscore#create"),
@@ -39,21 +39,13 @@ def _do_dropTable(tableName, conn):
 			("tap_schema.keys", "from_table"),
 			("tap_schema.keys", "target_table"),
 			("tap_schema.columns", "table_name")]:
-		if q.tableExists(metaTableName):
+		if q.getTableType(metaTableName) is not None:
 			q.query("delete from %s where %s=%%(tableName)s"%(
 				metaTableName, columnName),
 				{"tableName": tableName})
 
-	#	POSSIBLE SQL INJECTION when tableName is a suitably wicked
-	# quoted name; right now, this is mitigated by the fact that
-	# people that can call this don't need SQL injection since
-	# they can execute anything gavoadmin can anyway.
-	if q.viewExists(tableName):
-		q.query("drop view "+tableName)
-	elif q.tableExists(tableName):
-		# warning: this will drop ivoa.obscore if defined (the "cascade").
-		# We manually re-create obscore after this is run if necessary.
-		q.query("drop table "+tableName+" cascade")
+	if q.getTableType(tableName) is not None:
+		q.dropTable(tableName, cascade=True)
 
 
 def dropTable():
@@ -122,7 +114,7 @@ def _do_dropRD(opts, rdId, selectedIds=()):
 					"tap_schema.columns", "tap_schema.keys", "tap_schema.key_columns",
 					"dc.resources", "dc.interfaces", "dc.sets", "dc.subjects",
 					"dc.authors", "dc.res_dependencies"]:
-				if querier.tableExists(tableName):
+				if querier.getTableType(tableName) is not None:
 					querier.query(
 						"delete from %s where sourceRd=%%(sourceRD)s"%tableName,
 						{"sourceRD": rdId})

@@ -1035,8 +1035,8 @@ def unquoteProductKey(key):
 def quoteProductKey(key):
 	"""returns key as getproduct URL-part.
 
-	if key is a string, it is quoted as a naked accref so it's usable
-	as the path part of an URL.  If it's an RAccref, it is just stringified.
+	If ``key`` is a string, it is quoted as a naked accref so it's usable
+	as the path part of an URL.  If it's an ``RAccref``, it is just stringified.
 	The result is something that can be used after getproduct in URLs
 	in any case.
 	"""

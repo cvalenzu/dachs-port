@@ -32,13 +32,17 @@ def assertType(id, ob, forceType):
 
 
 def resolveCrossId(id, forceType=None, **kwargs):
-	"""resolves id, where id is of the form rdId#id.
+	"""resolves ``id``, where id is of the form ``rdId#id``.
 
-	id can also be a simple rdID.
+	``forceType``, if non-None must be a DaCHS struct type (e.g.,
+	rscdef.Table); a ``StructureError`` will be raised if the reference
+	resolves to something else than an instance of that type.
 
-	See resolveId for forceType.
+	``id`` can also be a simple rd id.
 
-	This lets you pass additional keyword arguments to getRD.
+
+	``kwargs`` lets you pass additional keyword arguments to the ``getRD``
+	calls that may be triggered by this.
 	"""
 	try:
 		rdId, rest = id.split("#")

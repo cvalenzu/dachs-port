@@ -212,8 +212,11 @@ def parseFromStream(rootStruct, inputStream, context=None):
 
 
 def parseFromString(rootStruct, inputString, context=None):
-	"""parses a tree rooted in rootStruct from a string.
+	"""parses a DaCHS RD tree rooted in ``rootStruct`` from a string.
 
-	It returns the root element of the resulting tree.
+	It returns the root element of the resulting tree.  You would use this like
+	this::
+
+		parseFromString(rscdef.Column, "<column name='foo'/>")
 	"""
 	return parseFromStream(rootStruct, StringIO(inputString), context)

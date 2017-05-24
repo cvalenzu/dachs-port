@@ -27,14 +27,14 @@ def parseISODT(value):
 
 @utils.document
 def jdnToDateTime(jd):
-	"""returns a datetime.datetime instance for a julian day number.
+	"""returns a ``datetime.datetime`` instance for a julian day number.
 	"""
 	return jYearToDateTime((jd-2451545.0)/365.25+2000.0)
 
 
 @utils.document
 def mjdToDateTime(mjd):
-	"""returns a datetime.datetime instance for a modified julian day number.
+	"""returns a ``datetime.datetime`` instance for a modified julian day number.
 
 	Beware: This loses a couple of significant digits due to transformation
 	to jd.

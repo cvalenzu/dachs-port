@@ -198,10 +198,13 @@ class _DataFeeder(table._Feeder):
 
 
 class Data(base.MetaMixin, common.ParamMixin):
-	"""is a collection of data parsed from a consistent set of sources.
+	"""A collection of tables.
 
-	That is, Data is the instanciation of a DataDescriptor.  In consists
-	of a couple of tables which may have certain roles.
+	``Data``, in essence, is the instanciation of a ``DataDescriptor``.
+
+	It is what ``makeData`` returns.  In typical one-table situations, 
+	you just want to call the ``getPrimaryTable()`` method to obtain the
+	table built.
 	"""
 	def __init__(self, dd, tables, parseOptions=common.parseNonValidating):
 		base.MetaMixin.__init__(self)  # we're not a structure
@@ -440,13 +443,13 @@ class _TableCornucopeia(object):
 
 def makeData(dd, parseOptions=common.parseNonValidating,
 		forceSource=None, connection=None, data=None, runCommit=True):
-	"""returns a data instance built from dd.
+	"""returns a data instance built from ``dd``.
 
 	It will arrange for the parsing of all tables generated from dd's grammar.
 	If connection is passed in, the the entire operation will run within a 
 	single transaction within this connection.  The connection will be
 	rolled back or committed depending on the success of the operation
-	(unless you pass runCommit=False, in which case a successful
+	(unless you pass ``runCommit=False``, in which case even a successful
 	import will not be committed)..
 
 	You can pass in a data instance created by yourself in data.  This

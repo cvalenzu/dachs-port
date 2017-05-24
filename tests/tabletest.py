@@ -240,9 +240,9 @@ class DBTableTest(tresc.TestWithDBConnection):
 		td = self._getRD().getTableDefById("xy")
 		querier = base.UnmanagedQuerier(connection=self.conn)
 		table = rsc.TableForDef(td, connection=self.conn, nometa=True)
-		self.assert_(querier.tableExists(td.getQName()))
+		self.assert_(table.exists())
 		table.drop()
-		self.assert_(not querier.tableExists(td.getQName()))
+		self.failUnless(querier.getTableType(td.getQName()) is None)
 
 	def testValidationFailure(self):
 		td = self._getRD().getTableDefById("xy")

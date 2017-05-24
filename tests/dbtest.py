@@ -524,5 +524,62 @@ class TestIgnoreFrom(testhelpers.VerboseTest):
 		self.assertEqual(data2.nAffected, 0)
 
 
+class InformationSchemaTest(testhelpers.VerboseTest):
+	resources = [("connection", tresc.dbConnection)]
+
+	def testNoTableType(self):
+		q = sqlsupport.UnmanagedQuerier(self.connection)
+		self.assertEqual(q.getTableType("thereareno.monsters"),
+			None)
+
+	def _assertProperlyManaged(self,
+			creationStatement,
+			tableName,
+			tableType):
+		q = sqlsupport.UnmanagedQuerier(self.connection)
+		# if things go seriously wrong in one of these tests, you may
+		# have to manually remove the relations created here.
+		q.query(creationStatement)
+		try:
+			self.assertEqual(q.getTableType(tableName), tableType)
+		finally:
+			q.dropTable(tableName)
+		self.assertEqual(q.getTableType(tableName), None)
+
+	def testTempTableManagement(self):
+		self._assertProperlyManaged(
+			"CREATE TEMP TABLE klutz (an INTEGER)",
+			"klutz", 
+			"LOCAL TEMPORARY")
+
+	def testNormalTableManagement(self):
+		self._assertProperlyManaged(
+			"CREATE TABLE tap_schema.klutz (an INTEGER)",
+			"tap_schema.klutz", 
+			"BASE TABLE")
+
+	def testPublicTableManagement(self):
+		self._assertProperlyManaged(
+			"CREATE TABLE klutz (an INTEGER)",
+			"klutz", 
+			"BASE TABLE")
+
+	def testViewManagement(self):
+		self._assertProperlyManaged(
+			"CREATE VIEW klutz AS (SELECT 1 as an)",
+			"klutz", 
+			"VIEW")
+
+	@unittest.skip("For some reason, materialised views are not in"
+		" the information schema for pg 9.4")
+	def testMaterialisedViewManagement(self):
+		self._assertProperlyManaged(
+			"CREATE MATERIALIZED VIEW klutz AS (SELECT 1 as an)",
+			"klutz", 
+			"VIEW")
+
+
+
+
 if __name__=="__main__":
 	testhelpers.main(AdhocQuerierTest)

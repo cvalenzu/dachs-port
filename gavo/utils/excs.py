@@ -31,10 +31,10 @@ from gavo.utils.fancyconfig import NoConfigItem #noflake: exported name
 
 
 class Error(Exception):
-	"""is the base class for all exceptions that can be expected to escape
+	"""The base class for all exceptions that can be expected to escape
 	a module.
 
-	Apart from the normal message, you can give a "hint" constructor argument.
+	Apart from the normal message, you can give a ``hint`` constructor argument.
 	"""
 	def __init__(self, msg="", hint=None):
 		Exception.__init__(self, msg)

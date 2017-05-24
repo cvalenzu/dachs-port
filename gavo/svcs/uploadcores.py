@@ -35,7 +35,7 @@ class UploadCore(core.Core):
 	It allows users to upload individual files into a special staging
 	area (taken from the stagingDir property of the destination data descriptor)
 	and causes these files to be parsed using destDD.  Note that destDD
-	*must* have ``updating="True"` for this to work properly (it will otherwise
+	*must* have ``updating="True"`` for this to work properly (it will otherwise
 	drop the table on each update).  If uploads are the only way updates
 	into the table occur, source management is not necessary for these, though.
 

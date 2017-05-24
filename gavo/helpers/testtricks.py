@@ -36,10 +36,10 @@ def _nukeNamespaces(xmlString):
 
 
 def getXMLTree(xmlString, debug=False):
-	"""returns an libxml2 etree for xmlString, where, for convenience,
+	"""returns an ``libxml2`` etree for ``xmlString``, where, for convenience,
 	all namespaces on elements are nuked.
 
-	The libxml2 etree lets you do xpath searching using the xpath method.
+	The libxml2 etree lets you do xpath searching using the ``xpath`` method.
 
 	Nuking namespaces is of course not a good idea in general, so you
 	might want to think again before you use this in production code.

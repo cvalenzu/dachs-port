@@ -552,6 +552,8 @@ class ADQLTAPJob(_WithEndpoint):
 	keyword parameter.  This only makes sense if the service has
 	handed out the jobId before (e.g., when a different program takes
 	up handling of a job started before).
+
+	See :dachsdoc:`adql.html` for details.
 	"""
 	def __init__(self, endpointURL, query=None, jobId=None, lang="ADQL", 
 			userParams={}, timeout=None):

@@ -378,9 +378,15 @@ class NullConnection(object):
 
 
 def getDBConnection(profile, debug=debug, autocommitted=False):
-	"""returns a slightly instrumented connection through profile.
+	"""returns an enhanced database connection through profile.
 
-	For the standard table connection, there's a pool of those below.
+	You will typically rather use the context managers for the standard
+	profiles (``getTableConnection`` and friends).  Use this function if
+	you want to keep your connection out of connection pools or if you want
+	to use non-standard profiles.
+
+	profile will usually be a string naming a profile defined in
+	``GAVO_ROOT/etc``.
 	"""
 	if profile is None:
 		profile = "trustedquery"
@@ -441,7 +447,7 @@ def _parseTableName(tableName, schema=None):
 				raise ValueError("%s is not a SQL regular identifier"%repr(tableName))
 
 		if len(parts)==1:
-			name = "public"
+			name = parts[0]
 		else:
 			schema, name = parts
 
@@ -618,35 +624,59 @@ class PostgresQueryMixin(object):
 		res = list(self.query(query, pars))
 		return len(res)!=0
 
-	def temporaryTableExists(self, tableName):
-		"""returns True if a temporary table tablename exists in the table's
-		connection.
+	def getTableType(self, tableName, schema=None):
+		"""returns the type of the relation relationName.
 
-		*** postgres specific ***
-		"""
-		return self._rowExists("SELECT table_name FROM"
-			" information_schema.tables WHERE"
-			" table_type='LOCAL TEMPORARY' AND table_name=%(tableName)s", 
-			{'tableName': tableName.lower()})
+		If relationName does not exist, None is returned.  Otherwise, it's
+		what is in the information schema for the table, which for postgres
+		currently is one of BASE TABLE, VIEW, FOREIGN TABLE, or LOCAL
+		TEMPORARY.
 
-	def tableExists(self, tableName, schema=None):
-		"""returns True if a table tablename exists in schema.
+		The DaCHS-idiomatic way to see if a relation exists is
+		getTableType() is not None.
+
+		You can pass in schema-qualified relation names, or the relation name
+		and the schema separately.
 
 		*** postgres specific ***
 		"""
 		schema, tableName = _parseTableName(tableName, schema)
-		return self._rowExists("SELECT table_name FROM"
-			" information_schema.tables WHERE"
-			" table_schema=%(schemaName)s AND table_name=%(tableName)s", 
-			{'tableName': tableName.lower(), 'schemaName': schema.lower()})
+		res = list(
+			self.query("""SELECT table_name, table_type FROM
+				information_schema.tables WHERE (
+						table_schema=%(schemaName)s 
+						OR table_type='LOCAL TEMPORARY')
+					AND table_name=%(tableName)s""", {
+					'tableName': tableName.lower(), 
+					'schemaName': schema.lower()}))
 
-	def viewExists(self, tableName, schema=None):
-		schema, tableName = _parseTableName(tableName, schema)
-		return self._rowExists("SELECT viewname FROM"
-			" pg_views WHERE"
-			" schemaname=%(schemaName)s AND viewname=%(tableName)s", 
-			{'tableName': tableName.lower(), 'schemaName': schema.lower()})
+		if not res:
+			return None
+		assert len(res)==1
+		return res[0][1]
 
+	def dropTable(self, tableName, cascade=False):
+		"""drops a table or view named by tableName.
+
+		This does not raise an error if no such relation exists.
+
+		*** postgres specific ***
+		"""
+		tableType = self.getTableType(tableName)
+		if tableType is None:
+			return
+
+		dropQualification = {
+			"VIEW": "VIEW",
+			"MATERIALIZED VIEW": "MATERIALIZED VIEW",
+			"FOREIGN TABLE": "FOREIGN TABLE",
+			"BASE TABLE": "TABLE",
+			"LOCAL TEMPORARY": "TABLE"}[tableType]
+		self.query("DROP %s %s %s"%(
+			dropQualification, 
+			tableName,
+			"CASCADE" if cascade else ""))
+		
 	def getSchemaPrivileges(self, schema):
 		"""returns (owner, readRoles, allRoles) for schema's ACL.
 		"""
@@ -691,7 +721,6 @@ class PostgresQueryMixin(object):
 				role, privs, granter = re.match("([^=]*)=([^/]*)/(.*)", acs).groups()
 				res.append((role, self._privTable.get(privs, "READ")))
 		return dict(res)
-
 
 	def getACLFromRes(self, thingWithPrivileges):
 		"""returns a dict of (role, ACL) as it is defined in thingWithPrivileges.
@@ -872,8 +901,21 @@ class UnmanagedQuerier(QuerierMixin):
 	"""A simple interface to querying the database through a connection
 	managed by someone else.
 
-	You have to pass in the connection, and any committing or rollback
-	is your responsibility.
+	This is typically used as in::
+
+		with base.getTableConn() as conn:
+			q = UnmanagedQuerier(conn)
+			...
+	
+	This contains numerous methods abstracting DB functionality a bit.
+	Documented ones include:
+
+	* schemaExissts(schema)
+	* getColumnsFromDB(tableName)
+	* getTableType(tableName) -- this will return None for non-existing tables,
+	  which is DaCHS' official way to determine table existence.
+	* getTimeout() -- returns the current query timeout in seconds
+	* setTimeout(timeout) -- sets a timeout in seconds.
 	"""
 	def __init__(self, connection):
 		self.connection = connection

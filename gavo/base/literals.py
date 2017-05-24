@@ -157,10 +157,10 @@ def parseCooPair(soup):
 
 
 def parseSPoint(soup):
-	"""returns an SPoint for a coordinate pair.
+	"""returns an ``SPoint`` for a coordinate pair.
 
-	The coordinate pair can be formatted in a variety of ways; see parseCooPair.
-	Input is always in degrees.
+	The coordinate pair can be formatted in a variety of ways; see the
+	`function parseCooPair`_.  Input is always in degrees.
 	"""
 	if soup is None or isinstance(soup, pgsphere.SPoint):
 		return soup

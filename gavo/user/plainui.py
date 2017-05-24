@@ -13,6 +13,9 @@ from gavo import base
 
 class StingyPlainUI(base.ObserverBase):
 	"""An Observer swallowing infos, warnings, and the like.
+
+	This is to configure the UI.  Enable it by calling 
+	``api.StingyPlainUI(api.ui)``.
 	"""
 	def __init__(self, eh):
 		self.curIndent = ""
@@ -37,7 +40,10 @@ class StingyPlainUI(base.ObserverBase):
 
 
 class SemiStingyPlainUI(StingyPlainUI):
-	"""a StingyPlainUI that at least displays warnings.
+	"""A StingyPlainUI that at least displays warnings.
+
+	This is to configure the UI.  Enable it by calling 
+	``api.SemiStingyPlainUI(api.ui)``.
 	"""
 	@base.listensTo("Warning")
 	def printWarning(self, message):
@@ -46,6 +52,8 @@ class SemiStingyPlainUI(StingyPlainUI):
 
 class PlainUI(SemiStingyPlainUI):
 	"""An Observer spitting out most info to the screen.
+
+	This is to configure the UI.  Enable it by calling ``api.PlainUI(api.ui)``.
 	"""
 	@base.listensTo("NewSource")
 	def announceNewSource(self, srcString):

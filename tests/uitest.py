@@ -109,8 +109,8 @@ class ImportTest(testhelpers.VerboseTest):
 				stdoutStrings=["Rows affected: 2"],
 				expectedRetcode=101)
 
-			self.failUnless(querier.tableExists("test.prodtest"))
-			self.failIf(querier.tableExists("test.typesTable"))
+			self.failIf(querier.getTableType("test.prodtest") is None)
+			self.failIf(querier.getTableType("test.typesTable") is not None)
 
 			self.assertOutput(cli.main,
 				argList=["--disable-spew", "--suppress-log", "publish", "data/test"])
@@ -124,7 +124,7 @@ class ImportTest(testhelpers.VerboseTest):
 					"drop", "data/test"], expectedStdout="", expectedStderr="")
 			self.failIf(list(querier.query("SELECT * FROM dc.subjects"
 				" WHERE subject=%(s)s", {'s': "Problems, somebody else's"})))
-			self.failIf(querier.tableExists("test.prodtest"))
+			self.failUnless(querier.getTableType("test.prodtest") is None)
 
 	def testImportDeniedForOffInputs(self):
 		destName = os.path.expanduser("~/foobar.rd")
@@ -232,7 +232,7 @@ class SystemImportTest(testhelpers.VerboseTest):
 		self.assertOutput(cli.main, argList=["drop", "--system", "sysrd"],
 			expectedRetcode=0, expectedStderr="", expectedStdout="")
 		with base.AdhocQuerier() as q:
-			self.failIf(q.tableExists("test.fromclitest"))
+			self.failUnless(q.getTableType("test.fromclitest") is None)
 
 
 class _FITSGeneratedRD(testhelpers.TestResource):
@@ -293,8 +293,8 @@ class DropTest(testhelpers.VerboseTest):
 		self.assertOutput(cli.main, argList=["drop", "myrd"],
 			expectedRetcode=0, expectedStderr="")
 		with base.AdhocQuerier() as q:
-			self.failIf(q.tableExists("test.autotable"))
-			self.failUnless(q.tableExists("test.noautotable"))
+			self.failUnless(q.getTableType("test.autotable") is None)
+			self.failIf(q.getTableType("test.noautotable") is None)
 
 	def testAllDropping(self):
 		self.assertOutput(cli.main, argList=["imp", "myrd", "y", "z"],
@@ -302,8 +302,8 @@ class DropTest(testhelpers.VerboseTest):
 		self.assertOutput(cli.main, argList=["drop", "myrd", "--all"],
 			expectedRetcode=0, expectedStderr="")
 		with base.AdhocQuerier() as q:
-			self.failIf(q.tableExists("test.autotable"))
-			self.failIf(q.tableExists("test.noautotable"))
+			self.failUnless(q.getTableType("test.autotable") is None)
+			self.failUnless(q.getTableType("test.noautotable") is None)
 
 	def testNamedDropping(self):
 		self.assertOutput(cli.main, argList=["imp", "myrd", "y", "z"],
@@ -311,8 +311,8 @@ class DropTest(testhelpers.VerboseTest):
 		self.assertOutput(cli.main, argList=["drop", "myrd", "z"],
 			expectedRetcode=0, expectedStderr="")
 		with base.AdhocQuerier() as q:
-			self.failUnless(q.tableExists("test.autotable"))
-			self.failIf(q.tableExists("test.noautotable"))
+			self.failIf(q.getTableType("test.autotable") is None)
+			self.failUnless(q.getTableType("test.noautotable") is None)
 
 
 class ValidationTest(testhelpers.VerboseTest):

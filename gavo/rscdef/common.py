@@ -498,15 +498,16 @@ def replaceProcDefAt(src, dictName="vars"):
 # base.parsecontext as it needs config, and I don't want it
 # in user.common as it might be useful for non-UI stuff.
 def getReferencedElement(refString, forceType=None, **kwargs):
-	"""returns the element for the DaCHS reference refString.
+	"""returns the element for the DaCHS reference ``refString``.
 
-	refString would be rdId[#subRef]; rdId can be filesystem-relative,
-	but the RD referenced must be below inputsDir anyway.
+	``refString`` has the form ``rdId[#subRef]``; ``rdId`` can be 
+	filesystem-relative, but the RD referenced must be below ``inputsDir`` 
+	anyway.
 
-	You can pass a structure class into forceType, and a StructureError
+	You can pass a structure class into ``forceType``, and a ``StructureError``
 	will be raised if what's pointed to by the id isn't of that type.
 
-	You should usually use base.resolveCrossId instead of this from *within*
+	You should usually use ``base.resolveCrossId`` instead of this from *within*
 	DaCHS.  This is intended for code handling RD ids from users.
 
 	This supports further keyword arguments to getRD.
@@ -530,15 +531,15 @@ def getReferencedElement(refString, forceType=None, **kwargs):
 
 @utils.document
 def getStandardPubDID(path):
-	"""returns the standard DaCHS PubDID for path.
+	"""returns the standard DaCHS PubDID for ``path``.
 
 	The publisher dataset identifier (PubDID) is important in protocols like
 	SSAP and obscore.  If you use this function, the PubDID will be your
 	authority, the path compontent ~, and the inputs-relative path of 
 	the input file as the parameter.
 
-	path can be relative, in which case it is interpreted relative to
-	the DaCHS inputsDir.
+	``path`` can be relative, in which case it is interpreted relative to
+	the DaCHS ``inputsDir.``
 
 	You *can* define your PubDIDs in a different way, but you'd then need
 	to provide a custom descriptorGenerator to datalink services (and
@@ -568,6 +569,9 @@ def getAccrefFromStandardPubDID(pubdid,
 
 	The function does not check if the remaining characters are a valid
 	accref, much less whether it can be resolved.
+
+	authBase's default will reflect you system's settings on your installation,
+	which probably is not what's given in this documentation.
 	"""
 	if not pubdid.startswith(authBase):
 		raise ValueError("'%s' is not a pubDID within this data center"%
@@ -579,11 +583,11 @@ def getAccrefFromStandardPubDID(pubdid,
 def getInputsRelativePath(absPath, liberalChars=True):
 	"""returns absath relative to the DaCHS inputsDir.
 
-	If absPath is not below inputsDir, a ValueError results.  On liberalChars,
-	see getRelativePath.
+	If ``absPath`` is not below ``inputsDir``, a ``ValueError`` results.  On 
+	``liberalChars``, wee see the `function getRelativePath`_.
 
 	In rowmakers and rowfilters, you'll usually use the macro
-	\inputRelativePath that inserts the appropriate code.
+	``\inputRelativePath`` that inserts the appropriate code.
 	"""
 	return utils.getRelativePath(absPath,
 		base.getConfig("inputsDir"), liberalChars=liberalChars)

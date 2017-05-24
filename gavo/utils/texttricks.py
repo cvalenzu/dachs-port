@@ -138,11 +138,12 @@ def formatSimpleTable(data, stringify=True):
 	return table
 
 
+@codetricks.document
 def getRelativePath(fullPath, rootPath, liberalChars=True):
 	"""returns rest if fullPath has the form rootPath/rest and raises an
 	exception otherwise.
 
-	Pass liberalChars=False to make this raise a ValueError when
+	Pass ``liberalChars=False`` to make this raise a ValueError when
 	URL-dangerous characters (blanks, amperands, pluses, non-ASCII, and 
 	similar) are present in the result.  This is mainly for products.
 	"""
@@ -636,7 +637,7 @@ def _iterSimpleTextNoContinuation(f):
 
 @codetricks.document
 def iterSimpleText(f):
-	"""iterates over physLineNumber, line in f with some usual 
+	"""iterates over ``(physLineNumber, line)`` in f with some usual 
 	conventions for simple data files.
 
 	You should use this function to read from simple configuration and/or

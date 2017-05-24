@@ -46,7 +46,10 @@ tableEncoders = {
 
 
 class VOTableContext(utils.IdManagerMixin):
-	"""encoding context.
+	"""A context object for writing VOTables.
+
+	The constructor arguments work as keyword arguments to ``getAsVOTable``.
+	Some other high-level functions accept finished contexts.
 
 	This class provides management for unique ID attributes, the value mapper
 	registry, and possibly additional services for writing VOTables.
@@ -729,9 +732,13 @@ def makeVOTable(data, ctx=None, **kwargs):
 
 
 def writeAsVOTable(data, outputFile, ctx=None, **kwargs):
-	"""a formats.common compliant data writer.
+	"""writes ``data`` to the ``outputFile``.
 
-	See makeVOTable for the arguments.
+	data can be a table or ``Data`` item.
+
+	``ctx`` can be a ``VOTableContext`` instance; alternatively,
+	``VOTableContext`` constructor arguments can be passed in as
+	``kwargs``.
 	"""
 	ctx = ctx or VOTableContext(**kwargs)
 	vot = makeVOTable(data, ctx)
@@ -741,7 +748,7 @@ def writeAsVOTable(data, outputFile, ctx=None, **kwargs):
 def getAsVOTable(data, ctx=None, **kwargs):
 	"""returns a string containing a VOTable representation of data.
 
-	For information on the arguments, refer to makeVOTable.
+	``kwargs`` can be constructor arguments for VOTableContext.
 	"""
 	ctx = ctx or VOTableContext(**kwargs)
 	dest = StringIO()
