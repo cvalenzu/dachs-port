@@ -772,7 +772,11 @@ class RDInfoRenderer(grend.CustomTemplateMixin, grend.ServiceBasedPage):
 		with base.getTableConn() as conn:
 			return [row[0] for row in
 				conn.query(
-					"SELECT DISTINCT sourceRD FROM dc.resources ORDER BY sourceRD")]
+					"""SELECT DISTINCT sourceRD 
+					FROM (
+						SELECT sourceRD FROM dc.resources 
+						WHERE NOT deleted) as q
+					ORDER BY sourceRD""")]
 
 	def locateChild(self, ctx, segments):
 		rdId = "/".join(segments)
