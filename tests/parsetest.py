@@ -341,5 +341,75 @@ class CrossResolutionTest(testhelpers.VerboseTest):
 				self.assertEqual(res.sourceId, "test/rel")
 
 
+class _SourceHierarchy(testhelpers.TestResource):
+	def make(self, ignored):
+		self.root = tempfile.mkdtemp("sourcetest", dir=base.getConfig("inputsDir"))
+		for dirInd in range(3):
+			dirName = os.path.join(self.root, "dir%s"%dirInd)
+			os.mkdir(dirName)
+			for fileInd in range(dirInd+1):
+				with open(os.path.join(dirName, "file.%s"%fileInd), "w") as f:
+					f.write(str(fileInd)+"\n")
+
+		linkDir = os.path.join(self.root, "links", "data")
+		os.makedirs(linkDir)
+		os.symlink(os.path.join(self.root, "dir1"),
+			os.path.join(linkDir, "a"))
+		os.symlink(os.path.join(self.root, "dir2"),
+			os.path.join(linkDir, "b"))
+
+		return os.path.basename(self.root)
+
+	def clean(self, ignored):
+		shutil.rmtree(self.root)
+
+
+class SourcesTest(testhelpers.VerboseTest):
+	resources = [("resdir", _SourceHierarchy())]
+
+	def testFollowLinks(self):
+		rd = base.parseFromString(rscdesc.RD,
+			'<resource schema="%s"><data id="import">'
+			'<sources recurse="True" pattern="links/file*"/></data></resource>'%
+				self.resdir)
+
+		self.assertEqual(
+			["/".join(s.split("/")[-2:])
+				for s in rd.getById("import").sources.iterSources()],
+			['a/file.0', 'a/file.1', 'b/file.0', 'b/file.1', 'b/file.2'])
+
+	def testFollowLinksImmediate(self):
+		rd = base.parseFromString(rscdesc.RD,
+			'<resource schema="%s"><data id="import">'
+			'<sources recurse="True" pattern="links/data/file*"/></data></resource>'%
+				self.resdir)
+
+		self.assertEqual(
+			["/".join(s.split("/")[-2:])
+				for s in rd.getById("import").sources.iterSources()],
+			['a/file.0', 'a/file.1', 'b/file.0', 'b/file.1', 'b/file.2'])
+
+	def testRecursePattern(self):
+		rd = base.parseFromString(rscdesc.RD,
+			'<resource schema="%s"><data id="import">'
+			'<sources recurse="True" pattern="dir*/*.0"/></data></resource>'%
+				self.resdir)
+		self.assertEqual(
+			["/".join(s.split("/")[-2:])
+				for s in rd.getById("import").sources.iterSources()],
+			['dir0/file.0', 'dir1/file.0', 'dir2/file.0'])
+
+	def testIgnorePattern(self):
+		rd = base.parseFromString(rscdesc.RD,
+			'<resource schema="%s"><data id="import">'
+			'<sources recurse="True" pattern="dir*/*">'
+			'<ignoreSources pattern="*.1"/></sources></data></resource>'%
+				self.resdir)
+		self.assertEqual(
+			["/".join(s.split("/")[-2:])
+				for s in rd.getById("import").sources.iterSources()],
+			['dir0/file.0', 'dir1/file.0', 'dir2/file.0', 'dir2/file.2'])
+
+
 if __name__=="__main__":
 	testhelpers.main(DispatchedGrammarTest)
