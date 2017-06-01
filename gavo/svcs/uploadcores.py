@@ -15,10 +15,7 @@ import os
 
 from gavo import base
 from gavo import rsc
-from gavo import rscdef
 from gavo.svcs import core
-from gavo.svcs import outputdef
-from gavo.svcs import standardcores
 
 
 MS = base.makeStruct
@@ -142,30 +139,3 @@ class UploadCore(core.Core):
 		totalAffected += self._saveData(srcFile, fName, mode)
 		return rsc.TableForDef(self.outputTable, 
 			rows=[{"nAffected": totalAffected}])
-	
-
-
-class EditCore(standardcores.TableBasedCore):
-	"""A core that allows POSTing records into database tables.
-	"""
-	name_ = "editCore"
-
-	_queriedTable = base.ReferenceAttribute("queriedTable", 
-		default=base.Undefined, description="Reference to the table to"
-			" be edited", forceType=rscdef.TableDef)
-
-	def completeElement(self, ctx):
-		if self.outputTable is base.Undefined:
-			self.outputTable = base.parseFromString(outputdef.OutputTableDef,
-				uploadOutputDef)
-		self._completeElementNext(EditCore, ctx)
-
-	def run(self, service, inputTable, queryMeta):
-		conn = base.getDBConnection(base.getDBProfile("admin"))
-		table = rsc.TableForDef(self.queriedTable, 
-			connection=conn)
-		table.addRow(inputTable.getParamDict())
-		conn.commit()
-		conn.close()
-		return rsc.TableForDef(self.outputTable, 
-			rows=[{"nAffected": 1}])
