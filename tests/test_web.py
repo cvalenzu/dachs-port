@@ -419,6 +419,10 @@ class BuiltinResTest(trialhelpers.ArchiveTest):
 		return self.assertGETHasStrings("/robots.txt", {},
 			['Disallow: /login'])
 
+	def testScaledLogo(self):
+		return self.assertGETHasStrings("/favicon.png", {},
+			["PNG", "IEND"])
+
 
 class ConstantRenderTest(trialhelpers.ArchiveTest):
 	def testVOPlot(self):

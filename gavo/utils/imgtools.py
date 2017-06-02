@@ -79,3 +79,18 @@ def scaleNumpyArray(arr, destSize):
 		img[:,rowInd] = newRow
 
 	return img
+
+
+def getScaledPNG(srcFile, newWidth):
+	"""returns a PNG string that is a scaled version of an image in srcFile.
+
+	srcFile must correspond to something that PIL can read.  Since scaling
+	really sucks for non-RGB images, we unconditionally convert whatever we
+	get to 3-band RGB.
+	"""
+	im = Image.open(srcFile).convert("RGB")
+	scale = newWidth/float(im.size[0])
+	scaled = im.resize((newWidth, int(im.size[1]*scale)), Image.ANTIALIAS)
+	f = StringIO()
+	scaled.save(f, format="png")
+	return f.getvalue()

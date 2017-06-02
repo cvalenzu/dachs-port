@@ -361,7 +361,7 @@ function _make_SAMP_success_handler(samp_button, cur_form) {
 		conn.declareMetadata([{
 			"samp.description": "SODA processed data from"+document.URL,
 			"samp.icon.url": 
-				"http://"+window.location.host+"/static/img/logo_tiny.png"
+				"http://"+window.location.host+"/favicon.png"
 		}]);
 
 		// set the button up so clicks send again without reconnection.

@@ -113,7 +113,7 @@ def makeDefaultMeta():
 		authority.title: Untitled data center
 		authority.shortName: DaCHS test
 		authority.description: This should be a relatively terse \
-			description of what you clam authority for.
+			description of what you claim authority for.
 		authority.referenceURL: (your DC's "contact" page, presumably)
 		authority.managingOrg: ivo://x-unregistred/org
 		organization.title: Unconfigured organization

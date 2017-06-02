@@ -24,6 +24,7 @@ from nevow import static
 
 from gavo import base
 from gavo import svcs
+from gavo import utils
 from gavo.imp import formal
 from gavo.web import caching
 from gavo.web import common
@@ -55,6 +56,18 @@ def makeDynamicPage(pageClass):
 		def renderHTTP(self, ctx):
 			return pageClass(ctx)
 	return DynPage()
+
+
+@utils.memoized
+def makeFaviconPNG():
+	"""returns a "small" version of the logo.
+
+	This is used mainly for SAMP logos at them moment.
+	"""
+	from gavo.utils import imgtools
+	return imgtools.getScaledPNG(
+		base.getPathForDistFile(
+			"web/img/logo_medium.png"), 62)
 
 
 def _authorizeCORS(request):
@@ -310,6 +323,9 @@ if (base.getConfig("web", "favicon")
 		and os.path.exists(base.getConfig("web", "favicon"))):
 	ArchiveService.addStatic("favicon.ico",
 		static.File(base.getConfig("web", "favicon")))
+
+ArchiveService.addStatic("favicon.png",
+	makeFaviconPNG())
 
 ArchiveService.installVanityMap()
 
