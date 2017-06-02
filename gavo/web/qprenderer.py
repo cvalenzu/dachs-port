@@ -29,7 +29,8 @@ class VOTableResource(rend.Page):
 	
 	def renderHTTP(self, ctx):
 		request = inevow.IRequest(ctx)
-		if self.res.queryMeta.get("Overflow"):
+		if base.getMetaText(self.res.getPrimaryTable(), "_queryStatus"
+				)=="Overflowed":
 			fName = "truncated_votable.xml"
 		else:
 			fName = "votable.xml"

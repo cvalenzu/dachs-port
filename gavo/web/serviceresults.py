@@ -90,7 +90,8 @@ class VOTableResult(ServiceResult):
 	@classmethod
 	def _formatOutput(cls, data, ctx):
 		request = inevow.IRequest(ctx)
-		if data.queryMeta.get("Overflow"):
+		if base.getMetaText(data.original.getPrimaryTable(), "_queryStatus"
+				)=="Overflowed":
 			fName = "truncated_votable.xml"
 		else:
 			fName = "votable.xml"
@@ -108,7 +109,8 @@ class FITSTableResult(ServiceResult):
 
 	@classmethod
 	def getTargetName(cls, data):
-		if data.queryMeta.get("Overflow"):
+		if base.getMetaText(data.original.getPrimaryTable(), "_queryStatus"
+				)=="Overflowed":
 			return "truncated_data.fits", "application/x-fits"
 		else:
 			return "data.fits", "application/x-fits"

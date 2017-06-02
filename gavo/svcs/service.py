@@ -144,7 +144,6 @@ class SvcResult(rend.DataFactory):
 		resultmeta = {
 			"itemsMatched": self.queryMeta.get("Matched", 
 				len(self.original.getPrimaryTable())),
-			"Overflow": self.queryMeta.get("Overflow", False),
 			"message": "",
 		}
 		return resultmeta

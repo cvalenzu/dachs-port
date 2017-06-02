@@ -378,24 +378,24 @@ class TableBasedCore(core.Core):
 			[cd.asSQL(inputTable.args, sqlPars, queryMeta)
 				for cd in self.condDescs]), sqlPars
 
-	def _processQueryMeta(self, resultTable, queryMeta):
-		"""furnishes resultTable and queryMeta with information on overflows,
-		etc.
+	def _addQueryStatus(self, resultTable, queryMeta):
+		"""furnishes resultTable with a DALI-compatible _queryStatus meta item.
+
+		This will also add a _warning meta in case of overflows.
 		"""
 		isOverflowed =  len(resultTable.rows)>queryMeta.get("dbLimit", 1e10)
 		if isOverflowed:
 			del resultTable.rows[-1]
 		queryMeta["Matched"] = len(resultTable.rows)
 		if isOverflowed:
-			queryMeta["Overflow"] = True
 			resultTable.addMeta("_warning", 
 				"The query limit was reached.  Increase it"
 				" to retrieve more matches.  Note that unsorted truncated queries"
 				" are not reproducible (i.e., might return a different result set"
 				" at a later time).")
-			resultTable.addMeta("_queryStatus", "Overflowed")
+			resultTable.setMeta("_queryStatus", "Overflowed")
 		else:
-			resultTable.addMeta("_queryStatus", "Ok")
+			resultTable.setMeta("_queryStatus", "Ok")
 	
 	def adaptForRenderer(self, renderer):
 		"""returns a core tailored to renderer renderers.
@@ -452,7 +452,7 @@ class FancyQueryCore(TableBasedCore, base.RestrictionMixin):
 			except:
 				mapDBErrors(*sys.exc_info())
 
-			self._processQueryMeta(res, queryMeta)
+			self._addQueryStatus(res, queryMeta)
 			return res
 
 
@@ -514,7 +514,7 @@ class DBCore(TableBasedCore):
 			finally:
 				queriedTable.close()
 
-			self._processQueryMeta(res, queryMeta)
+			self._addQueryStatus(res, queryMeta)
 			return res
 
 	def _makeResultTableDef(self, service, inputTable, queryMeta):

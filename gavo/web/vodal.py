@@ -433,7 +433,6 @@ class SIAP2Renderer(UnifiedDALRenderer):
 			queryStatus=queryStatus)
 
 
-
 class SSAPRenderer(UnifiedDALRenderer):
 	"""A renderer for the simple spectral access protocol.
 

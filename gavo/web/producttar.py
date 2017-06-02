@@ -136,11 +136,16 @@ class ProductTarMaker(object):
 		b.mtime = time.time()
 		return b, StringIO(data)
 
-	def _getHeaderVals(self, queryMeta):
-		if queryMeta.get("Overflow"):
-			return "truncated_data.tar", "application/x-tar"
+	def _getDestName(self, productsTable):
+		"""returns a filename for a tar with the stuff in productsTable.
+
+		For now, we just distinguish overflowed and non-overflowed tars.
+		"""
+		qs = base.getMetaText(productsTable, "_queryStatus")
+		if qs=="Overflowed":
+			return "truncated_data.tar"
 		else:
-			return "data.tar", "application/x-tar"
+			return "data.tar"
 
 	def _productsToTar(self, productData, destination):
 		"""actually writes the tar.
@@ -166,11 +171,10 @@ class ProductTarMaker(object):
 		outputTar.close()
 		return ""  # finish off request if necessary.
 
-	def _streamOutTar(self, productData, request, queryMeta):
-		name, mime = self._getHeaderVals(queryMeta)
+	def _streamOutTar(self, productData, request, queryMeta, destName):
 		request.setHeader('content-disposition', 
-			'attachment; filename=%s'%name)
-		request.setHeader("content-type", mime)
+			'attachment; filename=%s'%destName)
+		request.setHeader("content-type", "application/x-tar")
 
 		def writeTar(dest):
 			self._productsToTar(productData, dest)
@@ -196,7 +200,8 @@ class ProductTarMaker(object):
 			{"accref": accrefs})
 
 		prods = self.core.run(coreResult.service, inputTable, queryMeta)
-		return self._streamOutTar(prods, request, queryMeta)
+		return self._streamOutTar(prods, request, queryMeta,
+			self._getDestName(table))
 
 
 @utils.memoized

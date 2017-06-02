@@ -987,7 +987,5 @@ class HumanCoordParseTest(testhelpers.VerboseTest):
 			("$&& zefixx",))
 
 
-
-
 if __name__=="__main__":
 	testhelpers.main(ComputedServiceTest)
