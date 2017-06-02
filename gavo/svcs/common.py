@@ -104,7 +104,7 @@ class QueryMeta(dict):
 
 	It is constructed with a plain dictionary (there are alternative
 	constructors for nevow contexts and requests are below) mapping 
-	certain keys (you'll currently have to figure out which fromt the 
+	certain keys (you'll currently have to figure out which from the 
 	source) to values, mostly strings, except for the keys listed in 
 	listKeys, which should be sequences of strings.
 	
