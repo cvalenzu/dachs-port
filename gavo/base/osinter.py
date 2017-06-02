@@ -113,20 +113,12 @@ def getPathForDistFile(name):
 	"""returns a path for a "dist resource", i.e., a file distributed
 	with DaCHS.
 
-	This is like pkg_resources, except it also checks in 
-	$GAVO_DIR/override/<name> and returns that file if present.  Thus, you
-	can usually override DaCHS built-in files (but there's not too many
-	places in which that's used so far).
+	name is the file relative to resources.
 
-	TODO: this overrides stuff stinks a bit because for many classes 
-	of files (RDs, templates, ...) there already are override locations.
-	It think we should compute the override path based on name prefixes.
+	This is essentially pkg_resources.resource_filename with a dash
+	of built-in configuration.
 	"""
-	userPath = os.path.join(config.get("rootDir"), "overrides/"+name)
-	if os.path.exists(userPath):
-		return userPath
-	else:
-		return pkg_resources.resource_filename('gavo', "resources/"+name)
+	return pkg_resources.resource_filename('gavo', "resources/"+name)
 
 
 def openDistFile(name):

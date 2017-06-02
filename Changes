@@ -42,7 +42,8 @@ Version 0.9.9 beta 1 (2017-03-27)
 	* logo_tiny and logo_big are now ignored, all logos spit out by DaCHS are
 	  based on logo_medium.png (.../favicon.png is a 50 px rendering of it).
 
-	* Removed (probably largely unused) editCore, SDM2 support
+	* Removed (probably largely unused features) editCore, SDM2 support,
+		pkg_resource overrides,
 
 	* Hopefully more useful manpage -- have a peek!
 
