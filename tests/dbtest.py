@@ -252,7 +252,8 @@ class TestWithTableCreation(testhelpers.VerboseTest):
 	def tearDown(self):
 		if self.tableName is None:
 			return
-		self.table.drop().commit()
+		self.table.drop()
+		self.conn.commit()
 
 
 class TestPrivs(TestWithTableCreation):

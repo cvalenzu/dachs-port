@@ -30,11 +30,12 @@ def getSets():
 	services belonging to that set.
 	"""
 	tableDef = common.getServicesRD().getById("sets")
-	table = rsc.TableForDef(tableDef)
 	setMembers = {}
-	for rec in table:
+
+	for rec in tableDef.doSimpleQuery():
 		setMembers.setdefault(rec["setName"], []).append(
 			(rec["sourceRD"], rec["resId"]))
+
 	return [{"setName": key, "services": value} 
 		for key, value in setMembers.iteritems()]
 

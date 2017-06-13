@@ -63,9 +63,10 @@ class _ADQLTestTable(testhelpers.TestResource):
 		return ds
 	
 	def clean(self, ds):
-		ds.tables.values()[0].connection.rollback()
+		conn = ds.tables.values()[0].connection
+		conn.rollback()
 		ds.dropTables(rsc.parseNonValidating)
-		ds.commitAll().closeAll()
+		conn.commit()
 adqlTestTable = _ADQLTestTable()
 
 
@@ -97,9 +98,10 @@ class _GeometryTable(testhelpers.TestResource):
 			# it's a fake thing because we didn't have SMoc available
 			return
 
-		ds.tables.values()[0].connection.rollback()
+		conn = ds.tables.values()[0].connection
+		conn.rollback()
 		ds.dropTables(rsc.parseNonValidating)
-		ds.commitAll().closeAll()
+		conn.commit()
 geomTestTable = _GeometryTable()
 
 

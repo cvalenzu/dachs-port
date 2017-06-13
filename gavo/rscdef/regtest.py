@@ -127,6 +127,32 @@ def getHeaderValue(headers, key):
 	raise KeyError(key)
 
 
+class Keywords(argparse.Action):
+	"""A class encapsulating test selection keywords.
+
+	There's a match method that takes a string and returns true if either
+	no keywords are defined or all keywords are present in other (after
+	case folding).
+
+	This doubles as an argparse action and as such is "self-parsing" if you 
+	will.
+	"""
+	def __init__(self, *args, **kwargs):
+		argparse.Action.__init__(self, *args, **kwargs)
+		self.keywords = set()
+	
+	def __call__(self, parser, namespace, values, option_string=None):
+		self.keywords = set(values.lower().split())
+		setattr(namespace, self.dest, self)
+	
+	def match(self, other):
+		if not self.keywords:
+			return True
+
+		return not self.keywords-set(other.lower().split())
+
+
+
 ################## RD elements
 
 class DynamicOpenVocAttribute(base.AttributeDef):
@@ -674,10 +700,13 @@ class RegTestSuite(base.Structure):
 			" in sequence.",
 		default=False)
 
-	def itertests(self, tags):
+	def itertests(self, tags, keywords):
 		for test in self.tests:
-			if not test.tags or test.tags&tags:
-				yield test
+			if test.tags and not test.tags&tags:
+				continue
+			if keywords and not keywords.match(test.title):
+				continue
+			yield test
 
 	def completeElement(self, ctx):
 		if self.title is None:
@@ -777,7 +806,8 @@ class TestRunner(object):
 	def __init__(self, suites, serverURL=None, 
 			verbose=True, dumpNegative=False, tags=None,
 			timeout=45, failFile=None, nRepeat=1,
-			execDelay=0, nThreads=8, printTitles=False):
+			execDelay=0, nThreads=8, printTitles=False,
+			keywords=None):
 		self.verbose, self.dumpNegative = verbose, dumpNegative
 		self.failFile, self.nRepeat = failFile, nRepeat
 		self.printTitles = printTitles
@@ -788,6 +818,7 @@ class TestRunner(object):
 		self.timeout = timeout
 		self.execDelay = execDelay
 		self.nThreads = nThreads
+		self.keywords = keywords
 
 		self.serverURL = serverURL or base.getConfig("web", "serverurl")
 		self.curRunning = {}
@@ -824,7 +855,7 @@ class TestRunner(object):
 			if suite.sequential:
 				self._makeTestsWithState(suite)
 			else:
-				self.testList.extend(suite.itertests(self.tags))
+				self.testList.extend(suite.itertests(self.tags, self.keywords))
 
 	def _makeTestsWithState(self, suite):
 		"""helps _makeTestList by putting suite's test in a way that they are
@@ -832,12 +863,13 @@ class TestRunner(object):
 		"""
 		# technically, this is done by just entering the suite's "head"
 		# and have that pull all the other tests in the suite behind it.
-		tests = list(suite.itertests(self.tags))
-		firstTest = tests.pop(0)
-		self.testList.append(firstTest)
-		for test in tests:
-			firstTest.followUp = test
-			firstTest = test
+		tests = list(suite.itertests(self.tags, self.keywords))
+		if tests:
+			firstTest = tests.pop(0)
+			self.testList.append(firstTest)
+			for test in tests:
+				firstTest.followUp = test
+				firstTest = test
 
 	def _spawnThread(self):
 		"""starts a new test in a thread of its own.
@@ -1067,6 +1099,11 @@ def parseCommandLine(args=None):
 		"  Note that this doesn't necessarily make the execution sequence"
 		" predictable, just the submission sequence.",
 		action="store", type=int, dest="randomSeed", default=None)
+	parser.add_argument("-k", "--keywords", help="Only run tests"
+		" with descriptions containing all (whitespace-separated) keywords."
+		" Sequential tests will be run in full, nevertheless, if their head test"
+		" matches.",
+		action=Keywords, type=str, dest="keywords")
 
 	return parser.parse_args(args)
 
@@ -1094,13 +1131,14 @@ def main(args=None):
 		"execDelay": args.execDelay,
 		"nThreads": args.nThreads,
 		"printTitles": args.printTitles,
+		"keywords": args.keywords,
 	}
 
 	if args.id=="ALL":
 		runner = _getRunnerForAll(runnerArgs)
 	else:
 		runner = _getRunnerForSingle(args.id, runnerArgs)
-	
+
 	runner.runTests(showDots=True)
 	print runner.stats.getReport()
 	if runner.stats.fails:

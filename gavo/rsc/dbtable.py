@@ -157,28 +157,11 @@ class MetaTableMixin(object):
 class DBMethodsMixin(sqlsupport.QuerierMixin):
 	"""is a mixin for on-disk tables.
 
-	The parent must have tableDef, tableName (from tabledef.getQName())
-	attributes.
-
-	The parent must call the _makeConnection method with a dictionary;
-	if a connection key is in there, it will we used as the connection
-	attribute (and to create the querier).  Else, a new default connection
-	will be used.
-
-	Note that many of them return the table so you can say drop().commit()
-	in hackish code.
+	The parent must have tableDef, tableName (from tabledef.getQName()),
+	and connection attributes.
 	"""
 
 	scripts = None  # set by data on import, defined by make
-
-	def _makeConnection(self, kwargs):
-		self.ownedConnection = False
-		connection = kwargs.pop("connection", None)
-		if connection is None:
-			self.connection = base.getDBConnection("trustedquery")
-			self.ownedConnection = True
-		else:
-			self.connection = connection
 
 	def _definePrimaryKey(self):
 		if self.tableDef.primary and not self.hasIndex(self.tableName,
@@ -316,12 +299,6 @@ class DBMethodsMixin(sqlsupport.QuerierMixin):
 			raise base.DataError("Table %s: %s"%(
 				self.tableDef.getQName(), "; ".join(mismatches)))
 
-	def close(self):
-		"""cleans up connection if it is owned.
-		"""
-		if self.ownedConnection and not self.connection.closed:
-			self.connection.close()
-
 
 class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 	"""An interface to a table in the database.
@@ -361,13 +338,19 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 	_runScripts = None  # this is overridden by make (Yikes!)
 
 	def __init__(self, tableDef, **kwargs):
+		self.connection = kwargs.pop("connection", None)
+		if self.connection is None:
+			raise base.ReportableError("DBTable built without connection.",
+				hint="In pre-1.0 DaCHS, database tables could automatically"
+					" open and manage connections.  This turned out to be much"
+					" more trouble than it was worth.  See develNotes for how"
+					" to do things today.")
+
 		self.suppressIndex = kwargs.pop("suppressIndex", False)
 		self.tableUpdates = kwargs.pop("tableUpdates", False)
 		self.exclusive = kwargs.pop("exclusive", False)
 		self.commitAfterMeta = kwargs.pop("commitAfterMeta", False)
 		table.BaseTable.__init__(self, tableDef, **kwargs)
-
-		self._makeConnection(kwargs)
 
 		if self.tableDef.rd is None and not self.tableDef.temporary:
 			raise base.ReportableError("TableDefs without resource descriptor"
@@ -421,15 +404,10 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 			base.ui.notifyDBTableModified(self.tableName)
 
 		self.connection.execute("ANALYZE %s"%self.tableName)
-		if self.ownedConnection:
-			self.connection.commit()
 		return self
 	
 	def importFailed(self, *excInfo):
-		if not self.connection.closed:
-			self.connection.rollback()
-			if self.ownedConnection:
-				self.connection.close()
+		# rollback is handled by the feeder.
 		return False
 	
 	def feedRows(self, rows):
@@ -471,15 +449,6 @@ class DBTable(DBMethodsMixin, table.BaseTable, MetaTableMixin):
 			raise KeyError(key)
 		return res[0]
 
-	def commit(self):
-		"""commits an owned connection.
-
-		For borrowed connections, this is a no-op.
-		"""
-		if self.ownedConnection:
-			self.connection.commit()
-		return self
-	
 	def createUniquenessRules(self):
 		if not self.tableDef.forceUnique:
 			return
@@ -731,6 +700,4 @@ class View(DBTable):
 	def importFinished(self):
 		# don't do anything but run postCreation scripts
 		self.runScripts("postCreation")
-		if self.ownedConnection:
-			self.connection.commit()
 		return self

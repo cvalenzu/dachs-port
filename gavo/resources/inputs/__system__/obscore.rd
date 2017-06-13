@@ -423,7 +423,6 @@
 		# it.
 		rsc.makeData(base.caches.getRD("//obscore").getById("create"),
 			connection=table.connection)
-		table.commit()
 	</script>
 
 	<STREAM id="_publishCommon">

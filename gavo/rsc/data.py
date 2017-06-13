@@ -15,7 +15,6 @@ import sys
 from gavo import base
 from gavo import rscdef
 from gavo import utils
-from gavo.base import sqlsupport
 from gavo.rsc import common
 from gavo.rsc import table
 from gavo.rsc import tables
@@ -148,7 +147,7 @@ class _DataFeeder(table._Feeder):
 		This ignores any additional exceptions that might come out of
 		the exit methods.
 
-		The condition is rolled back, and we unconditionally propagate
+		The connection is rolled back, and we unconditionally propagate
 		the exception.
 		"""
 		for feeder in self.feeders:
@@ -294,36 +293,6 @@ class Data(base.MetaMixin, common.ParamMixin):
 				t.runScripts("preImport")
 				t.recreate()
 
-	def commitAll(self):
-		"""commits all dependent tables.
-
-		You only need to do this if you let the DBTables get their own
-		connections, i.e., didn't create them with a connection argument.
-
-		The method returns the data itself in order to let you do a
-		commitAll().closeAll().
-		"""
-		for t in self:
-			if t.tableDef.onDisk:
-				t.commit()
-		return self
-
-	def closeAll(self):
-		"""closes the connections of all dependent tables.
-
-		No implicit commit will be done, so this implies a rollback unless
-		you committed before.
-
-		You only need to do this if you let the DBTables get their own
-		connections, i.e., didn't create them with a connection argument.
-		"""
-		for t in self:
-			if t.tableDef.onDisk:
-				try:
-					t.close()
-				except sqlsupport.InterfaceError: # probably shared connection
-					pass                            # was already closed.
-
 	def getPrimaryTable(self):
 		"""returns the table contained if there is only one, or the one
 		with the role primary.
@@ -406,10 +375,12 @@ def _processSourceReal(data, source, feeder, opts):
 def processSource(data, source, feeder, opts, connection=None):
 	"""ingests source into the Data instance data.
 
-	If you pass in a connection, you can set opts.keepGoing to true
-	and make the system continue importing even if a particular source 
-	has caused an error.  In that case, everything contributed by
-	the bad source is rolled back.
+	If this builds database tables, you must pass in a connection object.
+
+	If opts.keepGoing is True,the system will continue importing 
+	even if a particular source has caused an error.  In that case, 
+	everything contributed by the bad source is rolled back (this will
+	only work when filling database tables).
 	"""
 	if not opts.keepGoing:
 		# simple shortcut if we don't want to recover from bad sources
@@ -418,7 +389,10 @@ def processSource(data, source, feeder, opts, connection=None):
 	else: # recover from bad sources, be more careful
 		if connection is None:
 			raise base.ReportableError("Can only ignore source errors"
-				" with an explicit connection", hint="This is a programming error.")
+				" when filling database tables.", 
+				hint="The -c flag on dachs imp and its friends builds on database"
+				" savepoints.  You can thus only meaninfully use it when your"
+				" table has onDisk='True'.")
 		try:
 			with connection.savepoint():
 				_processSourceReal(data, source, feeder, opts)
@@ -446,11 +420,15 @@ def makeData(dd, parseOptions=common.parseNonValidating,
 	"""returns a data instance built from ``dd``.
 
 	It will arrange for the parsing of all tables generated from dd's grammar.
-	If connection is passed in, the the entire operation will run within a 
-	single transaction within this connection.  The connection will be
-	rolled back or committed depending on the success of the operation
-	(unless you pass ``runCommit=False``, in which case even a successful
-	import will not be committed)..
+
+	If database tables are being made, you *must* pass in a connection.
+	The entire operation will then run within a single transaction within
+	this connection (except for building dependents; they will be built
+	in separate transactions).
+	
+	The connection will be rolled back or committed depending on the
+	success of the operation (unless you pass ``runCommit=False``, in
+	which case even a successful import will not be committed)..
 
 	You can pass in a data instance created by yourself in data.  This
 	makes sense if you want to, e.g., add some meta information up front.
@@ -459,9 +437,6 @@ def makeData(dd, parseOptions=common.parseNonValidating,
 	# We don't want that when validating and return some empty data thing.
 	if getattr(base, "VALIDATING", False):
 		return Data(dd, _TableCornucopeia())
-
-	if connection is None:
-		connection = base.getDBConnection("admin")
 
 	if data is None:
 		res = Data.create(dd, parseOptions, connection=connection)
@@ -488,9 +463,6 @@ def makeData(dd, parseOptions=common.parseNonValidating,
 			processSource(res, forceSource, feeder, parseOptions, connection)
 
 	res.validateParams()
-
-	if runCommit:
-		res.commitAll()
 	res.nAffected = feeder.getAffected()
 
 	if parseOptions.buildDependencies:

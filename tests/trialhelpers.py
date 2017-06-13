@@ -29,6 +29,7 @@ from gavo.helpers import testtricks
 
 from gavo import base
 from gavo import rsc
+from gavo import utils
 
 base.setConfig("web", "enabletests", "True")
 from gavo.web import weberrors
@@ -255,6 +256,12 @@ class ArchiveTest(RenderTest):
 	renderer = root.ArchiveService()
 
 
+@utils.memoized
+def getImportConnection():
+	# we cannot use the connection pools here since they may created threads.
+	return base.getDBConnection("admin")
+
+
 def provideRDData(rdName, ddId, _imported=set()):
 	"""makes ddId from rdName and returns a cleanup function.
 
@@ -270,7 +277,9 @@ def provideRDData(rdName, ddId, _imported=set()):
 		return lambda: None
 
 	dd = testhelpers.getTestRD(rdName).getById(ddId)
-	dataCreated = rsc.makeData(dd)
+	conn = getImportConnection()
+	dataCreated = rsc.makeData(dd, connection=conn)
+	conn.commit()
 	_imported.add((rdName, ddId))
 
 	# may be gone in atexit

@@ -38,6 +38,10 @@ Version 0.9.9 beta 1 (2017-03-27)
 	* In DaCHS' SQL interface, tuples now are matched to records and lists
 	  to arrays (was the other way round before).  If you have manual
 	  input to array-like columns, you'll have to change things.
+	
+	* rsc.makeData or rsc.TableForDef no longer automatically make connections
+	  when used on database tables.  You must give them explicit
+	  connection arguments now ("with base.getTableConn() as conn:").
 
 	* logo_tiny and logo_big are now ignored, all logos spit out by DaCHS are
 	  based on logo_medium.png (.../favicon.png is a 50 px rendering of it).
