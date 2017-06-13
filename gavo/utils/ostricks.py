@@ -109,7 +109,7 @@ _restrictedURLOpener.add_handler(urllib2.UnknownHandler())
 _restrictedURLOpener.addheaders = [("user-agent", 
 	"GAVO DaCHS HTTP client")]
 
-def urlopenRemote(url, data=None, creds=(None, None)):
+def urlopenRemote(url, data=None, creds=(None, None), timeout=100):
 	"""works like urllib2.urlopen, except only http, https, and ftp URLs
 	are handled.
 
@@ -124,7 +124,7 @@ def urlopenRemote(url, data=None, creds=(None, None)):
 	# The name in the next line is used in _UrlopenRemotePasswrodMgr
 	_temp_credentials = creds #noflake: Picked up from down the call chain
 	try:
-		res = _restrictedURLOpener.open(url, data)
+		res = _restrictedURLOpener.open(url, data, timeout=timeout)
 		if res is None:
 			raise IOError("Could not open URL %s -- does the resource exist?"%
 				url)
