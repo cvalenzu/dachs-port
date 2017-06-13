@@ -975,8 +975,11 @@ class DataGetRecordTest(testhelpers.VerboseTest, testtricks.XSDTestMixin):
 	def testTablesetPresent(self):
 		tables = self.srcAndTree[1].xpath(
 			"//tableset/schema/table")
-		self.assertEqual(tables[0].xpath("name")[0].text, "honk")
-		self.assertEqual(tables[1].xpath("name")[0].text, "funk")
+		self.assertEqual(
+			set([
+				tables[0].xpath("name")[0].text,
+				tables[1].xpath("name")[0].text]), 
+			set(["funk", "honk"]))
 
 
 class _ExternalRecordRes(testhelpers.TestResource):
@@ -1232,13 +1235,37 @@ class IdResolutionTest(testhelpers.VerboseTest):
 		self.failUnless(base.getMetaText(rec, "description").startswith(
 			" This should be a relatively terse description of"))
 
-	@unittest.skip("define an organization record again")
 	def testOrganization(self):
-		rec = registry.getResobFromIdentifier("ivo://%s/org"%self.auth)
-		self.failUnless(isinstance(rec, registry.nonservice.ResRec))
-		self.assertEqual(registry.getResType(rec), "organization")
-		self.assertEqual(base.getMetaText(rec, "referenceURL"),
-			"http://your.institution/home")
+		with testhelpers.userconfigContent(r"""
+				<STREAM id="registry-interfacerecords">
+				<resRec id="org">
+					<meta>				
+						resType: organization
+						creationDate: \\metaString{authority.creationDate}{UNCONFIGURED}
+						title: \\metaString{authority.title}{UNCONFIGURED}
+						shortName: \\metaString{authority.shortName}{UNCONFIGURED} org
+						subject: Organisation
+						referenceURL: http://your.institution/home
+						identifier: ivo://\getConfig{ivoa}{authority}/org
+						sets: ivo_managed
+					</meta>
+					<meta name="description"
+						>A test organisation
+					</meta>
+				</resRec>
+				</STREAM>"""):
+			base.caches.clearForName("__system__/services")
+			publication.updateServiceList([base.resolveCrossId("//services")])
+			rec = registry.getResobFromIdentifier("ivo://%s/org"%self.auth)
+			self.failUnless(isinstance(rec, registry.nonservice.ResRec))
+			self.assertEqual(registry.getResType(rec), "organization")
+			self.assertEqual(base.getMetaText(rec, "referenceURL"),
+				"http://your.institution/home")
+			self.assertEqual(base.getMetaText(rec, "description"),
+				"A test organisation")
+
+		base.caches.clearForName("__system__/services")
+		publication.updateServiceList([base.resolveCrossId("//services")])
 
 	def testBadId(self):
 		self.assertRaises(registry.IdDoesNotExist,
@@ -1264,7 +1291,8 @@ class ListIdentifiersTest(testhelpers.VerboseTest):
 		self.assertEqual(res&expected, expected)
 
 	def testSetSpec(self):
-		sets = self.tree.xpath("//header[1]/setSpec")
+		sets = self.tree.xpath(
+			"//header[identifier='ivo://x-unregistred']/setSpec")
 		self.assertEqual(len(sets), 1)
 		self.assertEqual(sets[0].text, "ivo_managed")
 

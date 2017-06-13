@@ -265,6 +265,8 @@ _rdRscRecGrammar = base.makeStruct(RDRscRecGrammar)
 def updateServiceList(rds, metaToo=False, connection=None, onlyWarn=True,
 		keepTimestamp=False):
 	"""updates the services defined in rds in the services table in the database.
+
+	This is what actually does the publication.
 	"""
 	recordsWritten = 0
 	parseOptions = rsc.getParseOptions(validateRows=True, batchSize=20)
