@@ -13,6 +13,8 @@ XXX TODO: Revise this to have events before module replayed.
 import os
 
 from gavo import base
+from gavo import rsc
+from gavo import rscdef
 from gavo import utils
 from gavo.svcs import core
 
@@ -46,3 +48,45 @@ class CustomCore(core.Core):
 
 	_module = ModuleAttribute("module", default=base.Undefined,
 		description="Path to the module containing the core definition.")
+
+
+class CoreProc(rscdef.ProcApp):
+	"""A definition of a pythonCore's functionalty.
+
+	This is a procApp complete with setup and code; you could inherit
+	between these.
+
+	coreProcs see the embedding service, the input table passed, and the
+	query metadata as service, inputTable, and queryMeta, respectively.
+
+	The core itself is available as self.
+	"""
+	name_ = "coreProc"
+	requiredType = "coreProc"
+	formalArgs = "self, service, inputTable, queryMeta"
+
+	additionalNamesForProcs = {
+		"rsc": rsc
+	}
+
+
+class PythonCore(core.Core):
+	"""A core doing computation using a piece of python.
+
+	See `Python Cores instead of Custom Cores`_ in the reference.
+	"""
+	name_ = "pythonCore"
+
+	_computer = base.StructAttribute("coreProc", default=base.Undefined,
+		childFactory=CoreProc, 
+		description="Code making the outputTable from the inputTable.",
+		copyable=True)
+
+	def expand(self, s):
+		# macro expansion should ideally take place in the service,
+		# but that's impossible in general because a core could be
+		# in use by several services.  Hence, we go ask the RD
+		return self.rd.expand(s)
+
+	def run(self, service, inputTable, queryMeta):
+		return self.coreProc.compile()(self, service, inputTable, queryMeta)

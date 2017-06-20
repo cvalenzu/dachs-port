@@ -57,7 +57,6 @@ from gavo.svcs import outputdef
 CORE_REGISTRY = {
 #	elementName -> module (without gavo.), class name
 	"adqlCore": ("protocols.adqlglue", "ADQLCore"),
-	"computedCore": ("svcs.computedcore", "ComputedCore"),
 	"customCore": ("svcs.customcore", "CustomCore"),
 	"datalinkCore": ("protocols.datalink", "DatalinkCore"),
 	"dbCore": ("svcs.standardcores", "DBCore"),
@@ -67,7 +66,7 @@ CORE_REGISTRY = {
 	"fixedQueryCore": ("svcs.standardcores", "FixedQueryCore"),
 	"nullCore": ("svcs.standardcores", "NullCore"),
 	"productCore": ("protocols.products", "ProductCore"),
-	"pythonCore": ("svcs.computedcore", "PythonCore"),
+	"pythonCore": ("svcs.customcore", "PythonCore"),
 	"registryCore": ("registry.oaiinter", "RegistryCore"),
 	"scsCore": ("protocols.scs", "SCSCore"),
 	"siapCutoutCore": ("protocols.siap", "SIAPCutoutCore"),
