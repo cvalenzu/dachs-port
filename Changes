@@ -6,7 +6,7 @@ svn log http://svn.ari.uni-heidelberg.de/svn/gavo/python/trunk/ | less
 to see the gory details.  If anything not mentioned here breaks something
 for you, we'd consider it a severe bug, though.
 
-Version 0.9.9 beta 1 (2017-03-27)
+Version 1.0 (2017-06-21)
 
 	* DaCHS' main entry point is now actually called dachs (i.e., call 
 		dachs imp q and such in the future).  gavo will work as an alias

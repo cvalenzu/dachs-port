@@ -523,9 +523,10 @@ Synopsis:
 .sp
 .nf
 .ft C
-dachs test [\-h] [\-v] [\-d] [\-t TAG] [\-R N] [\-T SECONDS] [\-D FILE]
-               [\-w SECONDS] [\-u SERVERURL] [\-n NTHREADS]
-               id
+dachs test [\-h] [\-v] [\-V] [\-d] [\-t TAG] [\-R N] [\-T SECONDS] [\-D FILE]
+            [\-w SECONDS] [\-u SERVERURL] [\-n NTHREADS]
+            [\-\-seed RANDOMSEED] [\-k KEYWORDS]
+            id
 .ft P
 .fi
 .UNINDENT
@@ -573,6 +574,12 @@ URL of the DaCHS root at the server to test
 .TP
 .BI \-n \ NTHREADS\fP,\fB \ \-\-number\-par \ NTHREADS
 Number of requests to be run in parallel
+.TP
+.BI \-k \ KEYWORDS\fP,\fB \ \-\-keywords \ KEYWORDS
+Only run tests with descriptions containing all
+(whitespace\-separated) keywords. Sequential tests will
+be run in full, nevertheless, if their head test
+matches.
 .UNINDENT
 .SH THE VALIDATE SUBCOMMAND
 .sp

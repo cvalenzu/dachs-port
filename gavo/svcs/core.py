@@ -61,7 +61,6 @@ CORE_REGISTRY = {
 	"datalinkCore": ("protocols.datalink", "DatalinkCore"),
 	"dbCore": ("svcs.standardcores", "DBCore"),
 	"debugCore": ("svcs.core", "DebugCore"),
-	"editCore": ("svcs.uploadcores", "EditCore"),
 	"fancyQueryCore": ("svcs.standardcores", "FancyQueryCore"),
 	"fixedQueryCore": ("svcs.standardcores", "FixedQueryCore"),
 	"nullCore": ("svcs.standardcores", "NullCore"),
