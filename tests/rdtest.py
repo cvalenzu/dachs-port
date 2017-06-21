@@ -159,35 +159,6 @@ class MacroTest(unittest.TestCase):
 		self.assertEqual(rd.expand("foo is \\foo."), "foo is  a\nbc  .")
 
 
-class ViewTest(testhelpers.VerboseTest):
-	"""tests for interpretation of view elements.
-	"""
-	def testBadRefRaises(self):
-		self.assertRaisesWithMsg(base.StructureError, 
-			'At [<simpleView><fieldRef table...], (1, 67):'
-			" No field 'noexist' in table test.prodtest", 
-			base.parseFromString, (tabledef.SimpleView, '<simpleView>'
-			'<fieldRef table="data/test#prodtest" column="noexist"/></simpleView>'))
-
-	def testTableDefCreation(self):
-		rd = base.parseFromString(rscdesc.RD,
-			'<resource schema="test2">'
-			'<simpleView id="vv">'
-			'<columnRef table="data/test#prodtest" column="alpha"/>'
-			'<columnRef table="data/test#prodtest" column="delta"/>'
-			'<columnRef table="data/test#prodtest" column="object"/>'
-			'<columnRef table="data/test#adql" column="mag"/>'
-			'</simpleView></resource>')
-		self.assertEqual(len(rd.tables), 1)
-		td = rd.tables[0]
-		self.failUnless(isinstance(td, rscdef.TableDef))
-		self.assertEqual(td.viewStatement, 'CREATE VIEW test2.vv AS'
-			' (SELECT test.prodtest.alpha,test.prodtest.delta,test.prodtest.'
-			'object,test.adql.mag FROM test.prodtest NATURAL JOIN test.adql)')
-		self.assertEqual(td.onDisk, True)
-		self.assertEqual(rd.getById("vv"), td)
-
-
 class TAP_SchemaTest(testhelpers.VerboseTest):
 	"""test for working tap_schema export.
 

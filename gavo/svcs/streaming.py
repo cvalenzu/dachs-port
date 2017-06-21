@@ -28,9 +28,6 @@ class StopWriting(IOError):
 
 
 class DataStreamer(threading.Thread):
-# This is nasty (because it's a thread) and not necessary most of the
-# time since the source may be a file or something that could just yield
-# now and then.  We should really, really fix this.
 	"""is a twisted-enabled Thread to stream out large files produced
 	on the fly.
 
@@ -45,6 +42,8 @@ class DataStreamer(threading.Thread):
 
 	writeStream will be run in a thread to avoid blocking the reactor.
 	"""
+# we shouldn't really do this kind of thing, but writing the stuff that
+# we want to produce asynchonously is typically still a bigger pain.
 
 	implements(IPushProducer)
 
@@ -126,7 +125,11 @@ class DataStreamer(threading.Thread):
 		self.join(0.01)
 		if self.connectionLive:
 			self.consumer.unregisterProducer()
-			self.consumer.finish()
+			# on broken connections, we get our finish notification
+			# too late, so we rather rely on Request internals to
+			# determine if we still need to finish.
+			if not getattr(self.consumer, "_disconnected", False):
+				self.consumer.finish()
 
 	def run(self):
 		try:

@@ -44,4 +44,4 @@ from gavo.rscdef.rowtriggers import IgnoreOn, TriggerPulled
 
 from gavo.rscdef.scripting import Script
 
-from gavo.rscdef.tabledef import (TableDef, SimpleView, makeTDForColumns)
+from gavo.rscdef.tabledef import (TableDef, makeTDForColumns)

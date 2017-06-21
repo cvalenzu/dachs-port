@@ -47,7 +47,7 @@ Version 0.9.9 beta 1 (2017-03-27)
 	  based on logo_medium.png (.../favicon.png is a 50 px rendering of it).
 
 	* Removed (probably largely unused features) editCore, SDM2 support,
-		pkg_resource overrides,
+		pkg_resource overrides, simpleView, computedCore.
 
 	* Hopefully more useful manpage -- have a peek!
 

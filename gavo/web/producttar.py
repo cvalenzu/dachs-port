@@ -178,6 +178,7 @@ class ProductTarMaker(object):
 
 		def writeTar(dest):
 			self._productsToTar(productData, dest)
+
 		return streaming.streamOut(writeTar, request)
 
 	def deliverProductTar(self, coreResult, request, queryMeta):

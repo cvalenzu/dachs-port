@@ -8,7 +8,6 @@ Common interface to table implementations.
 #c COPYING file in the source distribution.
 
 
-from gavo import rscdef
 from gavo.rsc import common
 from gavo.rsc import dbtable
 from gavo.rsc import table
@@ -28,8 +27,6 @@ def TableForDef(tableDef, suppressIndex=False,
 	See the `function getParseOptions`_ for what you can pass in as 
 	``parseOptions``; arguments there can also be used here.
 	"""
-	if isinstance(tableDef, rscdef.SimpleView):
-		tableDef = tableDef.getTableDef()
 	if tableDef.onDisk:
 		if tableDef.viewStatement:
 			cls = dbtable.View

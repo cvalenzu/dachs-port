@@ -141,12 +141,6 @@ class RD(base.Structure, base.ComputedMetaMixin, scripting.ScriptingMixin,
 		childFactory=regtest.RegTestSuite,
 		description="Suites of regression tests connected to this RD.")
 
-	# These replace themselves with expanded tables
-	_viewDefs = base.StructAttribute("simpleView",
-		childFactory=rscdef.SimpleView, 
-		description="Definitions of views created from natural joins", 
-		default=None)
-
 	_properties = base.PropertyAttribute()
 
 	def __init__(self, srcId, **kwargs):
