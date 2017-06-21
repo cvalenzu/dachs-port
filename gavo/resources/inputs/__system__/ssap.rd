@@ -523,7 +523,7 @@
 			<par key="dstype" late="True" 
 				description="Type of data.  The only defined value currently is
 					Spectrum, but you may get away with TimeSeries; ssa:Dataset.Type"
-				>"Spectrum"</par>
+				>"spectrum"</par>
 			<par key="publisher" late="True" 
 				description="Publisher IVO; ssa:Curation.Publisher"
 					>"Take from RD"</par>
