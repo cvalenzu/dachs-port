@@ -45,8 +45,8 @@ class SortHeadersTest(unittest.TestCase):
 	"""tests for sortHeaders.
 	"""
 	def assertHeaderSequence(self, hdr, keySeq):
-		for expected, card in zip(keySeq, hdr.ascardlist()):
-			self.assertEqual(expected, card.key)
+		for expected, card in zip(keySeq, hdr.cards):
+			self.assertEqual(expected, card.keyword)
 
 	def testHeadersPreserved(self):
 		"""tests for sortHeaders preserving the incoming headers by default.
@@ -87,17 +87,17 @@ class SortHeadersTest(unittest.TestCase):
 		"""tests for ordering of critical keywords.
 		"""
 		hdr = pyfits.PrimaryHDU().header
-		hdr.update("NAXIS1", 200)
-		hdr.update("NAXIS2", 400)
+		hdr.set("NAXIS1", 200)
+		hdr.set("NAXIS2", 400)
 		# EXTEND is now before NAXIS1
 		hdr = fitstools.sortHeaders(hdr)
 		self.assertHeaderSequence(hdr, ["SIMPLE", "BITPIX", "NAXIS", "NAXIS1", 
 			"NAXIS2", "EXTEND"])
 		hdr = pyfits.PrimaryHDU().header
 		del hdr["EXTEND"]
-		hdr.update("NAXIS1", 200)
-		hdr.update("FLOB", "Worong")
-		hdr.update("EXTEND", "F")
+		hdr.set("NAXIS1", 200)
+		hdr.set("FLOB", "Worong")
+		hdr.set("EXTEND", "F")
 		# EXTEND is now way behind NAXIS1
 		hdr = fitstools.sortHeaders(hdr)
 		self.assertHeaderSequence(hdr, ["SIMPLE", "BITPIX", "NAXIS", "NAXIS1", 
@@ -122,8 +122,8 @@ class FITSWriteTest(testhelpers.VerboseTest):
 	"""
 	def _assertOverwriteWorks(self, inFileName):
 		hdr = pyfits.open(inFileName)[0].header
-		hdr.update("TELESCOP", "Python Telescope")
-		hdr.update("APERTURE", 23)
+		hdr.set("TELESCOP", "Python Telescope")
+		hdr.set("APERTURE", 23)
 		fitstools.replacePrimaryHeaderInPlace(inFileName, hdr)
 		hdu = pyfits.open(inFileName)[0]
 		self.assertEqual(hdu.header["TELESCOP"], "Python Telescope")
@@ -146,7 +146,7 @@ class FITSWriteTest(testhelpers.VerboseTest):
 		with testhelpers.testFile("test.fits", _fitsData) as ff:
 			hdr = pyfits.open(ff)[0].header
 			for num in range(50):
-				hdr.update("KEY%d"%num, num)
+				hdr.set("KEY%d"%num, num)
 			fitstools.replacePrimaryHeaderInPlace(ff, hdr)
 			hdu = pyfits.open(ff)[0]
 			self.assertEqual(hdu.header["NAXIS1"], 10)
@@ -158,7 +158,7 @@ class FITSWriteTest(testhelpers.VerboseTest):
 			hdr = pyfits.open(ff)[0].header
 			oldhdr = hdr.copy()
 			for num in range(50):
-				hdr.update("KEY%d"%num, num)
+				hdr.set("KEY%d"%num, num)
 			fitstools.replacePrimaryHeaderInPlace(ff, hdr)
 			fitstools.replacePrimaryHeaderInPlace(ff, oldhdr)
 			
@@ -179,7 +179,7 @@ class FITSWriteTest(testhelpers.VerboseTest):
 
 	def testWithContinueCards(self):
 		hdr = pyfits.Header()
-		hdr.update("LONGVAL", "This is a long value that will require a"
+		hdr.set("LONGVAL", "This is a long value that will require a"
 			" continue card in the fits header.  Actually, there once even"
 			" was a bug that only showed up when two contination lines"
 			" were adjacent")
@@ -221,7 +221,7 @@ class ParseCardsTest(testhelpers.VerboseTest):
 				("NAXIS2", 22757),
 				("CTYPE1", "RA---TAN-SIP"),
 				("CTYPE2", "DEC--TAN-SIP"),]):
-			self.assertEqual(card.key, exKey)
+			self.assertEqual(card.keyword, exKey)
 			self.assertEqual(card.value, exVal)
 	
 	def testEndCard(self):
@@ -524,7 +524,7 @@ class TemplatingTest(testhelpers.VerboseTest):
 		self.assertFalse("BZERO" in self.base.fits)
 	
 	def testHeaderSequence(self):
-		self.assertEqual([c.key for c in self.base.fits.ascard],
+		self.assertEqual([c.keyword for c in self.base.fits.cards],
 			['SIMPLE', 'EXTEND', 'BITPIX', 'NAXIS', 'NAXIS1', 'NAXIS2', 
 				'', 'CHGLATER', 'TESTVAL', 'HISTORY'])
 	
@@ -541,7 +541,7 @@ class TemplatingTest(testhelpers.VerboseTest):
 			in self.base.ser)
 
 	def testModifiedHeaderSequence(self):
-		self.assertEqual([c.key for c in self.mod.fits.ascard],
+		self.assertEqual([c.keyword for c in self.mod.fits.cards],
 			['SIMPLE', 'EXTEND', 'BITPIX', 'NAXIS', 'NAXIS1', 'NAXIS2', 
 				'', 'ADDLATER', 'CHGLATER', 'TESTVAL', 'HISTORY', 'HISTORY',
 				'', 'COMMENT', 'COMMENT'])

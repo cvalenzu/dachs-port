@@ -150,9 +150,9 @@ class ProcessorTest(testhelpers.VerboseTest):
 
 	def _writeFITS(self, destPath, seed):
 		hdu = pyfits.PrimaryHDU(numpy.zeros((2,seed+1), 'i2'))
-		hdu.header.update("SEED", seed, "initial number")
-		hdu.header.update("WEIRD", "W"*seed)
-		hdu.header.update("RECIP", 1./(1+seed))
+		hdu.header.set("SEED", seed, "initial number")
+		hdu.header.set("WEIRD", "W"*seed)
+		hdu.header.set("RECIP", 1./(1+seed))
 		hdu.writeto(destPath)
 
 	def setUp(self):
@@ -182,7 +182,7 @@ class ProcessorTest(testhelpers.VerboseTest):
 
 		def _getHeader(self, srcName):
 			hdr = self.getPrimaryHeader(srcName)
-			hdr.update("SQUARE", hdr["SEED"]**2)
+			hdr.set("SQUARE", hdr["SEED"]**2)
 			self.headersBuilt += 1
 			return hdr
 
@@ -196,8 +196,9 @@ class ProcessorTest(testhelpers.VerboseTest):
 		# procmain reads argv, don't confuse it
 		sys.argv = ["test", "--bail"]
 		# Normal run, no headers present yet
-		proc, stdout, _ = testhelpers.captureOutput(processing.procmain,
+		proc, stdout, errs = testhelpers.captureOutput(processing.procmain,
 			(self.SimpleProcessor, "filetest/filetest", "import"))
+		self.assertEqual(errs, "")
 		self.assertEqual(stdout.split('\r')[-1].strip(), 
 			"10 files processed, 0 files with errors")
 		self.assertEqual(proc.headersBuilt, 10)
@@ -271,7 +272,7 @@ class ProcessorTest(testhelpers.VerboseTest):
 		"""
 		def newGetHeader(self, srcName):
 			hdr = self.getPrimaryHeader(srcName)
-			hdr.update("SQUARE", hdr["SEED"]**3)
+			hdr.set("SQUARE", hdr["SEED"]**3)
 			self.headersBuilt += 1
 			return hdr
 		sys.argv = ["misctest.py", "--reprocess", "--apply"]

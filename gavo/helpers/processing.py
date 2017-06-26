@@ -350,8 +350,8 @@ class HeaderProcessor(FileProcessor):
 		# nuke info on sizes that may still lurk; we don't want that in the
 		# cache
 		hdr = hdr.copy()
-		hdr.update("BITPIX", 8)
-		hdr.update("NAXIS", 0)
+		hdr.set("BITPIX", 8)
+		hdr.set("NAXIS", 0)
 		if hdr.has_key("NAXIS1"):
 			del hdr["NAXIS1"]
 		if hdr.has_key("NAXIS2"):
@@ -396,7 +396,7 @@ class HeaderProcessor(FileProcessor):
 		oldHeader = self.getPrimaryHeader(srcName)
 		for key in self.keepKeys:
 			if oldHeader.has_key(key):
-				header.update(key, oldHeader[key])
+				header.set(key, oldHeader[key])
 
 	def commentFilter(self, value):
 		"""returns true if the comment value should be preserved.
@@ -533,7 +533,7 @@ class AnetHeaderProcessor(HeaderProcessor):
 			if oldCards is None:
 				raise CannotComputeHeader("No cached headers and you asked"
 					" not to run astrometry.net")
-			return oldCards.ascard
+			return oldCards.cards
 
 	def _shouldRunAnet(self, srcName, hdr):
 		return True

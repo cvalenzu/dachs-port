@@ -266,15 +266,15 @@ def makeSDMDataForPUBDID(pubDID, ssaTD, spectrumData,
 def _add_target_pos_cards(header, par):
 	"""_SDM_HEADER_MAPPING for target.pos.
 	"""
-	header.update("RA_TARG", par.value.x/utils.DEG)
-	header.update("DEC_TARG", par.value.y/utils.DEG)
+	header.set("RA_TARG", par.value.x/utils.DEG)
+	header.set("DEC_TARG", par.value.y/utils.DEG)
 
 
 def _add_location_cards(header, par):
 	"""_SDM_HEADER_MAPPING for target.pos.
 	"""
-	header.update("RA", par.value[0])
-	header.update("DEC", par.value[1])
+	header.set("RA", par.value[0])
+	header.set("DEC", par.value[1])
 
 
 def getColIndForUtype(header, colUtype):
@@ -300,7 +300,7 @@ def _make_limits_func(colUtype, keyBase):
 	def func(header, par):
 		try:
 			key = keyBase+str(getColIndForUtype(header, colUtype))
-			header.update(key, par.value, comment="[%s]"%par.unit)
+			header.set(key, par.value, comment="[%s]"%par.unit)
 		except KeyError:
 			# no field for utype
 			pass
@@ -453,7 +453,7 @@ def makeBasicSDMHeader(sdmData, header):
 			elif isinstance(value, datetime.datetime):
 				value = value.isoformat()
 
-			header.update(destKey, value, comment)
+			header.set(destKey, value, comment)
 	
 
 def makeSDMFITS(sdmData):

@@ -547,8 +547,8 @@ class ModelBasedBuilderTest(testhelpers.VerboseTest):
 			("radio", meta.stanFactory(T.img), (), {
 					"src": "freq", "alt": "unit"}),])
 		res = flat.flatten(T.div[t.build(m)])
-		self.assertEqual(res, '<div><img src="90.9" alt="MHz">on</img>'
-			'<img src="9022" alt="kHz">off</img></div>')
+		self.assertEqual(res, '<div><img alt="MHz" src="90.9">on</img>'
+			'<img alt="kHz" src="9022">off</img></div>')
 
 	def testContentBuilder(self):
 		m = base.MetaMixin()

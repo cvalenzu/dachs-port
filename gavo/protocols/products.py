@@ -637,7 +637,7 @@ class CutoutProduct(ProductBase):
 			try:
 				skyWCS = coords.getWCS(hdus[0].header)
 				pixelFootprint = numpy.asarray(
-					numpy.round(skyWCS.wcs_sky2pix([
+					numpy.round(skyWCS.wcs_world2pix([
 						(ra-sra/2., dec-sdec/2.),
 						(ra+sra/2., dec+sdec/2.)], 1)), numpy.int32)
 				res = fitstools.cutoutFITS(hdus[0], 
@@ -701,7 +701,7 @@ class ScaledFITSProduct(ProductBase):
 			with open(self.rAccref.localpath) as f:
 				oldHdr = fitstools.readPrimaryHeaderQuick(f)
 				newHdr = fitstools.shrinkWCSHeader(oldHdr, scale)
-				newHdr.update("FULLURL", str(makeProductLink(self.baseAccref)))
+				newHdr.set("FULLURL", str(makeProductLink(self.baseAccref)))
 				yield fitstools.serializeHeader(newHdr)
 
 				for row in fitstools.iterScaledRows(f, scale, hdr=oldHdr):

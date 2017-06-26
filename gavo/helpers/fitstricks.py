@@ -37,16 +37,16 @@ def copyFields(header, cardList,
 	ignoredHeaders must be all lowercase.
 	"""
 	for card in cardList:
-		if card.key=="COMMENT":
+		if card.keyword=="COMMENT":
 			header.add_comment(card.value)
-		elif card.key=="HISTORY":
+		elif card.keyword=="HISTORY":
 			header.add_history(card.value)
-		elif card.key=="":
+		elif card.keyword=="":
 			header.append(pyfits.Card("", card.value), end=True)
-		elif card.key.lower() in ignoredHeaders:
+		elif card.keyword.lower() in ignoredHeaders:
 			pass
 		else:
-			header.update(card.key, card.value, card.comment)
+			header.set(card.keyword, card.value, card.comment)
 
 
 def getHeaderAsDict(hdr):
@@ -320,7 +320,7 @@ def getTemplateNameFromHistory(hdr):
 
 	A ReportableError is raised if the info signature is missing.
 	"""
-	for card in hdr.get_history():
+	for card in hdr["HISTORY"]:
 		mat = re.search("GAVO DaCHS template used: (\w+)", card)
 		if mat:
 			return mat.group(1)
@@ -340,7 +340,7 @@ def _applyTemplate(hdr, template, values):
 	"""
 	for tp in template:
 		if isinstance(tp, pyfits.Card):
-			tp.value = values.pop(tp.key, tp.value)
+			tp.value = values.pop(tp.keyword, tp.value)
 			hdr.append(tp, end=True)
 		else:
 			key, comment = tp
@@ -371,14 +371,14 @@ def _copyMissingCards(newHdr, oldHdr):
 	"""
 	commentCs, historyCs = [], []
 
-	for card in oldHdr.ascardlist():
-		if card.key=="COMMENT":
+	for card in oldHdr.cards:
+		if card.keyword=="COMMENT":
 			commentCs.append(card)
-		elif card.key=="HISTORY":
+		elif card.keyword=="HISTORY":
 			if not "GAVO DaCHS template used" in card.value:
 				historyCs.append(card)
-		elif card.key:
-			if card.key not in newHdr:
+		elif card.keyword:
+			if card.keyword not in newHdr:
 				newHdr.append(card, end=True)
 
 	for card in historyCs:

@@ -772,7 +772,7 @@ class SDMFITSTest(testhelpers.VerboseTest):
 
 	def testColumnComment(self):
 		hdr = self.hdus[1].header
-		self.assertEqual(hdr.ascard["TTYPE1"].comment, "Wavelength")
+		self.assertEqual(hdr.comments["TTYPE1"], "Wavelength")
 
 	def testValues(self):
 		wl, flux = self.hdus[1].data[1]
@@ -790,7 +790,7 @@ class SDMFITSTest(testhelpers.VerboseTest):
 
 	def testBandwidthUnit(self):
 		hdr = self.hdus[1].header
-		card = hdr.ascard["SPEC_BW"]
+		card = hdr.cards["SPEC_BW"]
 		self.assertEqual(card.value, 1e-7)
 		self.assertEqual(card.comment, "[m]")
 

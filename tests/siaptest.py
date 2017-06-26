@@ -335,9 +335,9 @@ class ScaleHeaderTest(testhelpers.VerboseTest):
 	def testTypesFixed(self):
 		fullHdr = fitstools.headerFromDict(
 			testhelpers.computeWCSKeys((23, 27), (1, 2), cutCrap=True))
-		fullHdr.update("BZERO", 32768)
-		fullHdr.update("BSCALE", 1)
-		fullHdr.update("BITPIX", 8)
+		fullHdr.set("BZERO", 32768)
+		fullHdr.set("BSCALE", 1)
+		fullHdr.set("BITPIX", 8)
 		halfHdr = fitstools.shrinkWCSHeader(fullHdr, 2)
 		self.failIf(halfHdr.has_key("BZERO"))
 		self.failIf(halfHdr.has_key("BSCALE"))

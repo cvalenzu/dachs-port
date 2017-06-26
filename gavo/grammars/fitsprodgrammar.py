@@ -40,9 +40,9 @@ class FITSProdIterator(RowIterator):
 
 	def _buildDictFromHeader(self, header):
 		res = {}
-		for card in header.ascard:
+		for card in header.cards:
 			try:
-				res[card.key.replace("-", "_")] = card.value
+				res[card.keyword.replace("-", "_")] = card.value
 			except (ValueError, pyfits.VerifyError):
 				self._hackBotchedCard(card, res)
 
@@ -100,7 +100,7 @@ class FITSProdGrammar(Grammar):
 	from the second extension for those even if you left hdu="0".
 
 	The original header is preserved as the value of the header\_ key.  This
-	is mainly intended for use WCS use, as in ``pywcs.WCS(@header_)``.
+	is mainly intended for use WCS use, as in ``wcs.WCS(@header_)``.
 
 	If you have more complex structures in your FITS files, you can get access
 	to the pyfits HDU using the hdusField attribute.  With

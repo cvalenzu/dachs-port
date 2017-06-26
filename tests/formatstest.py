@@ -432,7 +432,7 @@ class V11VOTableOutputTest(DefaultVOTableOutputTest):
 
 
 class FITSOutputTest(FormatOutputTest):
-	resources = [("output", _FormattedData("fits"))]
+	resources = [("output", _FormattedData("fits", debug=False))]
 
 	def testIsFITS(self):
 		self.assertOutputHas('SIMPLE  =                    T')
@@ -448,7 +448,7 @@ class FITSOutputTest(FormatOutputTest):
 	def testDescriptionPresent(self):
 		self.assertOutputHas("TCOMM3  = 'This is a complex beast so it needs"
 			" a description that requires &'   "
-			"CONTINUE  'continuation cards in FITS binary tables.&'")
+			"CONTINUE  'continuation cards in FITS binary tables.'")
 
 	def testSimplePar(self):
 		self.assertOutputHas(

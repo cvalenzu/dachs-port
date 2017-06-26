@@ -23,8 +23,10 @@ from gavo.utils import DEG
 from gavo.utils import pgsphere
 from gavo.utils import pyfits
 
-
-pywcs = utils.DeferredImport("pywcs")
+# temporary measure to shut up astropy's configuration parser.
+import __builtin__
+__builtin__._ASTROPY_SETUP_ = True
+from astropy import wcs
 
 
 fitsKwPat = re.compile("[A-Z0-9_-]{1,8}$")
@@ -36,9 +38,9 @@ def makePyfitsFromDict(d):
 	and shorter than 9 characters.
 	"""
 	res = pyfits.Header()
-	for key, val in d.iteritems():
-		if fitsKwPat.match(key) and val is not None:
-			res.update(str(key), val)
+	res.update(dict((str(key), val)
+		for key, val in d.iteritems()
+		if fitsKwPat.match(key) and val is not None))
 	return res
 
 
@@ -125,9 +127,11 @@ def straddlesStitchingLine(minRA, maxRA):
 def _calcFootprintMonkeypatch(self, hdr=None, undistort=True):
 	"""returns the coordinates of the four corners of an image.
 
-	This is for monkeypatching pywcs, which at least up to 1.11 does
-	really badly when non-spatial coordinates are present.  This method
-	relies on the _monkey_naxis_lengths attribute left by getWCS to
+	This is for monkeypatching astropy.wcs. pywcs, at least up to 1.11 did
+	really badly when non-spatial coordinates are present.  TODO: see
+	if there's astropy code that does this better.
+	
+	This method relies on the _monkey_naxis_lengths attribute left by getWCS to
 	figure out the axis lengths.
 
 	pywcs' hdr argument is always ignored here.
@@ -135,13 +139,13 @@ def _calcFootprintMonkeypatch(self, hdr=None, undistort=True):
 	naxis1, naxis2 = self._monkey_naxis_lengths
 	corners = [[1,1],[1,naxis2], [naxis1,naxis2], [naxis1, 1]]
 	if undistort:
-		return self.all_pix2sky(corners, 1)
+		return self.all_pix2world(corners, 1)
 	else:
-		return self.wcs_pix2sky(corners,1)
+		return self.wcs_pix2world(corners,1)
 
 
 def _monkeypatchWCS(wcsObj, naxis, wcsFields):
-	"""monkeypatches pywcs instances for DaCHS' purposes.
+	"""monkeypatches wcs.WCS instances for DaCHS' purposes.
 	"""
 	wcsObj._dachs_header = wcsFields
 	wcsObj.longAxis = naxis[0]
@@ -149,7 +153,6 @@ def _monkeypatchWCS(wcsObj, naxis, wcsFields):
 		wcsObj.latAxis = naxis[1]
 	wcsObj._monkey_naxis_lengths = [wcsFields.get("NAXIS%d"%i)
 		for i in naxis]
-	wcsObj.origCalcFootprint = wcsObj.calcFootprint
 	wcsObj.calcFootprint = new.instancemethod(_calcFootprintMonkeypatch, 
 		wcsObj, wcsObj.__class__)
 
@@ -158,25 +161,24 @@ def getWCS(wcsFields, naxis=(1,2), relax=True):
 	"""returns a WCS instance from wcsFields
 	
 	wcsFields can be either a dictionary or a pyfits header giving
-	some kind of WCS information, or an pywcs.WCS instance that is
+	some kind of WCS information, or an wcs.WCS instance that is
 	returned verbatim.
 
 	This will return None if no (usable) WCS information is found in the header.
 
-	We monkeypatch the resulting pywcs structure quite a bit.  Among
+	We monkeypatch the resulting WCS structure quite a bit.  Among
 	others:
 
-	* calcFootprint takes into account the naxis kw parameter
 	* there's longAxis and latAxis attributes taken from naxis
 	* there's _dachs_header, containing the incoming k-v pairs
 	* there's _monkey_naxis_length, the lengths along the WCS axes.
 	"""
-	if isinstance(wcsFields, pywcs.WCS):
+	if isinstance(wcsFields, wcs.WCS):
 		return wcsFields
 	if isinstance(wcsFields, dict):
 		wcsFields = makePyfitsFromDict(wcsFields)
 
-	# pywcs will invent identity transforms if no WCS keys are present.
+	# pywcs used to invent identity transforms if no WCS keys are present.
 	# Hence. we do some sanity checking up front to weed those out.
 	if (not wcsFields.has_key("CD1_1") 
 			and not wcsFields.has_key("CDELT1")
@@ -188,16 +190,16 @@ def getWCS(wcsFields, naxis=(1,2), relax=True):
 		if wcsFields.get(key)==0:
 			del wcsFields[key]
 
-	wcsObj = pywcs.WCS(wcsFields, relax=relax, naxis=naxis)
-
+	wcsObj = wcs.WCS(wcsFields, relax=relax, naxis=naxis)
 	_monkeypatchWCS(wcsObj, naxis, wcsFields)
+
 	return wcsObj
 
 
 def pix2foc(wcsFields, pixels):
 	"""returns the focal plane coordindates for the 2-sequence pixels.
 
-	(this is a thin wrapper intended to abstract for pix2sky's funky
+	(this is a thin wrapper intended to abstract for pix2world's funky
 	calling convention; also, we fix on the silly "0 pixel is 1 convention")
 	"""
 	wcsObj = getWCS(wcsFields)
@@ -208,21 +210,21 @@ def pix2foc(wcsFields, pixels):
 def pix2sky(wcsFields, pixels):
 	"""returns the sky coordindates for the 2-sequence pixels.
 
-	(this is a thin wrapper intended to abstract for pix2sky's funky
+	(this is a thin wrapper intended to abstract for pix2world's funky
 	calling convention; also, we fix on the silly "0 pixel is 1 convention")
 	"""
 	wcsObj = getWCS(wcsFields)
-	val = wcsObj.all_pix2sky((pixels[0],), (pixels[1],), 1)
+	val = wcsObj.all_pix2world((pixels[0],), (pixels[1],), 1)
 	return val[0][0], val[1][0]
 
 
 def sky2pix(wcsFields, longLat):
 	"""returns the pixel coordindates for the 2-sequence longLad.
 
-	(this is a thin wrapper intended to abstract for sky2pix's funky
+	(this is a thin wrapper intended to abstract for world2pix's funky
 	calling convention; also, we fix on the silly "0 pixel is 1 convention")
 	"""
-	val = getWCS(wcsFields).wcs_sky2pix((longLat[0],), (longLat[1],), 1)
+	val = getWCS(wcsFields).wcs_world2pix((longLat[0],), (longLat[1],), 1)
 	return val[0][0], val[1][0]
 
 
@@ -340,7 +342,7 @@ def getCoveringCircle(wcsFields, spatialAxes=(1,2)):
 
 
 def getSkyWCS(hdr):
-	"""returns a pair of a pywcs.WCS instance and a sequence of 
+	"""returns a pair of a wcs.WCS instance and a sequence of 
 	the spatial axes.
 
 	This will be None, () if no WCS could be discerned.  There's some
@@ -371,7 +373,7 @@ def getPixelLimits(cooPairs, wcsFields):
 	wcsFields.
 
 	cooPairs is a sequence of (ra, dec) tuples.  wcsFields is a DaCHS-enhanced
-	pywcs.WCS instance.
+	wcs.WCS instance.
 
 	Behaviour if cooPairs use a different coordinate system from wcsFields
 	is undefined at this point.
@@ -386,10 +388,10 @@ def getPixelLimits(cooPairs, wcsFields):
 	latPixels = wcsFields._dachs_header["NAXIS%d"%latAxis]
 	longPixels = wcsFields._dachs_header["NAXIS%d"%longAxis]
 
-	# pywcs does really funny things when we "wrap around".  Therefore, we
+	# pywcs used to do really funny things when we "wrap around".  Therefore, we
 	# clamp values to be within the pywcs-safe region.  Note that
 	# due to spherical magic this is not enough to ensure +/-Inf behaviour
-	# for SODA
+	# for SODA; TODO: re-evaluate this for astropy.wcs at some point.
 	cooPairs = [(
 			min(359.99999, max(-89.9999, ra)), 
 			min(89.9999, max(-89.9999, dec)))
@@ -397,7 +399,7 @@ def getPixelLimits(cooPairs, wcsFields):
 
 	slices = []
 	pixelFootprint = numpy.asarray(
-		numpy.round(wcsFields.wcs_sky2pix(cooPairs, 1)), numpy.int32)
+		numpy.round(wcsFields.wcs_world2pix(cooPairs, 1)), numpy.int32)
 	pixelLimits = [
 		[min(pixelFootprint[:,0]), max(pixelFootprint[:,0])],
 		[min(pixelFootprint[:,1]), max(pixelFootprint[:,1])]]

@@ -17,7 +17,12 @@ Version 1.0 (2017-06-21)
 	
 	* Added "declarative" licenses.  Please read the Licensing chapter in
 		the tutorial and slap licenses on your data.
-	
+
+	* Now using astropy.wcs instead of pywcs, astropy.io.fits instead of
+	  pyfits.  The respective APIs have, unfortunately, changed quite a bit.
+	  If you used them (e.g., in processors), you'll have to change them.
+	  (see also http://docs.g-vo.org/DaCHS/howDoI.html#update-my-code).
+
 	* Removed //epntap#table-2_0.  Use //epntap2#table-2_0 instead (sorry).
 
 	* Removed sdmCore (use SODA instead)

@@ -112,16 +112,16 @@ class TestWCS(unittest.TestCase):
 			self.assertAlmostEqual(expected[0], res[0], 5)
 			self.assertAlmostEqual(expected[1], res[1], 5)
 
-	@unittest.skip("Broken in pywcs")
+	@unittest.skip("Broken in astropy.wcs")
 	def testAtPole(self):
 		wcs = _getWCSExample()
 		wcs["CRVAL1"] = 0
 		wcs["CRVAL2"] = 90
-		wcs["CDELT1"] = -1.25000002E-02
-		wcs["CDELT2"] = 1.25000002E-02
-		wcs["CPIX1"] = 2.56516663E+02
-		wcs["CPIX2"] = 2.56516663E+02
-		wcs["NAXIS1"] = wcs["NAXIS2"] = 512
+		wcs["CDELT1"] = 0.01
+		wcs["CDELT2"] = 0.01
+		wcs["CPIX1"] = 50
+		wcs["CPIX2"] = 50
+		wcs["NAXIS1"] = wcs["NAXIS2"] = 100
 		print ">>>>", coords.getSpolyFromWCSFields(wcs)
 
 	def testInvalidWCSRejection(self):

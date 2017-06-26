@@ -131,14 +131,14 @@ def _makeExtension(serMan):
 		if colDesc["utype"]:
 			utypes.append((colInd, str(colDesc["utype"].lower())))
 
-	hdu = pyfits.new_table(pyfits.ColDefs(columns))
+	hdu = pyfits.BinTableHDU.from_columns(pyfits.ColDefs(columns))
 	for colInd, utype in utypes:
-		hdu.header.update("TUTYP%d"%(colInd+1), utype)
+		hdu.header.set("TUTYP%d"%(colInd+1), utype)
 	
-	cards = hdu.header.ascard
+	cards = hdu.header.cards
 	for colInd, desc in enumerate(descriptions):
 		cards["TTYPE%d"%(colInd+1)].comment = desc.encode("ascii", "ignore")
-		hdu.header.update("TCOMM%d"%(colInd+1), desc.encode("ascii", "ignore"))
+		hdu.header.set("TCOMM%d"%(colInd+1), desc.encode("ascii", "ignore"))
 
 	if not hasattr(serMan.table, "IgnoreTableParams"):
 		for param in serMan.table.iterParams():
@@ -154,7 +154,7 @@ def _makeExtension(serMan):
 				key = "hierarch "+key
 
 			try:
-				hdu.header.update(key=key, value=value, comment=comment)
+				hdu.header.set(key, value=value, comment=comment)
 			except ValueError, ex:
 				# do not fail just because some header couldn't be serialised
 				base.ui.notifyWarning(
@@ -175,7 +175,7 @@ def _makeFITSTableNOLOCK(dataSet, acquireSamples=True):
 		for table in dataSet.tables.values()]
 	extensions = [_makeExtension(table) for table in tables]
 	primary = pyfits.PrimaryHDU()
-	primary.header.update("DATE", time.strftime("%Y-%m-%d"), 
+	primary.header.set("DATE", time.strftime("%Y-%m-%d"), 
 		"Date file was written")
 	return pyfits.HDUList([primary]+extensions)
 
@@ -204,7 +204,7 @@ def writeFITSTableFile(hdulist):
 	# if there's more than the primary HDU, EXTEND=True is mandatory; let's
 	# be defensive here
 	if len(hdulist)>1:
-		hdulist[0].header.update("EXTEND", True, "More exts following")
+		hdulist[0].header.set("EXTEND", True, "More exts following")
 
 	with utils.silence():
 		hdulist.writeto(pathname, clobber=1)

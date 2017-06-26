@@ -111,7 +111,7 @@ class DeferredImport(object):
 
 	Use this like this::
 	
-		pywcs = utils.DeferredImport("pywcs")
+		mymodule = utils.DeferredImport("mymodule")
 	"""
 	loadedModule = None
 

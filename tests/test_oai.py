@@ -16,7 +16,7 @@ import time
 from twisted.internet import reactor
 from twisted.internet import threads
 
-from gavo.helpers import testhelpers
+from gavo.helpers import trialhelpers
 
 from gavo import api
 from gavo import base
@@ -24,8 +24,6 @@ from gavo import utils
 from gavo.protocols import oaiclient
 from gavo.registry import publication
 from gavo.web import root
-
-import trialhelpers
 
 
 class _OAITest(trialhelpers.RenderTest):
@@ -169,7 +167,7 @@ class OAIBasicTest(_OAITest):
 class OAIParameterTest(_OAITest):
 	def testFromUntil(self):
 		conn = base.getDBConnection("admin")
-		rd = testhelpers.getTestRD("pubtest")
+		rd = trialhelpers.testhelpers.getTestRD("pubtest")
 		publication.updateServiceList([rd], connection=conn)
 		conn.commit()
 
@@ -200,7 +198,7 @@ class OAIParameterTest(_OAITest):
 
 	def testSets(self):
 		conn = base.getDBConnection("admin")
-		rd = testhelpers.getTestRD("test")
+		rd = trialhelpers.testhelpers.getTestRD("test")
 		publication.updateServiceList([rd], connection=conn)
 		conn.commit()
 

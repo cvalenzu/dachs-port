@@ -158,7 +158,7 @@
 				class PixelGauge(object):
 					"""is a container for information about pixel sizes.
 
-					It is constructed with an pywcs.WCS instance and an (x, y)
+					It is constructed with an wcs.WCS instance and an (x, y)
 					pair of pixel coordinates that should be close to the center 
 					of the frame.
 					"""

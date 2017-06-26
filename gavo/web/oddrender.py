@@ -94,7 +94,7 @@ class JpegRenderer(formrender.FormMixin, grend.ServiceBasedPage,
 				for rec in data.original.getPrimaryTable()]
 		lines.reverse()
 
-		img = Image.fromstring("L", (len(lines[0]), len(lines)),
+		img = Image.frombytes("L", (len(lines[0]), len(lines)),
 			"".join(pixLine for pixLine in lines))
 		if pars.get("palette"):
 			pal = pars["palette"]
@@ -105,9 +105,9 @@ class JpegRenderer(formrender.FormMixin, grend.ServiceBasedPage,
 					raise base.ValidationError("No such palette: %s"%pal,
 						colName="palette")
 			img = img.convert("RGB")
-			img = img.tostring("jpeg", "RGB")
+			img = img.tobytes("jpeg", "RGB")
 		else:
-			img = img.tostring("jpeg", "L")
+			img = img.tobytes("jpeg", "L")
 		return img
 
 	def _deliverJpeg(self, jpegStr, ctx):

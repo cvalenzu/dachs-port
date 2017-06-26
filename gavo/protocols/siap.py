@@ -265,9 +265,8 @@ class SIAPCutoutCore(svcs.DBCore):
 					sqlPars.get("_ra", record["centerAlpha"]), 
 					sqlPars.get("_dec", record["centerDelta"]), sra, sdec)
 			except ValueError:
-				# pywcs derives its (hidden) InvalidTransformError from ValueError.
-				# Anwyway, deliver slightly botched records rather
-				# than none at all, but warn the operators:
+				# Old pywcs signified troublesome WCS with a ValueError-derived
+				# thing.  Let's see how this works out for astropy.
 				base.ui.notifyWarning("Botched WCS in the record %s"%record)
 		return res
 

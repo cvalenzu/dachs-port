@@ -13,6 +13,7 @@ from __future__ import with_statement
 import os
 import urlparse
 import warnings
+import weakref
 from cStringIO import StringIO
 
 from nevow import context
@@ -51,13 +52,13 @@ def _requestDone(result, request, ctx):
 	return request.accumulator, request
 
 
-def _renderCrashAndBurn(failure, ctx):
-	return _renderException(failure, ctx)
+def _renderCrashAndBurn(flr, ctx):
+	return _renderException(flr, ctx)
 
 
-def _renderException(failure, ctx):
+def _renderException(flr, ctx):
 	return _doRender(
-		weberrors.getDCErrorPage(failure), ctx, formatExcs=False)
+		weberrors.getDCErrorPage(flr), ctx, formatExcs=False)
 
 
 def _doRender(page, ctx, formatExcs=True):
@@ -112,6 +113,19 @@ class FakeFieldStorage(object):
 		return StringIO(self.args[0])
 
 
+class _HeaderFaker(object):
+	"""simulates the old request headers attribute.
+	"""
+	def __init__(self, request):
+		self.request = weakref.proxy(request)
+	
+	def __getitem__(self, name):
+		try:
+			return self.request.responseHeaders.getRawHeaders(name)[0]
+		except IndexError:
+			raise KeyError(name)
+
+
 class FakeRequest(testutil.AccumulatingFakeRequest):
 	"""A Request for testing purpuses.
 
@@ -122,6 +136,7 @@ class FakeRequest(testutil.AccumulatingFakeRequest):
 	def __init__(self, *args, **kwargs):
 		self.finishDeferred = defer.Deferred()
 		testutil.AccumulatingFakeRequest.__init__(self, *args, **kwargs)
+		self.headers_out = _HeaderFaker(self)
 
 	def registerProducer(self, producer, isPush):
 		self.producer = producer
@@ -233,10 +248,10 @@ class RenderTest(TrialTest):
 		def cb(res):
 			raise AssertionError("%s not raised (returned %s instead)"%(
 				exc, res))
-		def eb(failure):
-			failure.trap(exc)
+		def eb(flr):
+			flr.trap(exc)
 			if alsoCheck is not None:
-				alsoCheck(failure)
+				alsoCheck(flr)
 
 		return runQuery(self.renderer, "GET", path, args
 			).addCallback(cb

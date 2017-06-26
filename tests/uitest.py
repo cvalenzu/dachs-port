@@ -335,7 +335,7 @@ class ValidationTest(testhelpers.VerboseTest):
 				expectedStdout=lambda text: re.match(
 					r'% -- \[ERROR\] %: Malformed RD input, message follows\s+'
 					r"\*\*\* Error: .*etc/userconfig.rd"
-					"\s+mismatched tag:\s+line 2, column 6", text))
+					"\s+mismatched\s+tag:\s+line\s+2,\s+column 6", text))
 
 
 class CLIReferenceTest(testhelpers.VerboseTest):

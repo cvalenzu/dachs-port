@@ -18,7 +18,7 @@ from twisted.internet import reactor
 from twisted.python import threadable
 threadable.init()
 
-import trialhelpers
+from gavo.helpers import trialhelpers
 
 from gavo import api
 
@@ -123,7 +123,7 @@ class SyncTest(trialhelpers.ArchiveTest):
 
 	def testVOT14Spectrum(self):
 		def assertMediatype(res):
-			self.assertEqual(res[1].headers["content-type"], 
+			self.assertEqual(res[1].headers_out["content-type"], 
 				"application/x-votable+xml;version=1.4")
 
 		return self.assertGETHasStrings("/data/ssatest/dl/dlget", {
@@ -228,7 +228,7 @@ class AsyncTest(trialhelpers.ArchiveTest):
 		# whatever's said there applies here, too.
 		def assertDeleted(result, jobURL):
 			self.assertEqual(result[1].code, 303)
-			next = killLocalhost(result[1].headers["location"])
+			next = killLocalhost(result[1].headers_out["location"])
 			jobId = jobURL.split("/")[-1]
 			return self.assertGETLacksStrings(next, {}, ['jobref id="%s"'%jobId]
 			).addCallback(lambda res: reactor.disconnectAll())
@@ -239,7 +239,7 @@ class AsyncTest(trialhelpers.ArchiveTest):
 			).addCallback(assertDeleted, jobURL)
 
 		def checkResult(result, jobURL):
-			self.assertEqual(result[1].headers["content-type"], "image/fits")
+			self.assertEqual(result[1].headers_out["content-type"], "image/fits")
 			self.assertTrue("NAXIS1  =                   11" in result[0])
 			return deleteJob(jobURL)
 		
@@ -260,7 +260,7 @@ class AsyncTest(trialhelpers.ArchiveTest):
 		def assertStarted(result, jobURL):
 			req = result[1]
 			self.assertEqual(req.code, 303)
-			self.assertEqual(killLocalhost(req.headers["location"]), jobURL)
+			self.assertEqual(killLocalhost(req.headers_out["location"]), jobURL)
 			return waitForResult(("", None), jobURL, 0)
 
 		def startJob(jobURL):
@@ -271,7 +271,7 @@ class AsyncTest(trialhelpers.ArchiveTest):
 		def checkPosted(result):
 			request = result[1]
 			self.assertEqual(request.code, 303)
-			jobURL = request.headers["location"]
+			jobURL = request.headers_out["location"]
 			self.assertTrue(jobURL.startswith(
 				"http://localhost:8080/data/cores/dl/dlasync/"),
 				"Bad service URL on redirect")

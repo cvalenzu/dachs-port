@@ -110,7 +110,7 @@ def ensureSkyWCS(descriptor):
 	it's a no-op if it has already run.
 
 	skyWCS will be None after this function as run if no usable WCS is found;
-	otherwise, it will be a pywcs.WCS instance.  Additionally, spatialAxes
+	otherwise, it will be a astropy.wcs.WCS instance.  Additionally, spatialAxes
 	will be a sequence of 1-based axis indices, and an empty dictionary
 	axisNames is available to be filled by metaMakers.  It will then map
 	the SODA parameter name to either a FITS axis index or to the special

@@ -36,16 +36,13 @@ from twisted.internet import reactor
 from twisted.python import threadable
 threadable.init()
 
-from gavo.helpers import testhelpers
+from gavo.helpers import trialhelpers
 
 from gavo import base
 from gavo import rscdesc
 from gavo.protocols import scs  # for table's q3c mixin
 from gavo.web import weberrors
 from gavo.web.taprender import TAPRenderer
-
-import trialhelpers
-
 
 base.DEBUG = True
 
@@ -305,7 +302,7 @@ class SimpleAsyncTest(TAPRenderTest):
 		# big test probably won't be run at every commit.
 		def assertDeleted(result, jobId):
 			self.assertEqual(result[1].code, 303)
-			next = result[1].headers["location"][len(
+			next = result[1].headers_out["location"][len(
 				self._tapService.getURL("tap")):]
 			self.assertEqual(next, "/async",
 				"Deletion redirect doesn't point to job list but to %s"%next)
@@ -320,7 +317,7 @@ class SimpleAsyncTest(TAPRenderTest):
 			# lastRes must be a redirect to the job info page
 			req = lastRes[1]
 			self.assertEqual(req.code, 303)
-			self.assertEqual(req.headers["location"], 
+			self.assertEqual(req.headers_out["location"], 
 				 "http://localhost:8080/__system__/tap/run/tap/async/"+jobId)
 			return delete(jobId)
 
@@ -348,7 +345,7 @@ class SimpleAsyncTest(TAPRenderTest):
 			# jobId is in location of result[1]
 			request = result[1]
 			self.assertEqual(request.code, 303)
-			next = request.headers["location"]
+			next = request.headers_out["location"]
 			self.failIf("/async" not in next)
 			jobId = next.split("/")[-1]
 			return checkPhase(jobId)

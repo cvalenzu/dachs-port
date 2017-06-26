@@ -153,11 +153,11 @@ def makeDataForFT(rd, srcName, opts):
 def makeTableFromFITS(rd, srcName, opts):
 	keyMappings = []
 	table = rscdef.TableDef(rd, id=opts.tableName, onDisk=True)
-	headerCards = fitstools.openFits(srcName)[0].header.ascardlist()
+	headerCards = fitstools.openFits(srcName)[0].header.cards
 	for index, card in enumerate(headerCards):
-		if isIgnoredKeyword(card.key):
+		if isIgnoredKeyword(card.keyword):
 			continue
-		colName = re.sub("[^a-z]", "_", card.key.lower())
+		colName = re.sub("[^a-z]", "_", card.keyword.lower())
 		if not colName:
 			continue
 
@@ -171,7 +171,7 @@ def makeTableFromFITS(rd, srcName, opts):
 		table.feedObject("column", MS(rscdef.Column,
 			name=colName, unit="FILLIN", ucd="FILLIN", type=type,
 			description=card.comment))
-		keyMappings.append((colName, card.key))
+		keyMappings.append((colName, card.keyword))
 	rd.setProperty("mapKeys", ", ".join("%s:%s"%(v,k) for k,v in keyMappings))
 	return table.finishElement()
 

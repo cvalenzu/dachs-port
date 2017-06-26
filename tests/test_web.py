@@ -16,7 +16,7 @@ import re
 
 from twisted.internet import reactor
 
-import trialhelpers
+from gavo.helpers import trialhelpers
 
 from gavo import api
 from gavo import base
@@ -127,7 +127,7 @@ class StaticTest(trialhelpers.ArchiveTest):
 	def testRendererInferred(self):
 		def assertRedirected(result):
 			self.assertEqual(result[1].code, 301)
-			self.assertTrue(result[1].headers["location"],
+			self.assertTrue(result[1].headers_out["location"],
 				"http://localhost:8080/data/cores/rds/static/")
 
 		return trialhelpers.runQuery(self.renderer, "GET",
@@ -137,7 +137,7 @@ class StaticTest(trialhelpers.ArchiveTest):
 	def testSlashAdded(self):
 		def assertRedirected(result):
 			self.assertEqual(result[1].code, 301)
-			self.assertTrue(result[1].headers["location"],
+			self.assertTrue(result[1].headers_out["location"],
 				"http://localhost:8080/data/cores/rds/static/")
 
 		return trialhelpers.runQuery(self.renderer, "GET",
@@ -398,7 +398,7 @@ class CORSTest(trialhelpers.ArchiveTest):
 	def testAuthorizedCORS(self):
 		def assertCORSHeader(res):
 			self.assertEqual(
-				res[1].headers["access-control-allow-origin"],
+				res[1].headers_out["access-control-allow-origin"],
 			"https://example.com/corsusing/abc/d")
 
 		return trialhelpers.runQuery(self.renderer, "GET", "/robots.txt", {},
@@ -407,7 +407,8 @@ class CORSTest(trialhelpers.ArchiveTest):
 
 	def testUnauthorizedCORS(self):
 		def assertNoCORSHeader(res):
-			self.assertTrue("access-control-allow-origin" not in res[1].headers)
+			self.assertFalse(
+				res[1].responseHeaders.hasHeader("access-control-allow-origin"))
 
 		return trialhelpers.runQuery(self.renderer, "GET", "/robots.txt", {},
 			requestMogrifier=_makeOriginAdder("https://examplexcom/corsusing/abc/d")
@@ -645,7 +646,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 	def testWorkingLifecycle(self):
 		def assertDeleted(result, jobURL):
 			self.assertEqual(result[1].code, 303)
-			next = _nukeHostPart(result[1].headers["location"])
+			next = _nukeHostPart(result[1].headers_out["location"])
 			jobId = next.split("/")[-1]
 			return self.assertGETLacksStrings(next, {}, ['jobref id="%s"'%jobId]
 			).addCallback(lambda res: reactor.disconnectAll())
@@ -655,7 +656,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 			).addCallback(assertDeleted, jobURL)
 
 		def checkOtherResult(result, jobURL):
-			self.assertEqual(result[1].headers["content-type"], "text/plain")
+			self.assertEqual(result[1].headers_out["content-type"], "text/plain")
 			self.assertEqual(result[0], "Hello World.\n")
 			return delete(jobURL)
 
@@ -694,7 +695,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 		def assertStarted(lastRes, jobURL):
 			req = lastRes[1]
 			self.assertEqual(req.code, 303)
-			self.assertTrue(req.headers["location"].endswith(jobURL))
+			self.assertTrue(req.headers_out["location"].endswith(jobURL))
 			return trialhelpers.runQuery(self.renderer, "POST", 
 				jobURL+"/parameters", {"opim": ["4"]}
 			).addCallback(checkParametersImmutable, jobURL)
@@ -702,7 +703,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 		def checkPosted(result):
 			request = result[1]
 			self.assertEqual(request.code, 303)
-			jobURL = _nukeHostPart(request.headers["location"])
+			jobURL = _nukeHostPart(request.headers_out["location"])
 			self.assertTrue(jobURL.startswith("/data/cores/pc/uws.xml/"))
 			return trialhelpers.runQuery(self.renderer, "POST", 
 				jobURL+"/phase", {"PHASE": "RUN"}
@@ -744,7 +745,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 			return deleteJob(jobURL)
 
 		def checkParameters(result):
-			jobURL = _nukeHostPart(result[1].headers["location"])
+			jobURL = _nukeHostPart(result[1].headers_out["location"])
 			return trialhelpers.runQuery(self.renderer, "GET", 
 				jobURL, {}
 			).addCallback(assertParams, jobURL)
@@ -816,7 +817,7 @@ class TestUserUWS(trialhelpers.ArchiveTest):
 			).addCallback(assertNoPostingToFile, jobURL)
 
 		def getJobURL(result):
-			jobURL = _nukeHostPart(result[1].headers["location"])
+			jobURL = _nukeHostPart(result[1].headers_out["location"])
 			return trialhelpers.runQuery(self.renderer, "GET", 
 				jobURL, {}
 			).addCallback(assertParams, jobURL)
@@ -856,7 +857,7 @@ class TestUWSAuth(trialhelpers.ArchiveTest):
 			).addCallback(assertUnauthenticatedSeesAll, jobURL, jobURL2)
 
 		def queryJobList(result, jobURL):
-			jobURL2 = _nukeHostPart(result[1].headers["location"])
+			jobURL2 = _nukeHostPart(result[1].headers_out["location"])
 			return trialhelpers.runQuery(self.renderer, "GET", 
 				"/".join(jobURL.split("/")[:-1]), {},
 				requestMogrifier=_setUser("testuser")
@@ -885,7 +886,7 @@ class TestUWSAuth(trialhelpers.ArchiveTest):
 
 		def assertPosted(result):
 			request = result[1]
-			jobURL = _nukeHostPart(request.headers["location"])
+			jobURL = _nukeHostPart(request.headers_out["location"])
 			return trialhelpers.runQuery(self.renderer, "GET", 
 				jobURL+"/owner", {}, requestMogrifier=_setUser("testuser")
 			).addCallback(assertOwnerSet, jobURL)
@@ -921,13 +922,13 @@ class UserUWSJoblistTest(trialhelpers.ArchiveTest):
 			).addCallback(assertPCJoblist, pcJobURL, ucJobURL)
 
 		def getJoblist(result, pcJobURL):
-			ucJobURL = _nukeHostPart(result[1].headers["location"])
+			ucJobURL = _nukeHostPart(result[1].headers_out["location"])
 			return trialhelpers.runQuery(self.renderer, "GET", 
 				"/data/cores/uc/uws.xml", {}
 			).addCallback(assertUCJoblist, pcJobURL, ucJobURL)
 
 		def postOther(result):
-			pcJobURL = _nukeHostPart(result[1].headers["location"])
+			pcJobURL = _nukeHostPart(result[1].headers_out["location"])
 			return trialhelpers.runQuery(self.renderer, "POST", 
 				"/data/cores/uc/uws.xml", {
 					"UPLOAD": ["stuff,param:foo", "other,param:bar"],

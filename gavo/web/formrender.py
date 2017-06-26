@@ -217,7 +217,6 @@ def getFieldArgsForInputKey(inputKey):
 	label = inputKey.getLabel()
 
 	res = {
-		"label": label,
 		"name": inputKey.name,
 		"type": _getFormalType(inputKey),
 		"widgetFactory": _getWidgetFactory(inputKey),

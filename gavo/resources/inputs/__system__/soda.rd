@@ -357,7 +357,7 @@ This is a temporary location for procDefs and friends complying to
 		<doc>A metaMaker that generates parameters allowing cutouts along
 		the various WCS axes in physical coordinates.
 	
-		This uses pywcs for the spatial coordinates and tries to figure out 
+		This uses astropy.wcs for the spatial coordinates and tries to figure out 
 		what these are with some heuristics.  For the remaining coordinates,
 		it assumes all are basically 1D, and it sets up separate, manual
 		transformations for them.
@@ -444,7 +444,7 @@ This is a temporary location for procDefs and friends complying to
 
 			This is axisNames, a dictionary mapping parameter names to
 			the FITS axis numbers or the special names WCSLAT or WCSLONG. 
-			It also expects a skyWCS attribute, a pywcs.WCS instance for spatial
+			It also expects a skyWCS attribute, a wcs.WCS instance for spatial
 			cutouts.
 
 			Finally, descriptor must have a list attribute slices, containing

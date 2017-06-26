@@ -9,11 +9,13 @@ Common code for DaCHS's base package.
 
 
 from gavo.utils.excs import *  #noflake: really want those names
+from gavo.utils import excs # make life a bit easier for pyflakes.
 
 
 class NotGivenType(type):
 	def __str__(self):
-		raise StructureError("%s cannot be stringified"%self.__class__.__name__)
+		raise excs.StructureError(
+			"%s cannot be stringified"%self.__class__.__name__)
 
 	__unicode__ = __str__
 
@@ -30,7 +32,7 @@ class NotGiven(object):
 	__metaclass__ = NotGivenType
 
 
-class Ignore(ExecutiveAction):
+class Ignore(excs.ExecutiveAction):
 	"""An executive action causing an element to be not adopted by its
 	parent.
 
@@ -40,7 +42,7 @@ class Ignore(ExecutiveAction):
 	"""
 
 
-class Replace(ExecutiveAction):
+class Replace(excs.ExecutiveAction):
 	"""An executive action replacing the current child with the Exception's
 	argument.
 
@@ -70,7 +72,8 @@ class Parser(object):
 		elif type=="end":
 			return self.end_(ctx, name, value)
 		else:
-			raise StructureError("Illegal event type while building: '%s'"%type)
+			raise excs.StructureError(
+				"Illegal event type while building: '%s'"%type)
 
 
 class StructParseDebugMixin(object):

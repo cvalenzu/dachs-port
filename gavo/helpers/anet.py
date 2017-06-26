@@ -312,7 +312,7 @@ def _resolve(fName, solverParameters={}, sexControl=None, objectFilter=None,
 
 
 def _retrieveWCS(srcDir, fName, **ignored):
-	return pyfits.getheader("img.wcs").ascard
+	return pyfits.getheader("img.wcs").cards
 
 
 def getWCSFieldsFor(fName, solverParameters, sexControl=None, objectFilter=None,

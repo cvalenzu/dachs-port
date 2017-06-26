@@ -34,13 +34,13 @@ from . import excs
 from . import misctricks
 from . import ostricks
 
-# Make sure we get the numpy version of pyfits.  This is the master
-# import that all others should use (from gavo.utils import pyfits).
-# see also utils/__init__.py
-os.environ["NUMERIX"] = "numpy"
 try:
 	import numpy
-	import pyfits  # not "from gavo.utils" (this is the original)
+	import __builtin__
+	# temporary measure to shut up astropy's configuration parser.
+	__builtin__._ASTROPY_SETUP_ = True
+	# the following is the original import of pyfits, and only it should be used
+	from astropy.io import fits as pyfits  
 except ImportError:  
 	# pyfits is not installed; don't die, since the rest of gavo.utils
 	# will still work.
@@ -228,7 +228,7 @@ def serializeHeader(hdr):
 	"""
 	parts = []
 	for card in hdr.ascardlist():
-		r = card.ascardimage('ignore')
+		r = card.image
 		assert not len(r)%CARD_SIZE
 		parts.append(r)
 	serForm = "".join(parts)+padCard('END')
@@ -338,7 +338,7 @@ def _enforceHeaderConstraints(cardList, cardSequence):
 # I can't use pyfits.verify for this since cardList may not refer to
 # a data set that's actually in memory
 	cardsAdded, newCards = set(), []
-	cardDict = dict((card.key, card) for card in cardList)
+	cardDict = dict((card.keyword, card) for card in cardList)
 
 	for kw, mandatory in itertools.chain(
 			STANDARD_CARD_SEQUENCE,  _iterForcedPairs(cardSequence)):
@@ -358,7 +358,7 @@ def _enforceHeaderConstraints(cardList, cardSequence):
 
 	for card in cardList:  # use cardList rather than cardDict to maintain
 		                     # cardList order
-		if card.key not in cardsAdded or card.key=='':
+		if card.keyword not in cardsAdded or card.keyword=='':
 			newCards.append(card)
 	return pyfits.Header(newCards)
 
@@ -396,9 +396,9 @@ def sortHeaders(header, commentFilter=None, historyFilter=None,
 	else:
 		iterable = header
 	for card in iterable:
-		if card.key=="COMMENT":
+		if card.keyword=="COMMENT":
 			commentCs.append(card)
-		elif card.key=="HISTORY":
+		elif card.keyword=="HISTORY":
 			historyCs.append(card)
 		else:
 			realCs.append(card)
@@ -409,7 +409,7 @@ def sortHeaders(header, commentFilter=None, historyFilter=None,
 	
 	historySeen = set()
 	if historyCs:
-		newCards.append(pyfits.Card(key=""))
+		newCards.append(pyfits.Card(keyword=""))
 	for card in historyCs:
 		if historyFilter is None or historyFilter(card.value):
 			if card.value not in historySeen:
@@ -418,7 +418,7 @@ def sortHeaders(header, commentFilter=None, historyFilter=None,
 
 	commentsSeen = set()
 	if commentCs:
-		newCards.append(pyfits.Card(key=""))
+		newCards.append(pyfits.Card(keyword=""))
 	for card in commentCs:
 		if commentFilter is None or commentFilter(card.value):
 			if card.value not in commentsSeen:
@@ -493,11 +493,12 @@ class PlainHeaderManipulator:
 		self.add_comment = self.hdus[0].header.add_comment
 		self.add_history = self.hdus[0].header.add_history
 		self.add_blank = self.hdus[0].header.add_blank
-		self.update = self.hdus[0].header.update
+		self.update = self.hdus[0].header.set
+		self.set = self.hdus[0].header.set
 	
 	def updateFromList(self, kvcList):
 		for key, value, comment in kvcList:
-			self.hdus[0].header.update(key, value, comment=comment)
+			self.hdus[0].header.set(key, value, comment=comment)
 
 	def close(self):
 		self.hdus.close()
@@ -604,7 +605,7 @@ def cutoutFITS(hdu, *cuts):
 
 			newHeader["NAXIS%d"%(index+1)] = newAxisLength
 			refpixKey = "CRPIX%d"%(index+1)
-			newHeader.update(refpixKey, newHeader[refpixKey]-firstPix)
+			newHeader.set(refpixKey, newHeader[refpixKey]-firstPix)
 
 	slices.reverse()
 	newHDU = pyfits.PrimaryHDU(data=hdu.data[tuple(slices)].copy(order='C'),
@@ -632,7 +633,7 @@ def shrinkWCSHeader(oldHeader, factor):
 
 	factor = int(factor)
 	newHeader = oldHeader.copy()
-	newHeader.update("SIMPLE", True,"GAVO DaCHS, %s"%datetime.datetime.utcnow())
+	newHeader.set("SIMPLE", True,"GAVO DaCHS, %s"%datetime.datetime.utcnow())
 	newHeader["NAXIS1"] = oldHeader["NAXIS1"]//factor
 	newHeader["NAXIS2"] = oldHeader["NAXIS2"]//factor
 	newHeader["BITPIX"] = -32
@@ -648,7 +649,7 @@ def shrinkWCSHeader(oldHeader, factor):
 	except KeyError: # no WCS, we're fine either way
 		pass
 
-	newHeader.update("IMSHRINK", "Image scaled down %s-fold by DaCHS"%factor)
+	newHeader.set("IMSHRINK", "Image scaled down %s-fold by DaCHS"%factor)
 
 	for hField in ["BZERO", "BSCALE"]:
 		if newHeader.has_key(hField):
@@ -809,7 +810,7 @@ def headerFromDict(d):
 	hdr = pyfits.PrimaryHDU().header
 	for key, value in d.iteritems():
 		if value is not None:
-			hdr.update(key, value)
+			hdr.set(key, value)
 	return hdr
 
 
@@ -818,7 +819,7 @@ class WCSAxis(object):
 
 	You'll usually use the fromHeader constructor.
 
-	The idea of using this rather than pywcs or similar is that this is
+	The idea of using this rather than astropy.wcs or similar is that this is
 	simple and robust.  It doesn't know many of the finer points of WCS,
 	though, and in particular it's 1D only.
 
@@ -987,8 +988,8 @@ class _ESODescriptorsParser(object):
 		"""
 		descLines, collecting = [], False
 
-		for card in hdr.ascardlist():
-			if card.key=="HISTORY":
+		for card in hdr.cards:
+			if card.keyword=="HISTORY":
 				if " ESO-DESCRIPTORS END" in card.value:
 					collecting = False
 				if collecting:
