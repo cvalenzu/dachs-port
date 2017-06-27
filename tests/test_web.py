@@ -408,7 +408,7 @@ class CORSTest(trialhelpers.ArchiveTest):
 	def testUnauthorizedCORS(self):
 		def assertNoCORSHeader(res):
 			self.assertFalse(
-				res[1].responseHeaders.hasHeader("access-control-allow-origin"))
+				"access-control-allow-origin" in res[1].headers_out)
 
 		return trialhelpers.runQuery(self.renderer, "GET", "/robots.txt", {},
 			requestMogrifier=_makeOriginAdder("https://examplexcom/corsusing/abc/d")

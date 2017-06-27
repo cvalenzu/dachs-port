@@ -24,6 +24,7 @@ from nevow import url
 from twisted.trial.unittest import TestCase as TrialTest
 from twisted.python import failure  #noflake: exported name
 from twisted.internet import defer
+from twisted.web.http_headers import Headers
 
 from gavo.helpers import testhelpers
 from gavo.helpers import testtricks
@@ -114,7 +115,8 @@ class FakeFieldStorage(object):
 
 
 class _HeaderFaker(object):
-	"""simulates the old request headers attribute.
+	"""A helper for simulating the old request.headers attribute in
+	twisted > jessie
 	"""
 	def __init__(self, request):
 		self.request = weakref.proxy(request)
@@ -124,6 +126,9 @@ class _HeaderFaker(object):
 			return self.request.responseHeaders.getRawHeaders(name)[0]
 		except IndexError:
 			raise KeyError(name)
+
+	def __contains__(self, name):
+		return self.request.responseHeaders.hasHeader(name)
 
 
 class FakeRequest(testutil.AccumulatingFakeRequest):
@@ -137,6 +142,13 @@ class FakeRequest(testutil.AccumulatingFakeRequest):
 		self.finishDeferred = defer.Deferred()
 		testutil.AccumulatingFakeRequest.__init__(self, *args, **kwargs)
 		self.headers_out = _HeaderFaker(self)
+		# compatibility code for trial < stretch (remove at some point)
+		if not hasattr(self, "responseHeaders"):
+			self.responseHeaders = Headers()
+			def _(key, val):
+				self.responseHeaders.setRawHeaders(key, [val])
+				testutil.AccumulatingFakeRequest.setHeader(self, key, val)
+			self.setHeader = _
 
 	def registerProducer(self, producer, isPush):
 		self.producer = producer
