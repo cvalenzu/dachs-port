@@ -17,6 +17,7 @@ from nevow import inevow
 from nevow import flat
 
 from gavo.helpers import testhelpers
+from gavo.helpers import trialhelpers
 
 from gavo import base
 from gavo import formats
@@ -34,7 +35,6 @@ from gavo.web import formrender
 from gavo.web import vodal
 
 import tresc
-import trialhelpers
 
 
 MS = base.makeStruct
