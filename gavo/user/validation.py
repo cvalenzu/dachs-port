@@ -18,6 +18,7 @@ to anything expensive, they're advised to have something like::
 #c COPYING file in the source distribution.
 
 
+import argparse
 import re
 import sys
 import traceback
@@ -28,7 +29,6 @@ from gavo import base
 from gavo import stc
 from gavo import utils
 from gavo.helpers import testtricks
-from gavo.imp import argparse
 from gavo.registry import builders
 from gavo.registry import publication
 from gavo.protocols import datalink

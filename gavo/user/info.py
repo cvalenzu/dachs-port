@@ -11,13 +11,13 @@ Commands for obtaining information about various things in the data center.
 # move the core of annotateDBTable to rsc.dbtable, and rsc.Limits.
 # There's now inMemoryTable.getLimits that does a similar thing.
 
+from argparse import ArgumentParser
+
 from gavo import api
 from gavo import base
 from gavo import svcs
 from gavo import utils
 from gavo.rsc import table
-from gavo.imp.argparse import ArgumentParser
-
 
 
 class AnnotationMaker(object):

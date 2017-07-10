@@ -414,7 +414,7 @@ def initDB(dsn):
 
 
 def parseCommandLine():
-	from gavo.imp import argparse
+	import argparse
 	parser = argparse.ArgumentParser(description="Create or update DaCHS'"
 		" file system and database environment.")
 	parser.add_argument("-d", "--dsn", help="DSN to use to connect to"

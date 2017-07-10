@@ -20,10 +20,10 @@ admin.py for an example.
 #c COPYING file in the source distribution.
 
 
+import argparse
 import sys
 
 from gavo import base
-from gavo.imp import argparse
 
 
 class Arg(object):

@@ -502,7 +502,7 @@ def upgrade(forceDBVersion=None):
 	
 
 def parseCommandLine():
-	from gavo.imp import argparse
+	import argparse
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--force-dbversion", help="assume this as the"
 		" database's schema version.  If you don't develop DaCHS, you"

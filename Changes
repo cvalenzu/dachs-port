@@ -54,6 +54,10 @@ Version 1.0 (2017-06-21)
 	* Removed (probably largely unused features) editCore, SDM2 support,
 		pkg_resource overrides, simpleView, computedCore.
 
+	* Removed argparse module shipped with DaCHS.  This breaks compatibility
+	  with python 2.6 (although you can still run DaCHS with a manually
+	  installed argparse.py in 2.6).
+
 	* Hopefully more useful manpage -- have a peek!
 
 

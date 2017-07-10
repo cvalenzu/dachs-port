@@ -54,7 +54,7 @@ def dropTable():
 	This is a "toplevel" function inteded to be called by cli directly.
 	"""
 	def parseCmdline():
-		from gavo.imp.argparse import ArgumentParser
+		from argparse import ArgumentParser
 		parser = ArgumentParser(
 			description="Removes all traces of the named table within the DC.")
 		parser.add_argument("tablename", help="The name of the table to drop,"
@@ -129,7 +129,7 @@ def dropRD():
 	This is a "toplevel" function inteded to be called by cli directly.
 	"""
 	def parseCmdline():
-		from gavo.imp.argparse import ArgumentParser
+		from argparse import ArgumentParser
 		parser = ArgumentParser(
 			description="Drops all tables made in an RD's data element.")
 		parser.add_argument("rdid", help="RD path or id to drop")

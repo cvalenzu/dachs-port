@@ -336,7 +336,7 @@ def getChangedRD(rdId, limits):
 
 
 def parseCmdLine():
-	from gavo.imp.argparse import ArgumentParser
+	from argparse import ArgumentParser
 
 	parser = ArgumentParser(
 		description="Updates existing values min/max items in a referenced"

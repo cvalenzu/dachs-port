@@ -229,7 +229,7 @@ def writeResultTo(page, destFile):
 ####################### CLI
 
 def parseCommandLine():
-	from gavo.imp import argparse
+	import argparse
 	parser = argparse.ArgumentParser(description="Run an asynchronous datalink"
 		" job (used internally)")
 	parser.add_argument("jobId", type=str, help="UWS id of the job to run")

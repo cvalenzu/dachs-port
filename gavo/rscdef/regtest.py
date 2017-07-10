@@ -14,6 +14,7 @@ run while (or rather, after) executing gavo val.
 
 from __future__ import with_statement
 
+import argparse
 import collections
 import cPickle as pickle
 import httplib
@@ -42,7 +43,6 @@ except ImportError:
 from gavo import base
 from gavo import votable
 from gavo import utils
-from gavo.imp import argparse
 from . import common
 from . import procdef
 
