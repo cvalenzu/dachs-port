@@ -20,8 +20,9 @@ import textwrap
 import traceback
 
 import matplotlib
+# if the next line fails because the backend is already set, change the import
+# order and move processing up.
 matplotlib.use("Agg")
-from matplotlib import pyplot
 
 import Image
 
@@ -32,6 +33,8 @@ from gavo.helpers import anet
 from gavo.helpers import fitstricks
 from gavo.utils import fitstools
 from gavo.utils import pyfits
+
+pyplot = utils.DeferredImport("matplotlib.pyplot")
 
 
 class CannotComputeHeader(Exception):

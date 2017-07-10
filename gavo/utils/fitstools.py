@@ -45,7 +45,7 @@ except ImportError:
 	# pyfits is not installed; don't die, since the rest of gavo.utils
 	# will still work.
 	pyfits = misctricks.NotInstalledModuleStub( #noflake: exported name
-		"pyfits and/or numpy")
+		"astropy and/or numpy")
 
 else:
 	# I need some parts of pyfits' internals, and it's version-dependent
