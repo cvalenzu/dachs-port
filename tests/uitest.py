@@ -96,6 +96,13 @@ class MiscCLITest(testhelpers.VerboseTest):
 				r"Software \(\d+\.\d+(\.\d+)?\)"
 				r" Schema \(\d+/-?\d+\)" "\n", msg))
 
+	def testDachsInitJustRuns(self):
+		from gavo.user import initdachs
+
+		self.assertOutput(initdachs.main, argList=[],
+			expectedRetcode=0,
+			expectedStdout="",
+			expectedStderr="")
 
 class ImportTest(testhelpers.VerboseTest):
 	resources = [("conn", tresc.dbConnection)]

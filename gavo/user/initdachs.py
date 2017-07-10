@@ -341,10 +341,18 @@ def _loadPgExtension(conn, extName):
 	It returns True if the extension was found (and has created it as a
 	side effect).
 	"""
-	res = _execDB(conn, "SELECT * FROM pg_available_extensions"
+	res = _execDB(conn, "SELECT default_version, installed_version"
+		" FROM pg_available_extensions"
 		" WHERE name=%(name)s", {"name": extName})
 	if not res:
+		# The extension is not available at all; let's hope we can limp on.
 		return False
+
+	if res[0][1] is not None: 
+			# there is an installed version.  Leave it as is for now
+			# (is it worth annoying the user with nagging for updates if 
+			# there's a new version?  Perhaps, but will they read it? So, for now:
+		return True
 
 	cursor = conn.cursor()
 	cursor.execute("CREATE EXTENSION "+extName)
