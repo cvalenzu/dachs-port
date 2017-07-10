@@ -347,8 +347,10 @@ def getMatchingResobs(pars):
 		else:
 			try:
 				res.append(identifiers.getResobFromRestup(restup))
-			except base.NotFoundError:
-				base.ui.notifyError("Could not create resource for %s"%repr(restup))
+			except Exception, exc:
+				base.ui.notifyError("Could not create resource for %s: %s"%(
+					repr(restup),
+					exc))
 	return res
 
 
