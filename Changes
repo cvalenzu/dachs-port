@@ -6,11 +6,11 @@ svn log http://svn.ari.uni-heidelberg.de/svn/gavo/python/trunk/ | less
 to see the gory details.  If anything not mentioned here breaks something
 for you, we'd consider it a severe bug, though.
 
-Version 1.0 (2017-06-21)
+Version 1.0 (2017-07-11)
 
 	* DaCHS' main entry point is now actually called dachs (i.e., call 
 		dachs imp q and such in the future).  gavo will work as an alias
-		for quite a while, though.
+		for quite a while to come, though.
 
 	* UWS support is now for version 1.1 (i.e., there's creationDate,
 	  filters in the joblist, and slow polling).
@@ -18,9 +18,10 @@ Version 1.0 (2017-06-21)
 	* Added "declarative" licenses.  Please read the Licensing chapter in
 		the tutorial and slap licenses on your data.
 
-	* Now using astropy.wcs instead of pywcs, astropy.io.fits instead of
+	* Now using astropy.wcs instead of pywcs, and astropy.io.fits instead of
 	  pyfits.  The respective APIs have, unfortunately, changed quite a bit.
-	  If you used them (e.g., in processors), you'll have to change them.
+	  If you used them (e.g., in processors), you'll have to change your
+	  code; it's unlikely services are impacted at runtime.
 	  (see also http://docs.g-vo.org/DaCHS/howDoI.html#update-my-code).
 
 	* Removed //epntap#table-2_0.  Use //epntap2#table-2_0 instead (sorry).
@@ -38,18 +39,22 @@ Version 1.0 (2017-06-21)
 	  inputKeys, please check the respective services carefully.  See
 	  also "Building Service Interface" in the reference documentation.
 	  Most user-visible change: If you've been using repeated parameters
-	  to fill array-valued inputs, that's no longer allowed.
+	  to fill array-valued inputs, that's no longer allowed; if you actually
+	  must have this kind of thing, you'll need a custom core and must fill
+	  the arrays by hand.
 	
 	* In DaCHS' SQL interface, tuples now are matched to records and lists
-	  to arrays (was the other way round before).  If you have manual
-	  input to array-like columns, you'll have to change things.
+	  to arrays (was the other way round before).  If while importing you
+	  manually created lists to fill to array-like columns, you'll have to
+	  make tuples from these now.
 	
 	* rsc.makeData or rsc.TableForDef no longer automatically make connections
 	  when used on database tables.  You must give them explicit
 	  connection arguments now ("with base.getTableConn() as conn:").
 
 	* logo_tiny and logo_big are now ignored, all logos spit out by DaCHS are
-	  based on logo_medium.png (.../favicon.png is a 50 px rendering of it).
+	  based on logo_medium.png, including, if not overridden, the favicon
+	  (that you will now get if you have not set it before).
 
 	* Removed (probably largely unused features) editCore, SDM2 support,
 		pkg_resource overrides, simpleView, computedCore.
