@@ -540,7 +540,9 @@ Manual\fP\&.
 .INDENT 0.0
 .TP
 .B id
-RD id or cross\-RD identifier for a testable thing.
+RD id or cross\-RD identifier for a testable thing.  Write ALL here
+to have DaCHS search and test all RDs in the inputs, ignoring those
+in or below directories with a file named DACHS_PRUNE.
 .UNINDENT
 .SS Options
 .INDENT 0.0
@@ -600,7 +602,9 @@ This checks RDs for well\-formedness and some aspects  of  VO\-friendliness
 .INDENT 0.0
 .TP
 .B rd
-RD path or ID to validate
+RD path or ID to validate.  Write ALL here to have DaCHS search
+and validate all RDs in your input and validate them, ignoring those
+in or below directories with a file named DACHS_PRUNE.
 .UNINDENT
 .SS Options
 .INDENT 0.0

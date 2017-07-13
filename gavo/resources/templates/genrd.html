@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+		"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:n="http://nevow.com/ns/nevow/0.1">
+
+<!-- Most of this was written by Mikhail Minin, who also came up with the
+idea of generating RDs in this way.
+
+Mikhail has graciously donated his code to the GAVO project.
+-->
+
+<head n:render="commonhead">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+<script> //getter API
+// getElementById
+function $id(id) {
+        var element=document.getElementById(id);
+        element.tag = function(tag){
+            return element.getElementsByTagName(tag);
+        };
+	return element;
+}
+</script>
+
+<script>
+////////////// Restoring data <![CDATA[
+function loadFile(){
+  var file    = document.querySelector('input[type=file]').files[0];
+  var reader  = new FileReader();
+  reader.onload = function() {
+    var text = reader.result;
+    //console.log(text);
+    fillForm(text);
+  };
+  reader.readAsText(file);
+};
+
+function Output(msg) {
+	var m = $id("messages");
+	m.innerHTML = msg + m.innerHTML;
+};
+
+var jay={};
+var jkeys=[];
+function fillForm(txt) {
+   jay=JSON.parse(txt);
+   jkeys=Object.keys(jay);
+   for (i in jkeys){
+      $id(jkeys[i]).value=jay[jkeys[i]];
+   };
+   checkBoxChkUpdate(); //update checked state of checkboxes after loading data
+};
+
+////////////// Saving data
+function save() {
+checkBoxValUpdate() // set checkboxes values before saving
+var link = $id("downloadLink");
+link.href = makeTextFile(JSON.stringify(buildDict()));
+link.style.display = 'block';
+};
+
+var textFile = null;
+function makeTextFile(text) {
+    var data = new Blob([text], {type: 'text/plain'});
+    if (textFile !== null) {window.URL.revokeObjectURL(textFile);}; // prevent memory leaks.
+    textFile = window.URL.createObjectURL(data);
+    return textFile;
+};
+function buildDict(){
+    listOfFormIds=[for (x of $id("form").tag("input")) x.id].concat( [for (x of $id("form").tag("select")) x.id] );
+    var dict = {};
+    listOfFormIds.forEach(
+        function(x,i,q){dict[x]=$id(x).value;}
+    );
+    return dict;
+};
+/////////// make form empty
+var text='';
+function clearForm(){
+    // read text from URL location
+    var request = new XMLHttpRequest();
+    request.open('GET', 'void.txt', true);
+    request.send(null);
+    request.onreadystatechange = function () { 
+        if (request.readyState==4){
+            text=request.responseText;
+//          console.log(text);
+            fillForm(text); 
+        };
+    };
+};
+
+//// update checkbox values
+var myboxes;
+function checkBoxValUpdate(){
+    myboxes = document.querySelectorAll('input[type=checkbox]');
+    myboxes.forEach(function (mybox,b,c){
+        mybox.value=['off','on'][+(mybox.checked)];
+    });
+};
+function checkBoxChkUpdate(){
+    myboxes = document.querySelectorAll('input[type=checkbox]');
+    myboxes.forEach(function (mybox,b,c){
+        mybox.checked=mybox.value=='on';
+    });
+};
+//]]>
+</script>
+
+</head>
+<body>
+<div>
+Use previously saved file:
+<input type="file" id="fileselect" name="fileselect[]" multiple="multiple" onchange="loadFile()" />
+</div>
+<br />
+<div id="messages"></div>
+Save current edits: 
+<button id="save" onclick="save()">Save</button>
+<a download="form.txt" id="downloadLink" style="display: none">Download</a>
+<p>Clear form: 
+<button id="save" onclick="clearForm()">Restore defaults</button>
+</p>
+</body>
+</html>

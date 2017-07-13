@@ -674,7 +674,7 @@
 					overridden = set(["index_",
 						"target_name", "time_scale",
 						"instrument_host_name", "instrument_name",
-						"access_format", "target_region", "target_class",
+						"target_region", "target_class",
 						"spatial_frame_type"])
 
 					mixin = context.getById("table-2_0")
