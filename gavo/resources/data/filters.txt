@@ -1,5 +1,7 @@
-# Approximate bandpasses of common filters	low	characteristic	high,
-# with all values in nanometers.  These are tab separated values	with
+# Approximate bandpasses of common filters	
+# (low, characteristic, high, with all values in nanometers.  
+
+# These are tab separated values	with
 # =<primary>tab<alias>{tab<alias>} lines interspersed
 #
 # All those are rough approximations, suitable only for data discovery,
@@ -144,10 +146,14 @@ u.MP9301	330	374	420
 z.MP9801	810	1170	1200
 #
 # Private communication from Christian Westhues <christian.westhues@rub.de>
-#
 Brγ 	2067	2067	2067
 H2 S(1)	2137	2137	2137
 He I	2180	2180	2180 
 K-cont	2270	2270	2270
 CO	2300	2300	2300
+#
+# 1961ApJ...133..869A (with 103a-O emulsion)
+WG-2	330	410	500
+# stuff pulled from SVO Filter Profile Service 
+# http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse
 # vim:noet:ts=12
