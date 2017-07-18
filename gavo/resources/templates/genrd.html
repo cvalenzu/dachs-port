@@ -8,6 +8,10 @@
 idea of generating RDs in this way.
 
 Mikhail has graciously donated his code to the GAVO project.
+
+local note: see 
+gavo/soft/DaCHS-for-VESPA/qrdcreator1 for Mikhail's original.
+
 -->
 
 <head n:render="commonhead">
@@ -121,7 +125,67 @@ Save current edits:
 <button id="save" onclick="save()">Save</button>
 <a download="form.txt" id="downloadLink" style="display: none">Download</a>
 <p>Clear form: 
-<button id="save" onclick="clearForm()">Restore defaults</button>
+<button id="clear" onclick="clearForm()">Restore defaults</button>
 </p>
+
+<hr/>
+
+<div id="form">
+Data source pattern: <input id="m_Data_Source" placeholder="data/*.fits"></input><br />
+<span class="legend">This is a resdir-relative shell pattern; you can use a single file name</span><br /><br />
+<h2>Resource Metadata</h2>
+<table>
+<tr><td>Schema name: </td><td><input id="mSchema"></input></td></tr>
+<tr><td>Title: </td><td><input id="mTitle"></input></td></tr>
+<tr><td>Description: </td><td><textarea id="mDescription"></textarea></td></tr>
+<tr><td>Creation date: </td><td><input id="mCreationDate" placeholder="2016-03-30T00:00:00"></input></td></tr>
+<tr><td>Subjects: </td><td><input id="mSubject"></input><br/>
+<span class="legend">Choose terms from the
+<a href="http://astrothesaurus.org">Unified Astronomy Thesaurus</a>.  
+Separate multiple terms by hash marks ("#").</span>
+</td></tr>
+
+<tr><td>Creator name: </td><td><input id="mCreatorName" placeholder="Herschel, W.; Herschel, C."></input><br/>
+<span class="legend">The authors of the data. Separate multiple author names by semicolons, and use Last, F.I. form.</span>
+</td></tr>
+
+<tr><td>Contact name: </td><td><input id="mContactName" 
+	placeholder="Demleitner, M."></input>
+<br/>
+<span class="legend">Who to contact with questions on the service (like when
+it's broken).</span>
+</td></tr>
+<tr><td>Contact email: </td><td><input id="mContactEmail"
+	placeholder="msdemlei@ari.uni-heidelberg.de"></input><br/>
+<span class="legend">Contact name's email (try and use one that's going
+to be around for a while).</span>
+</td></tr>
+<tr><td>Instrument: </td><td><input id="mInstrument"
+	placeholder="Palomar 100in Schmidt"></input></td></tr>
+<tr><td>Facility: </td><td><input id="mFacility"
+	placeholder="Palomar Observatory"></input></td></tr>
+<tr><td>Source: </td><td><input id="mSource" 
+	placeholder="2016ivoa.spec.0523D"></input><br/>
+<span class="legend">A bibliographic source for where to find out more
+about the data.  Use an <a href="http://ads.harvard.edu">ADS</a>
+bibcode if possible.</span></td></tr>
+<tr><td>Content level (Mark all that apply):</td><td>
+<input type="checkbox" name="mContentLevel" value="Research"></input> Research
+<input type="checkbox" name="mContentLevel" value="Amateur"></input> Amateur
+<input type="checkbox" name="mContentLevel" value="General"></input> General
+</td></tr>
+
+<tr><td>Waveband (Mark all that apply)</td><td>
+<input type="checkbox" id="mWbRadio"      value="off"/>Radio
+<input type="checkbox" id="mWbMillimeter" value="off"/>Millimeter
+<input type="checkbox" id="mWbInfrared"   value="off"/>Infrared
+<input type="checkbox" id="WbOptical"     value="off"/>Optical<br />
+<input type="checkbox" id="WbUV"          value="off"/>UV
+<input type="checkbox" id="WbEUV"         value="off"/>EUV
+<input type="checkbox" id="WbXRay"        value="off"/>X-ray
+<input type="checkbox" id="WbGammaRay"    value="off"/>Gamma-ray</td></tr>
+</table>
+</div>
+
 </body>
 </html>

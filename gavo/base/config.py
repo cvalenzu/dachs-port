@@ -430,7 +430,7 @@ _config = Configuration(
 			"Enable test pages (don't if you don't know why)"),
 		IntConfigItem("maxPreviewWidth", "300", "Ignored, only present"
 			" for backward compatiblity"),
-		ListConfigItem("graphicMimes", "image/fits,image/jpeg", "MIME types"
+		ListConfigItem("graphicMimes", "image/fits,image/jpeg,application/x-votable+xml;content=datalink", "MIME types"
 			" considered as graphics (for SIAP, mostly)"),
 		StringConfigItem("adsMirror", 
 			"http://ads.g-vo.org",

@@ -36,6 +36,7 @@ BUILTIN_VANITY = """
 	__system__/services/overview/rdinfo browse
 	__system__/tap/run/tap tap
 	__system__/adql/query/form adql !redirect
+	__system__/run/genrd genrd
 """
 
 

@@ -1,6 +1,6 @@
 # Approximate bandpasses of common filters	
 # (low, characteristic, high, with all values in nanometers.  
-
+#
 # These are tab separated values	with
 # =<primary>tab<alias>{tab<alias>} lines interspersed
 #

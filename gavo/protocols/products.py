@@ -36,7 +36,6 @@ import datetime
 import gzip
 import re
 import os
-import struct
 import urllib
 import urlparse
 from cStringIO import StringIO
@@ -97,6 +96,7 @@ def guessMediaType(fName):
 		return _getMediaTypes()[os.path.splitext(fName)[-1]]
 	except:
 		return "application/octet-stream"
+
 
 def makePreviewFromFITS(product):
 	"""returns image/jpeg bytes for a preview of a product spitting out a
@@ -697,20 +697,12 @@ class ScaledFITSProduct(ProductBase):
 		if scale<2:
 			scale = 2
 	
-		with utils.fitsLock():
-			with open(self.rAccref.localpath) as f:
-				oldHdr = fitstools.readPrimaryHeaderQuick(f)
-				newHdr = fitstools.shrinkWCSHeader(oldHdr, scale)
-				newHdr.set("FULLURL", str(makeProductLink(self.baseAccref)))
-				yield fitstools.serializeHeader(newHdr)
-
-				for row in fitstools.iterScaledRows(f, scale, hdr=oldHdr):
-					# Unfortunately, numpy's byte swapping for floats is broken in
-					# many wide-spread revisions.  So, we cannot do the fast
-					#	yield row.newbyteorder(">").tostring()
-					# but rather, for now, have to try the slow:
-					yield struct.pack("!%df"%len(row), *row)
-			
+		for stuff in fitstools.iterScaledBytes(
+				self.rAccref.localpath,
+				scale,
+				extraCards={"FULLURL": str(makeProductLink(self.baseAccref))}):
+			yield stuff
+					
 	def _writeStuffTo(self, destF):
 		for chunk in self.iterData():
 			destF.write(chunk)

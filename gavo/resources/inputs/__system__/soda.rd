@@ -732,6 +732,45 @@ This is a temporary location for procDefs and friends complying to
 			name="circleSlice"/>
 	</STREAM>
 
+	<procDef type="metaMaker" id="fits_makeSCALEMeta">
+		<doc>
+			Yields standard SCALE meta for FITS files.  Scale factors
+			need to be integral here.
+		</doc>
+		<code>
+			yield MS(InputKey, name="SCALE", type="integer",
+				description="Factor to scale the image down before transporting"
+					" (this does not currently take into account cutout parameters).")
+		</code>
+	</procDef>
+
+	<procDef type="dataFunction" id="fits_doSCALE">
+		<doc>
+			Sets the scaled fits as the current data attribute.  This
+			can only deal with integral scales and will not honor cutout ranges
+			(for now).
+		</doc>
+		<setup>
+			<code>
+				from gavo.utils import fitstools
+			</code>
+		</setup>
+		<code><![CDATA[
+			if args["SCALE"] is None:
+				return
+			if not 1<args["SCALE"]<30:
+				raise base.ValidationError("SCALE must be between 1 and 30.",
+					"SCALE")
+
+			# TODO: make this stream out the scaled bytes
+			descriptor.data = "".join(
+				chunk for chunk in fitstools.iterScaledBytes(
+					os.path.join(base.getConfig("inputsDir"), descriptor.accref),
+					args["SCALE"]))
+			raise DeliverNow()
+		]]></code>
+	</procDef>
+
 	<STREAM id="fits_standardDLFuncs">
 		<doc>
 			Pulls in all "standard" SODA functions for FITSes, including
@@ -754,6 +793,8 @@ This is a temporary location for procDefs and friends complying to
 			<bind key="stcs">'\stcs'</bind>
 		</metaMaker>
 		<dataFunction procDef="//soda#fits_makeHDUList" name="makeHDUList"/>
+		<metaMaker procDef="//soda#fits_makeSCALEMeta"/>
+		<dataFunction procDef="//soda#fits_doSCALE"/>
 		<metaMaker procDef="//soda#fits_makeBANDMeta">
 			<bind key="fitsAxis">\spectralAxis</bind>
 			<bind key="wavelengthOverride">\wavelengthOverride</bind>

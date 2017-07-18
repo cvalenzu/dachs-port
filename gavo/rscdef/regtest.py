@@ -926,6 +926,10 @@ class TestRunner(object):
 						f.write(test.data)
 
 			except Exception, ex:
+				if self.failFile and getattr(test, "data", None) is not None:
+					with open(self.failFile, "w") as f:
+						f.write(test.data)
+
 				f = StringIO()
 				traceback.print_exc(file=f)
 				self.resultsQueue.put(("ERROR", test, ex, f.getvalue(), 

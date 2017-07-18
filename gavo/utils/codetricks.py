@@ -593,9 +593,12 @@ class _FunctionCompiler(object):
 		if debug:
 			debugLocals = {}
 			embSrc = "\n".join([
+				"from gavo.utils import excs",
 				"def compileFunctionDebugWrapper(*args, **kwargs):",
 				"  try:",
 				"    return %s(*args, **kwargs)"%funcName,
+				"  except excs.ExecutiveAction:",
+				"    raise",
 				"  except:",
 				'    notify("Failing source:\\n%s"%src)',
 				"    raise"])
