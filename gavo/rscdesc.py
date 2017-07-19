@@ -325,6 +325,19 @@ class RD(base.Structure, base.ComputedMetaMixin, scripting.ScriptingMixin,
 
 		self.__class__ = BrokenClass
 
+	def macro_RSTccbysa(self, stuffDesignation):
+		"""expands to a declaration that stuffDesignation is available under
+		CC-BY-SA.
+		
+		This only works in reStructured text (though it's still almost
+		readable as source).
+		"""
+		return ("%s is licensed under the `Creative Commons Attribution"
+			" Share-Alike 3.0"
+			" License <http://creativecommons.org/licenses/by-sa/3.0/>`_\n\n"
+			".. image:: /static/img/ccbysa.png\n\n"
+			)%stuffDesignation
+
 	def macro_RSTccby(self, stuffDesignation):
 		"""expands to a declaration that stuffDesignation is available under
 		CC-BY.

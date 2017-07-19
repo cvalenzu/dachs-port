@@ -444,11 +444,11 @@ Core phrase makers and friends -->
 
 <STREAM id="license-cc0">
 	<doc>
-		Include this stream with a what being a short phrase saying what 
-		is licensed to make your resource licensed under Creative 
+		Include this stream with a @what (a short phrase saying what 
+		is licensed) to make your resource licensed under Creative 
 		Commons-0 (a.k.a. public domain).  This will generate the copyright, 
-		rights and rightsURI metadata items.  It will currently need to live
-		in the RD.
+		rights and rightsURI metadata items.  It needn to live in the
+		toplevel /resource element.
 
 		Example::
 			
@@ -462,11 +462,11 @@ Core phrase makers and friends -->
 
 <STREAM id="license-cc-by">
 	<doc>
-		Include this stream with a what being a short phrase saying what 
-		is licensed to make your resource licensed under Creative 
+		Include this stream with a @what (a short phrase saying what 
+		is licensed) to make your resource licensed under Creative 
 		Commons Attribution (CC-BY).  This will generate the copyright, 
-		rights and rightsURI metadata items.  It will currently need to
-		live in the RD.
+		rights and rightsURI metadata items.  It needs to live in the
+		toplevel /resource element.
 
 		Example::
 			
@@ -476,6 +476,24 @@ Core phrase makers and friends -->
 	<meta name="rights">Licensed under CC-BY</meta>
 	<meta name="rights.rightsURI"
 		>http://creativecommons.org/licenses/by/3.0/</meta>
+</STREAM>
+
+<STREAM id="license-cc-by-sa">
+	<doc>
+		Include this stream with a @what (a short phrase saying what 
+		is licensed) to make your resource licensed under Creative 
+		Commons Attribution Share Alike (CC-BY-SA).  This will generate 
+		the copyright, rights and rightsURI metadata items.  It needs
+		to live in the toplevel /resource element.
+
+		Example::
+			
+			&lt;FEED source="//procs#license-cc-by-sa" what="the HSOY catalogue"/&gt;
+	</doc>
+	<meta name="copyright" format="rst">\\RSTccbysa{\what}</meta>
+	<meta name="rights">Licensed under CC-BY-SA</meta>
+	<meta name="rights.rightsURI"
+		>http://creativecommons.org/licenses/by-sa/3.0/</meta>
 </STREAM>
 
 </resource>
