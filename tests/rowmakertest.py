@@ -88,13 +88,6 @@ class RowmakerMapTest(testhelpers.VerboseTest):
 		mapper = dd.makes[0].rowmaker.compileForTableDef(td)
 		self.assertEqual(mapper({'src': '15'}, None)['x'], 15)
 
-	def testBadBasicMap(self):
-		self.assertRaisesWithMsg(base.LiteralParseError,
-			'At [<data><table id="foo"><colu...], (1, 144):'
-			" '@src' is not a valid value for source",
-			makeDD, ('<column name="x" type="integer" required="True"/>',
-			'<map dest="x" src="@src"/>'))
-
 	def testWithDefault(self):
 		dd, td = makeDD('<column name="x" type="integer" required="True"'
 			'><values default="18"/></column>', '<map dest="x">int(@x)</map>')
@@ -216,7 +209,18 @@ class RowmakerMapTest(testhelpers.VerboseTest):
 		mapper = dd.makes[0].rowmaker.compileForTableDef(td)
 		self.assertEqual(mapper({'foo': "x3"}, None), {'foo': None})
 
+	def testOddSourceAtts(self):
+		dd, td = makeDD('<column name="foo"/><column name="bar"/>',
+			'<map dest="foo" source=\'knall"fall\'/>'
+			r'<map dest="bar" source="bad\ass"/>')
+		mapper = dd.makes[0].rowmaker.compileForTableDef(td)
+		self.assertEqual(
+			mapper({
+				'knall"fall': "21",
+				"bad\\ass": "5e4"}, None), 
+			{'foo': 21., 'bar': 5e4})
 
+		
 class ApplyTest(testhelpers.VerboseTest):
 	"""Tests for mapping procedures.
 	"""

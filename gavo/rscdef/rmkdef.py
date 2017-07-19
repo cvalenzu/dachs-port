@@ -103,12 +103,6 @@ class MappedExpression(base.Structure):
 				hint="Var keys must be valid python"
 				" identifiers, and '%s' is not"%self.key)
 
-		if self.source:
-			if not utils.identifierPattern.match(self.source):
-				raise base.LiteralParseError("source", self.source,
-					hint="Map sources must be (python)"
-					" identifiers, and '%s' is not"%self.source)
-
 		if self.nullExpr is not base.NotGiven:
 			utils.ensureExpression(self.nullExpr)
 
@@ -130,7 +124,8 @@ class MappedExpression(base.Structure):
 			try:
 				code.append('%s["%s"] = %s'%(self.destDict,
 					self.key, 
-					base.sqltypeToPythonCode(colDef.type)%'vars["%s"]'%self.source))
+					base.sqltypeToPythonCode(colDef.type)%'vars["%s"]'%
+						self.source.replace("\\", r"\\").replace('"', '\\"')))
 			except base.ConversionError:
 				raise base.ui.logOldExc(base.LiteralParseError("map", colDef.type,
 					hint="Auto-mapping to %s is impossible since"
