@@ -9,6 +9,7 @@ Support for IVOA DAL and registry protocols.
 
 
 import datetime
+import os
 
 from nevow import appserver
 from nevow import inevow
@@ -584,6 +585,50 @@ class RegistryRenderer(grend.ServiceBasedPage):
 		return appserver.errorMarker
 
 
+def addAttachmentHeaders(request, mime=None):
+	"""adds a content-disposition header to request with a filename guessed 
+	based on datalink arguments.
+
+	This tries a number of heuristics to try and preserve a bit of the
+	provenance in the name, mainly to make saving these things simpler.
+	"""
+	try:
+		if mime is None:
+			mime = request.getHeader('content-type')
+		if mime is None:
+			# this is an error, really.  This should only be called when
+			# request is ready for serving.  But let's be generous.
+			mime = "application/octet-stream"
+		ext = common.getExtForMime(mime)
+
+		basicId = request.args["ID"][0]
+		if '?' in basicId:
+			# presumably the query part is the path
+			stem = os.path.splitext(
+				basicId.split('?')[-1].replace("/", "_"))[0]
+		else:
+			# who knows?  Whatever comes after the last slash is
+			# probably a better bet than anything else
+			stem = basicId.split("/")[-1]
+
+		if len(stem)<3: # this cannot be right
+			stem = "result"+stem
+
+		# if if there's any arguments we suspect have changed the contents
+		argkeys = [k for k in 
+				set(request.args.keys()) - set(["ID", "RESPONSEFORMAT"])
+			if request.args[k]]
+		if argkeys:
+			stem = stem+"_proc"
+
+		request.setHeader('content-disposition', 
+			'attachment; filename=%s%s'%(stem, ext))
+	except:
+		# if all fails, use a safe, if dumb, fallback
+		request.setHeader('content-disposition', 
+			'attachment; filename=result.dat')
+
+
 class _DatalinkRendererBase(grend.ServiceBasedPage):
 	"""the base class of the two datalink sync renderers.
 	"""
@@ -611,13 +656,16 @@ class _DatalinkRendererBase(grend.ServiceBasedPage):
 			request.setHeader("content-type", mime)
 
 			if self.attachResult:
-				request.setHeader('content-disposition', 
-					'attachment; filename=result%s'%common.getExtForMime(mime))
+				addAttachmentHeaders(request, mime)
 
 			return streaming.streamOut(lambda f: f.write(payload), 
 				request)
 
 		else:
+			if self.attachResult:
+				# the following getattr is for when data is a nevow.static.File
+				addAttachmentHeaders(request, getattr(data, "type", None))
+
 			return data
 
 	failureNameMap = {

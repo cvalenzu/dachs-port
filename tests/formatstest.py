@@ -28,6 +28,7 @@ from gavo import rscdef
 from gavo import rscdesc
 from gavo import utils
 from gavo import votable
+from gavo import web
 from gavo.base import valuemappers
 from gavo.formats import csvtable
 from gavo.formats import fitstable

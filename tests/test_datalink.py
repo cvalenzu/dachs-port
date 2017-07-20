@@ -106,11 +106,16 @@ class SyncTest(trialhelpers.ArchiveTest):
 				" in product table</TD>"])
 	
 	def testCubeCutout(self):
+		def assertNameGiven(res):
+			self.assertEqual(res[1].headers_out["content-disposition"],
+				"attachment; filename=data_excube_proc.fits")
+
 		return self.assertGETHasStrings("/data/cores/dl/dlget", {
 			"ID": "ivo://x-unregistred/~?data/excube.fits",
 			"COO_3": "3753 +Inf"}, [
 			"NAXIS3  =                    2",
-			"CRPIX3  =                 -1.0"])
+			"CRPIX3  =                 -1.0"]
+			).addCallback(assertNameGiven)
 
 	def testSDM2Spectrum(self):
 		# This is testing a silly sort of backdoor.  Don't count on it
@@ -125,6 +130,8 @@ class SyncTest(trialhelpers.ArchiveTest):
 		def assertMediatype(res):
 			self.assertEqual(res[1].headers_out["content-type"], 
 				"application/x-votable+xml;version=1.4")
+			self.assertEqual(res[1].headers_out["content-disposition"],
+				"attachment; filename=test2_proc.vot")
 
 		return self.assertGETHasStrings("/data/ssatest/dl/dlget", {
 				"FORMAT": "application/x-votable+xml;version=1.4",

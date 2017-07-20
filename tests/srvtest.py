@@ -20,6 +20,7 @@ from gavo import rscdesc
 from gavo.base import cron
 from gavo.base import events
 from gavo.rscdef import executing
+from gavo.web import common as webcommon
 
 
 class _listWithMessage(list):
@@ -294,6 +295,33 @@ class EventDispatcherTest(testhelpers.VerboseTest):
 			pass
 		self.assertEqual(ex.args[0], 
 			'[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41...')
+
+
+class ExtensionGuesserTest(testhelpers.VerboseTest):
+	def testSystemExtension(self):
+		self.assertEqual(webcommon.getExtForMime("text/html"), ".htm")
+
+	def testMimesParsed(self):
+		self.assertEqual(webcommon.getExtForMime("text/html;charset=iso-8859-1"), 
+		".htm")
+
+	def testFitstable(self):
+		self.assertEqual(webcommon.getExtForMime("application/fits"), 
+		".fitstable")
+
+	def testFitsimage(self):
+		self.assertEqual(webcommon.getExtForMime("image/fits"), 
+		".fits")
+
+	def testVOTable(self):
+		self.assertEqual(webcommon.getExtForMime("application/x-votable+xml"), 
+		".vot")
+
+	def testNewVOTable(self):
+		self.assertEqual(webcommon.getExtForMime(
+				"application/x-votable+xml;serialization=BINARY2"), 
+		".vot")
+
 
 
 if __name__=="__main__":

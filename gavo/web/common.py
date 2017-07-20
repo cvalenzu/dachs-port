@@ -55,6 +55,9 @@ def getExtForMime(mime):
 
 	if mediaType==base.votableType:
 		return ".vot"
+	# override plain application/octet-stream (static.File is too random)
+	if mediaType=='application/octet-stream':
+		return ".bin"
 
 	for ext, type in static.File.contentTypes.iteritems():
 		if mediaType==type:
