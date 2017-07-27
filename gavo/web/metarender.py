@@ -33,11 +33,14 @@ def _protectForBibTeX(tx):
 	"""returns tx in a way that hopefully prevents larger disasters
 	when used with BibTeX.
 
-	(currently, this just looks for multiple uppercase characters within
+	Among others, this just looks for multiple uppercase characters within
 	one word and protects the respective word with curly braces; for now,
-	this is ASCII only).
+	this is ASCII only.
+
+	This is also where we escape for TeX.
 	"""
-	return re.sub(r"(\w*[A-Z]\w+[A-Z]\w*)", r"{\1}", tx)
+	return re.sub(r"([#$_&\\%])", r"\\\1",
+		re.sub(r"(\w*[A-Z]\w+[A-Z]\w*)", r"{\1}", tx))
 
 
 def makeBibTeXForMetaCarrier(mc):

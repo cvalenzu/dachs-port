@@ -38,6 +38,7 @@ static.File.contentTypes[".rd"] = "application/x-gavo-descriptor+xml"
 static.File.contentTypes[".f90"] = "text/x-fortran"
 static.File.contentTypes[".skyglow"] = "text/plain"
 static.File.contentTypes[".fitstable"] = "application/fits"
+static.File.contentTypes[".fits"] = "image/fits"
 # this one is for co-operation with ifpages
 static.File.contentTypes[".shtml"] = "text/nevow-template"
 

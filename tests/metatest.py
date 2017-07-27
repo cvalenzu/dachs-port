@@ -955,14 +955,14 @@ class BibTeXTest(testhelpers.VerboseTest):
 	def testBasic(self):
 		mc = parseMetaXML("<meta>creator.name: Thor, A.U.\n"
 			"creator:\ncreator.name: Bohr, N.\ntitle:On GAVO's role"
-			" in Writing DaCHS\ncreationDate: 1984-08-05\n"
+			" in Writing DaCHS &amp; \\\\expandafter\ncreationDate: 1984-08-05\n"
 			"referenceURL:http://purl.org/pub/thor+bohr\n"
 			"shortName:testres\n"
 			"doi:10.542/testing</meta>")
 		self.assertEqual(metarender.makeBibTeXForMetaCarrier(mc),
-			"""@MISC{vo:testres,
+			r"""@MISC{vo:testres,
   year=1984,
-  title={On {GAVO}'s role in Writing {DaCHS}},
+  title={On {GAVO}'s role in Writing {DaCHS} \& \\expandafter},
   author={Thor, A.U. and Bohr, N.},
   url={http://purl.org/pub/thor+bohr},
   howpublished={{VO} resource provided by the Unittest Suite},

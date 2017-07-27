@@ -6,6 +6,13 @@ svn log http://svn.ari.uni-heidelberg.de/svn/gavo/python/trunk/ | less
 to see the gory details.  If anything not mentioned here breaks something
 for you, we'd consider it a severe bug, though.
 
+Version 1.1 (2017-10-XX)
+
+	* DaCHS now tries a bit harder to come up with sensible names for
+	  SODA result files.
+
+	* map/@source is no longer limited to identifier-like strings
+
 Version 1.0 (2017-07-11)
 
 	* DaCHS' main entry point is now actually called dachs (i.e., call 

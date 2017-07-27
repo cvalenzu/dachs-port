@@ -144,6 +144,7 @@ XS = QNamer("http://www.w3.org/2001/XMLSchema")
 VO_SCHEMATA = [
 		"Characterisation-v1.11.xsd",
 		"ConeSearch-v1.0.xsd",
+		"DataModel-v1.0.xsd",
 		"DocRegExt-v1.0.xsd",
 		"oai_dc.xsd",
 		"OAI-PMH.xsd",
