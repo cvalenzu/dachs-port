@@ -535,8 +535,11 @@ def wrapTable(table, rdSource=None):
 
 	This will grab info meta from the table.
 	"""
-	if isinstance(table, Data):
+	if hasattr(table, "dd"):
+		# we trust it's already a Data instance (don't want to use isinstance
+		# here since people may pass in fakes).
 		return table
+
 	if rdSource is None:
 		rd = table.tableDef.rd
 	elif hasattr(rdSource, "rd"):

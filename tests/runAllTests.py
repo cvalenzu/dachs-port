@@ -43,7 +43,7 @@ import warnings
 
 from gavo.helpers import testhelpers
 
-from gavo.imp import testresources
+import testresources
 
 from gavo import base
 

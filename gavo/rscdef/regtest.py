@@ -610,11 +610,6 @@ class RegTest(procdef.ProcApp, unittest.TestCase):
 
 		If you need an RE match rather than equality, there's
 		EqualingRE in your code's namespace.
-
-		This needs lxml (debian package python-lxml) installed.
-		As it's only a matter of time until lxml will become
-		a hard DaCHS dependency, installing it is a good idea
-		anyway.
 		"""
 		tree = lxtree.fromstring(self.data)
 		res = tree.xpath(path, namespaces=self.XPATH_NAMESPACE_MAP)

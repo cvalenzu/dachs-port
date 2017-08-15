@@ -277,12 +277,14 @@ class FormatOutputTest(testhelpers.VerboseTest):
 	"""a base class for tests against formatted output.
 	"""
 	# extra pain to allow both _FormattedData and _FormattedAndPardData
-	# in output
+	# in output, plus unwrapping stuff wrapped by testhelpers.
 	def _getOutput(self):
-		if isinstance(self.output, tuple):
-			return self.output[0]
+		output = getattr(self.output, "original", self.output)
+		if isinstance(output, tuple):
+			# it's a tuple wrapped by testresources
+			return output[0]
 		else:
-			return self.output
+			return output
 
 	def assertOutputHas(self, fragment):
 		self.assertTrue(fragment in self._getOutput(),

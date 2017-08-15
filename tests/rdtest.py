@@ -363,7 +363,7 @@ class CachesTest(testhelpers.VerboseTest):
 		sameRD = base.caches.getRD("temp")
 		self.failUnless(origRD is sameRD)
 		now = time.time()
-		os.utime(self.tempRDFile, (now+1, now+1))
+		os.utime(self.tempRDFile.original, (now+1, now+1))
 		otherRD = base.caches.getRD("temp")
 		self.failIf(origRD is otherRD)
 

@@ -125,6 +125,7 @@ else:
 				sys.exit(1)
 
 
+
 class FakeSimbad(object):
 	"""we monkeypatch simbadinterface such that we don't query simbad during
 	tests.
@@ -133,9 +134,9 @@ class FakeSimbad(object):
 	that functionality therefore doesn't get exercised.
 	"""
 	simbadData = {'Aldebaran': {'RA': 68.98016279,
-  	'dec': 16.50930235,
-  	'oname': 'Aldebaran',
-  	'otype': 'LP?'},
+		'dec': 16.50930235,
+		'oname': 'Aldebaran',
+		'otype': 'LP?'},
  	 u'M1': {'RA': 83.63308333, 'dec': 22.0145, 'oname': 'M1', 'otype': 'SNR'},
  	 'Wozzlfoo7xx': None}
 
@@ -145,13 +146,6 @@ class FakeSimbad(object):
 	def query(self, ident):
 		return self.simbadData.get(ident)
 
-
-
-
-from gavo.imp import testresources
-from gavo.imp.testresources import TestResource  #noflake: exported name
-from gavo.helpers.testtricks import (  #noflake: exported names
-	XSDTestMixin, testFile, getMemDiffer, getXMLTree) 
 
 # Here's the deal on TestResource: When setting up complicated stuff for
 # tests (like, a DB table), define a TestResource for it.  Override
@@ -165,6 +159,103 @@ from gavo.helpers.testtricks import (  #noflake: exported names
 # 
 # If you use this and you have a setUp of your own, you *must* call 
 # the superclass's setUp method.
+
+import testresources
+
+class ResourceInstance(object):
+	"""A helper class for TestResource.
+
+	See that docstring for info on what this is about; in case you
+	encounter one of these but need the real thing, just pull
+	.original.
+	"""
+	def __init__(self, original):
+		self.original = original
+	
+	def __getattr__(self, name):
+		return getattr(self.original, name)
+	
+	def __getitem__(self, index):
+		return self.original[index]
+
+	def __iter__(self):
+		return iter(self.original)
+
+	def __str__(self):
+		return str(self.original)
+
+	def __unicode__(self):
+		return unicode(self.original)
+
+	def __len__(self):
+		return len(self.original)
+
+	def __contains__(self, other):
+		return other in self.original
+
+
+class TestResource(testresources.TestResource):
+	"""A wrapper for testresources maintaining some backward compatibility.
+
+	testresources 2.0.1 pukes into the namespaces of what's
+	returned from make.  I've not really researched what they
+	intend people to return from make these days, but in order
+	to avoid major surgery on the code, this class simply wraps
+	objects that don't allow arbitrary attributes with ResourceInstance
+	when returned from make.
+
+	To make that happen, I need to override code from testresources itself,
+	which is a pity.  In case this breaks: Take all methods that call .make
+	and replace make with _make_and_wrap.
+
+	Caution: when you implement reset(), you'll have to wrap the
+	result with testhelpers.ResourceInstance manually; but then you'd
+	have to copy dependencies manually, which is crazy, and so I think
+	manual reset currently really is broken.
+	"""
+	def _make_and_wrap(self, deps):
+		res = self.make(deps)
+		try:
+			# see if we can set attributes and return if so...
+			res.improbably_named_attribute = None
+			del res.improbably_named_attribute
+			return res
+		except AttributeError:
+			# ...else wrap the result
+			return ResourceInstance(res)
+
+	##### Methods adapted from testresources
+
+	def _make_all(self, result):
+		"""Make the dependencies of this resource and this resource."""
+		self._call_result_method_if_exists(result, "startMakeResource", self)
+		dependency_resources = {}
+		for name, resource in self.resources:
+				dependency_resources[name] = resource.getResource()
+		resource = self._make_and_wrap(dependency_resources)
+		for name, value in dependency_resources.items():
+				setattr(resource, name, value)
+		self._call_result_method_if_exists(result, "stopMakeResource", self)
+		return resource
+
+	def _reset(self, resource, dependency_resources):
+		"""Override this to reset resources other than via clean+make.
+
+		This method should reset the self._dirty flag (assuming the manager can
+		ever be clean) and return either the old resource cleaned or a fresh
+		one.
+
+		:param resource: The resource to reset.
+		:param dependency_resources: A dict mapping name -> resource instance
+				for the resources specified as dependencies.
+		"""
+		self.clean(resource)
+		return self._make_and_wrap(dependency_resources)
+
+
+from gavo.helpers.testtricks import (  #noflake: exported names
+	XSDTestMixin, testFile, getMemDiffer, getXMLTree) 
+
 
 
 class ForkingSubprocess(subprocess.Popen):
@@ -741,3 +832,4 @@ def main(testClass, methodPrefix=None):
 		from gavo.user import errhandle
 		traceback.print_exc()
 		errhandle.raiseAndCatch(base)
+		sys.exit(1)

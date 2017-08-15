@@ -269,8 +269,9 @@ class MkRDTest(testhelpers.VerboseTest):
 			self.failUnless(frag in self.fitsrd, "%s missing"%frag)
 	
 	def testRunImp(self):
-		with testhelpers.testFile(os.path.join(base.getConfig("inputsDir"),
-				"gen.rd"), self.fitsrd):
+		with testhelpers.testFile(
+				os.path.join(base.getConfig("inputsDir"), "gen.rd"), 
+				self.fitsrd.original):
 			self.assertOutput(cli.main, ["imp", "gen"], expectedStderr="",
 				expectedStdout=lambda s: "Rows affected: 1", expectedRetcode=0)
 			self.assertOutput(cli.main, ["drop", "gen"])

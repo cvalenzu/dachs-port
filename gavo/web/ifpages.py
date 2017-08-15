@@ -23,10 +23,14 @@ from gavo import registry
 from gavo import svcs
 from gavo import utils
 from gavo.base import meta
-from gavo.imp import rjsmin
 from gavo.web import caching
 from gavo.web import grend
 
+# prefer globally installed version to what we deliver
+try:
+	import rjsmin
+except ImportError:
+	from gavo.imp import rjsmin
 
 class LoginPage(rend.Page, grend.GavoRenderMixin):
 	"""a page that logs people in or out.

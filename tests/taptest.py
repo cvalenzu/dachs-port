@@ -109,13 +109,17 @@ class _UWSJobResource(testhelpers.TestResource):
 		return tap.WORKER_SYSTEM.getNewJobId()
 	
 	def clean(self, jobId):
-		tap.WORKER_SYSTEM.destroy(jobId)
+		tap.WORKER_SYSTEM.destroy(jobId.original)
 
 _uwsJobResource = _UWSJobResource()
 
 
 class TAPParametersTest(testhelpers.VerboseTest):
-	resources = [("jobId", _uwsJobResource)]
+	resources = [("jobIdResource", _uwsJobResource)]
+
+	def setUp(self):
+		testhelpers.VerboseTest.setUp(self)
+		self.jobId = self.jobIdResource.original
 
 	def testRunidInsensitive(self):
 		with tap.WORKER_SYSTEM.changeableJob(self.jobId) as job:
@@ -144,7 +148,11 @@ class TAPParametersTest(testhelpers.VerboseTest):
 
 
 class UWSResponsesValidTest(testhelpers.VerboseTest, testtricks.XSDTestMixin):
-	resources = [("jobId", _uwsJobResource)]
+	resources = [("jobIdResource", _uwsJobResource)]
+
+	def setUp(self):
+		testhelpers.VerboseTest.setUp(self)
+		self.jobId = self.jobIdResource.original
 
 	def testJobRes(self):
 		job = tap.WORKER_SYSTEM.getJob(self.jobId)
@@ -159,7 +167,11 @@ class UWSResponsesValidTest(testhelpers.VerboseTest, testtricks.XSDTestMixin):
 class BlockingTest(testhelpers.VerboseTest):
 	"""tests for working impicit uws locking.
 	"""
-	resources = [("jobId", _uwsJobResource)]
+	resources = [("jobIdResource", _uwsJobResource)]
+
+	def setUp(self):
+		testhelpers.VerboseTest.setUp(self)
+		self.jobId = self.jobIdResource.original
 
 	def testIndexDoesNotBlock(self):
 		with tap.WORKER_SYSTEM.changeableJob(self.jobId):
