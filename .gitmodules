@@ -1,0 +1,6 @@
+[submodule "specs/pgsphere"]
+	path = specs/pgsphere
+	url = https://github.com/akorotkov/pgsphere
+[submodule "specs/q3c"]
+	path = specs/q3c
+	url = https://github.com/segasai/q3c
